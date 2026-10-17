@@ -1,76 +1,133 @@
 <p align="center">
-  <img src="docs/branding/aiset-logo.png" alt="aiset — a shared brain for AI agents" width="480">
+  <img src="src/aiset/static/aiset-icon.png" alt="aiset shared brain logo" width="64" height="64">
 </p>
 
-<h1 align="center">A shared brain for your AI agents.</h1>
+<p align="center"><strong>aiset</strong> &nbsp; / &nbsp; The shared brain for your AI coding team</p>
 
 <p align="center">
-  Persistent project knowledge. Shared decisions. Less repeated work.
+  <a href="#quick-start"><strong>Get started →</strong></a> &nbsp; · &nbsp;
+  <a href="docs/USER-GUIDE.md">Explore the guide</a> &nbsp; · &nbsp;
+  <a href="docs/RESEARCH-TOOLS.md">Read the research</a>
 </p>
 
 <p align="center">
-  <a href="#quick-start">Quick start</a> ·
-  <a href="#memory-that-outlives-a-chat">How memory works</a> ·
-  <a href="docs/USER-GUIDE.md">User guide</a> ·
-  <a href="docs/RESEARCH-TOOLS.md">Research & evaluation</a> ·
-  <a href="LICENSE">MIT license</a>
+  <img src="docs/branding/readme-hero.svg" alt="A shared brain. A smarter next task. Aiset connects project rules, decisions, code context and lessons in a shared memory." width="1200">
 </p>
 
-**Aiset gives AI coding agents a shared, persistent brain for your project.** It connects repository knowledge, working rules, past decisions, and task history so the next task can build on what the team already learned.
+<p align="center">
+  <strong>Persistent memory</strong> &nbsp; / &nbsp; <strong>Focused context</strong> &nbsp; / &nbsp; <strong>Visible teamwork</strong>
+  <br>
+  <sub>Built for Claude Code · Python 3.9+ · MIT licensed</sub>
+</p>
 
-Explain a convention, resolve a tricky bug, or agree on an API contract: save that knowledge once, then make it available to the agents that need it in later sessions. Aiset also gives you a live office to see who is working, what they are reading, and where tokens are going.
+<br>
 
-**Currently built for Claude Code.** Aiset generates a project team and provides local memory, research tools, and a browser interface around its work.
+## Your team learns. The next task benefits.
 
-## Memory that outlives a chat
+**Aiset gives coding agents a shared, persistent brain for your project.** Save conventions, capture decisions, and carry useful lessons into future sessions. A live office shows how the team uses that knowledge—and where its tokens go.
 
-A fresh conversation should not mean rediscovering your project from scratch. Aiset keeps the team's knowledge in workspace files that survive session restarts.
+<table>
+<tr>
+<td width="33%" valign="top">
 
-| What the team should remember | Where it lives | How it is reused |
+### 01 · Remember
+
+Keep project conventions, decisions, and lessons in **workspace memory** that survives a chat restart.
+
+</td>
+<td width="33%" valign="top">
+
+### 02 · Retrieve
+
+Find **the context a task needs**: brief sections, relevant code, and earlier episodes—with sources.
+
+</td>
+<td width="33%" valign="top">
+
+### 03 · Reuse
+
+Build on previous discoveries and shared task boards. **Reduce repeated investigation** across the team.
+
+</td>
+</tr>
+</table>
+
+## From one conversation to shared knowledge
+
+<table>
+<tr><th align="left">You set a convention</th><th align="left">The team records it</th><th align="left">A later task retrieves it</th></tr>
+<tr>
+<td width="33%" valign="top">“Use cursor-based pagination for new list endpoints. Save this in the backend brief.”</td>
+<td width="33%" valign="top">The engineer adds it to <strong>Field notes</strong>; the task contract captures the agreement.</td>
+<td width="33%" valign="top">The next engineer reads the brief and uses the saved convention as context.</td>
+</tr>
+</table>
+
+> **Memory is a workflow, not a promise of perfect recall.** Important information must be saved and retrieved. Aiset's agent instructions guide that process; not every chat message is automatically stored as a rule. Review recorded knowledge and refresh it as the project changes.
+
+<details>
+<summary><strong>Inside the brain: what is remembered, and where?</strong></summary>
+
+| Memory | Stored as | Used for |
 |---|---|---|
-| Project structure, conventions, known pitfalls | Knowledge briefs and dated **Field notes** | Engineers are instructed to read their brief index and relevant sections before working, including Field notes. |
-| Working rules and role responsibilities | Agent instruction files | The selected agent receives its instructions when a new session starts. |
-| Current requirements and API agreements | Task boards: brief, contract, handoffs, log | Agents coordinate through the same written task context. |
-| What was done, why, and what went wrong | **Episodes** written when a task closes | Later research can find previous decisions, touched files, and lessons. |
-| Code relationships and previous research | Code graphs and research records | `teammap` retrieves relevant evidence without requiring a full repository read. |
+| Conventions and pitfalls | Knowledge briefs + dated Field notes | Giving the next task a useful starting point |
+| Roles and working rules | Agent instruction files | Guiding the selected agent in a new session |
+| Requirements and agreements | Task briefs, contracts, handoffs, logs | Keeping agents aligned on active work |
+| Decisions and lessons | Episodes written when tasks close | Finding earlier solutions and their reasoning |
+| Code relationships | Graphs, indexes, research records | Retrieving evidence without reading the whole repo |
 
-### Make a rule part of the team's memory
+Engineers are instructed to read their brief index, relevant sections, and Field notes. When a task closes, the PM writes an episode and carries reusable lessons into the owning engineer's brief.
 
-For example, tell your PM:
+</details>
 
-> “Use cursor-based pagination for new list endpoints. Save this convention in the relevant engineers' knowledge briefs, and include it in the contract for this task.”
+<br>
 
-Or after solving a problem:
+## See the work. Follow the knowledge.
 
-> “Record why this failed, the verified fix, and the affected files in the episode. Add the reusable lesson to the owning engineer's Field notes.”
+<table>
+<tr>
+<td width="50%" valign="top">
 
-The next task can retrieve that rule or lesson from the shared files, even after the original conversation ends.
+### Office
 
-**Persistence depends on writing and retrieval.** Aiset does not automatically turn every question or chat message into a permanent rule, and saved instructions do not guarantee perfect agent compliance. Ask the team to record important decisions, check the saved files, and refresh knowledge when the code changes. The Brain page makes those records and their connections visible.
+Your team's live workspace. Follow assignments, task boards, agent activity, models, tokens, and estimated costs.
 
-## Less rediscovery. More useful work.
+</td>
+<td width="50%" valign="top">
 
-Aiset is designed to reduce the context agents need to consume before they can act:
+### Brain
 
-- **Read the right section.** Brief indexes expose headings and line ranges so agents can open the relevant parts instead of entire documents.
-- **Share task context.** Boards and handoffs let agents reference the same requirements rather than repeatedly relaying them through the PM.
-- **Reuse earlier lessons.** Episodes and Field notes preserve discoveries that would otherwise need to be made again.
-- **Query the code.** `teammap` returns definitions, callers, models, and architecture evidence with source locations.
-- **Filter research output.** Focused tools return findings and coverage gaps, with access to the full stored result when needed.
+Explore the connections between agents, briefs, episodes, and code. Follow an agent's path through the project.
 
-These mechanisms target wasted work; they are not a promise of a fixed token reduction. The current research evaluation includes output-size measurements, which are **not** actual token savings. See [measured results and limitations](docs/RESEARCH-TOOLS.md).
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
 
-## One team, four views
+### Architecture
 
-| View | What you can see or control |
-|---|---|
-| **Office** | Live agent activity, assignments, task boards, model usage, tokens, and estimated costs. |
-| **Brain** | The connections between agents, knowledge, episodes, repositories, and files; follow an agent's route through the project. |
-| **Architecture** | Services, infrastructure, and dependencies, with source evidence and a distinction between exact and inferred links. |
-| **Settings** | Team names, roles, models, office layout, and history windows. |
+See how services and infrastructure connect. Inspect source evidence and distinguish exact links from inferred ones.
 
-The PM clarifies the request and coordinates the work. Engineers work on their assigned repositories; QA and integration agents check the result. Knowledge and task records stay with the workspace.
+</td>
+<td width="50%" valign="top">
 
+### Settings
+
+Shape the team: names, roles, models, layout, and history windows, all in one place.
+
+</td>
+</tr>
+</table>
+
+## Spend context where it matters
+
+**Read sections, not entire briefs.** Share task context instead of repeatedly relaying it. Query code relationships and saved lessons before starting another investigation.
+
+Aiset combines brief indexes, shared boards, source-linked code queries, and focused research output to target unnecessary reading and repeated work.
+
+[See the measurements →](docs/RESEARCH-TOOLS.md) Current results include output-size comparisons, **not proven token savings**. Actual usage depends on the task and how agents use the tools.
+
+---
 ## Quick start
 
 **Requirements:** Python 3.9+, Git, and Claude Code for agent sessions. The Python package has no third-party runtime dependencies. TypeScript indexing additionally needs Node.js and an accessible TypeScript installation.
@@ -108,7 +165,9 @@ Visit **http://127.0.0.1:8765**. Use **Brain** to explore the team's knowledge a
 
 Both folders of repositories and monorepos are supported. Team generation detects repository stacks and can group large workspaces by stack. The bundled sample roster is for exploration; `aiset-init` creates the actual agent files for your project.
 
-## Ask the brain before searching from scratch
+<details>
+<summary><strong>Research commands · ask the brain before searching from scratch</strong></summary>
+
 
 Run these commands from your initialized workspace:
 
@@ -128,7 +187,12 @@ teammap research show <id>
 
 Results include source references, exact or inferred findings, and known gaps. Use `--json` for structured output and `--max-chars` to limit displayed text. See the [research tools guide](docs/USER-GUIDE.md#research-tools-teammap-impact-failures-relevant) for supported formats and options.
 
-## Your workspace owns the memory
+
+</details>
+
+<details>
+<summary><strong>Storage & privacy · your workspace owns the memory</strong></summary>
+
 
 ```text
 example-project/
@@ -145,6 +209,11 @@ example-project/
 The memory is inspectable and editable on disk. Separate workspaces can maintain separate teams. For monorepos, generated `.claude/` files are excluded locally from Git by default; use `--share` when you intend to version them.
 
 The dashboard runs on localhost and reads Claude Code transcripts. It also updates agent names, settings, brief indexes, and graph caches. Model requests still follow your Claude Code setup; a local dashboard does not mean offline model execution. The dashboard is intended for local use, not public hosting.
+
+
+</details>
+
+---
 
 ## Development
 
