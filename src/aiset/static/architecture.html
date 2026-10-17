@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TEAM_NAME__ Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090e; --floor: #0a0d14; --room-line: rgba(255,255,255,.075); --line-strong: rgba(255,255,255,.14);
+  --card: #11151f; --card2: #171c28; --text: #e8eaf0; --muted: #959cae; --faint: #5d6477;
+  --accent: #8b7cf6; --accent2: #ec4899;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* one colour per kind of connection / component */
+  --k-http: #60a5fa; --k-database: #34d399; --k-cache: #f87171; --k-broker: #fb923c; --k-worker: #f472b6;
+  --k-auth: #a78bfa; --k-storage: #fbbf24; --k-observability: #94a3b8; --k-search: #2dd4bf; --k-external: #cbd5e1; --k-discovery: #64748b;
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+body { display: flex; flex-direction: column; overflow: hidden; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.12) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+
+header { position: relative; z-index: 10; display: flex; align-items: center; gap: 14px; padding: 10px 18px; min-height: 58px; background: rgba(9,11,17,.78); backdrop-filter: saturate(160%) blur(14px); border-bottom: 1px solid var(--room-line); }
+header::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,124,246,.45), rgba(236,72,153,.35), transparent); opacity: .6; }
+.logo { display: flex; align-items: center; gap: 11px; font-weight: 650; font-size: 15.5px; letter-spacing: -.01em; }
+.logo svg { width: 30px; height: 30px; filter: drop-shadow(0 4px 12px rgba(139,124,246,.35)); }
+.logo small { display: block; font-weight: 500; font-size: 11px; color: var(--muted); margin-top: 1px; }
+nav.pages { display: flex; gap: 2px; background: rgba(255,255,255,.035); border: 1px solid var(--room-line); border-radius: 10px; padding: 3px; }
+nav.pages a { color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 550; padding: 5px 13px; border-radius: 7px; }
+nav.pages a.on { background: rgba(255,255,255,.08); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06); }
+nav.pages a:hover { color: var(--text); }
+.stats { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; align-items: center; }
+.stat { display: flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px; background: rgba(255,255,255,.03); border: 1px solid var(--room-line); font-size: 12px; color: var(--muted); }
+.stat b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 9px; background: rgba(255,255,255,.04); border: 1px solid var(--room-line); font-size: 12px; cursor: pointer; color: var(--muted); transition: color .15s, border-color .15s, background .15s; }
+.btn:hover { color: var(--text); border-color: var(--line-strong); background: rgba(255,255,255,.07); }
+.btn.on { color: var(--text); border-color: rgba(139,124,246,.5); background: rgba(139,124,246,.12); }
+
+main { flex: 1; display: grid; grid-template-columns: 1fr 420px; min-height: 0; }
+#map-wrap { position: relative; overflow: auto; min-height: 0;
+  background: radial-gradient(circle at 1px 1px, rgba(255,255,255,.04) 1px, transparent 0) 0 0/28px 28px,
+              radial-gradient(900px 520px at 30% -10%, rgba(139,124,246,.12), transparent 60%), var(--floor); }
+#map { position: relative; min-width: 1080px; padding: 18px 22px 40px; }
+.cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 56px; position: relative; z-index: 2; }
+.col h3 { margin: 0 0 12px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 650; display: flex; gap: 8px; align-items: baseline; }
+.col h3 span { color: var(--faint); text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 11px; }
+.col .stack { display: flex; flex-direction: column; gap: 12px; }
+.col .stack.tight { gap: 7px; }
+.col .stack.two { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 10px; align-items: start; }
+.node.compact { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-left: 3px solid var(--lc, var(--room-line)); border-radius: 10px; }
+.node.compact .nm { font-weight: 600; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.node.compact .fw { color: var(--faint); font-size: 10.5px; white-space: nowrap; }
+.node.compact .dots { margin-left: auto; display: flex; gap: 3px; flex: none; }
+.node.compact .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--kc); }
+.node.match { border-color: rgba(253,230,138,.7); box-shadow: 0 0 0 1px rgba(253,230,138,.5); }
+.focusbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 8px 12px; border-radius: 11px; background: rgba(139,124,246,.1); border: 1px solid rgba(139,124,246,.35); font-size: 12.5px; color: var(--muted); }
+.focusbar b { color: var(--text); }
+.focusbar .btn { margin-left: auto; }
+#q { width: 210px; background: rgba(255,255,255,.035); border: 1px solid var(--room-line); border-radius: 9px; padding: 5px 10px; font: inherit; font-size: 12px; color: var(--text); outline: none; }
+#q:focus { border-color: rgba(139,124,246,.5); box-shadow: 0 0 0 3px rgba(139,124,246,.15); }
+#edges { position: absolute; inset: 0; pointer-events: none; z-index: 1; overflow: visible; }
+#edges path { fill: none; stroke-width: 1.6; opacity: .55; transition: opacity .15s, stroke-width .15s; }
+#edges path.dash { stroke-dasharray: 5 5; }
+#edges path.hl { opacity: 1; stroke-width: 2.6; }
+#edges path.dim { opacity: .07; }
+#edges.dense path { opacity: .13; }
+#edges.dense path.hl { opacity: 1; }
+#edges.dense path.dim { opacity: .04; }
+.ext { display: flex; flex-wrap: wrap; gap: 6px; }
+.ext .node { padding: 4px 9px; border-radius: 999px; font-size: 11.5px; box-shadow: none; display: inline-flex; align-items: center; gap: 6px; border-color: rgba(203,213,225,.18); }
+.ext .node .n { color: var(--muted); font-size: 10.5px; }
+#edges text { font-size: 10.5px; fill: var(--muted); font-family: var(--mono); paint-order: stroke; stroke: var(--floor); stroke-width: 4px; opacity: 0; transition: opacity .15s; }
+#edges text.hl { opacity: 1; }
+
+.node { position: relative; background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015)), var(--card); border: 1px solid var(--room-line); border-radius: 13px; padding: 10px 12px; cursor: pointer; transition: border-color .15s, opacity .15s, transform .15s, box-shadow .15s; box-shadow: 0 10px 24px -14px rgba(0,0,0,.7); }
+.node:hover { border-color: var(--line-strong); }
+.node.sel { border-color: var(--kc, var(--accent)); box-shadow: 0 0 0 1px var(--kc, var(--accent)), 0 0 26px -8px var(--kc, var(--accent)); }
+.node.dim { opacity: .28; }
+.node .t { display: flex; align-items: center; gap: 8px; font-weight: 650; font-size: 13.5px; letter-spacing: -.01em; }
+.node .t .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.node .sub { color: var(--muted); font-size: 11.5px; margin-top: 3px; }
+.node .lb { display: flex; height: 4px; gap: 2px; border-radius: 999px; overflow: hidden; margin-top: 8px; background: rgba(255,255,255,.05); }
+.node .lb i { display: block; height: 100%; }
+.node .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.chip { font-size: 10px; font-weight: 550; padding: 1px 7px; border-radius: 999px; color: var(--kc, var(--muted)); background: color-mix(in srgb, var(--kc, #94a3b8) 12%, transparent); border: 1px solid color-mix(in srgb, var(--kc, #94a3b8) 30%, transparent); white-space: nowrap; }
+.kind { margin-left: auto; font-size: 9.5px; font-weight: 650; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); }
+.comp { display: flex; align-items: center; gap: 10px; border-left: 3px solid var(--kc); }
+.comp .ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; font-size: 15px; background: color-mix(in srgb, var(--kc) 14%, transparent); flex: none; }
+.comp .t { font-size: 13px; }
+.minor { margin-top: 30px; position: relative; z-index: 2; }
+.minor h3 { margin: 0 0 10px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 650; }
+.minor .row { display: flex; flex-wrap: wrap; gap: 10px; }
+.minor .node { flex: 0 1 230px; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: var(--muted); margin-bottom: 16px; align-items: center; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 18px; height: 0; border-top: 2px solid var(--kc); }
+.legend i.dash { border-top-style: dashed; }
+#loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 14px; }
+
+aside { border-left: 1px solid var(--room-line); background: linear-gradient(180deg, rgba(14,17,25,.96), rgba(10,12,18,.98)); overflow: auto; padding: 18px 18px 30px; min-height: 0; }
+aside h2 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -.015em; display: flex; align-items: center; gap: 8px; }
+aside .lead { color: var(--muted); font-size: 12.5px; margin: 4px 0 16px; line-height: 1.5; }
+.sec { margin-bottom: 18px; }
+.sec h4 { margin: 0 0 8px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 650; display: flex; gap: 8px; align-items: center; }
+.box { background: rgba(255,255,255,.025); border: 1px solid var(--room-line); border-radius: 12px; padding: 10px 12px; font-size: 12.5px; line-height: 1.5; }
+.kv { display: grid; grid-template-columns: 92px 1fr; gap: 6px 12px; }
+.kv > span:nth-child(odd) { color: var(--muted); }
+.kv > span { min-width: 0; overflow-wrap: anywhere; }
+.conn { border-top: 1px solid var(--room-line); padding: 8px 0; }
+.conn:first-child { border-top: 0; padding-top: 2px; }
+.conn .h { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.conn .h b { font-weight: 600; }
+.conn .h .lbl { color: var(--muted); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+.conf { font-size: 9.5px; font-weight: 650; text-transform: uppercase; letter-spacing: .06em; padding: 1px 6px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.conf.exact, .conf.wired { color: #34d399; } .conf.used { color: #60a5fa; } .conf.inferred, .conf.configured { color: #fbbf24; } .conf.declared { color: var(--faint); }
+.ev { list-style: none; margin: 6px 0 0; padding: 0; display: none; }
+.conn.open .ev { display: block; }
+.ev li { display: grid; grid-template-columns: 52px 1fr; gap: 8px; padding: 3px 0; font-size: 11.5px; }
+.ev .ty { color: var(--faint); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; padding-top: 2px; }
+.ev a { color: #c4b5fd; text-decoration: none; font-family: var(--mono); font-size: 11px; }
+.ev a:hover { text-decoration: underline; }
+.ev code { display: block; color: #c9cdd8; font-family: var(--mono); font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 1px; }
+.langs { display: flex; flex-direction: column; gap: 5px; }
+.langs div { display: grid; grid-template-columns: 90px 1fr 40px; gap: 8px; align-items: center; font-size: 12px; }
+.langs .bar { height: 5px; border-radius: 999px; background: rgba(255,255,255,.05); overflow: hidden; }
+.langs .bar i { display: block; height: 100%; border-radius: 999px; }
+.langs .pc { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cmd { font-family: var(--mono); font-size: 11px; color: #c9cdd8; overflow-wrap: anywhere; }
+.hint { color: var(--faint); font-size: 12px; line-height: 1.55; }
+.hint code { font-family: var(--mono); font-size: 11px; background: rgba(255,255,255,.06); border: 1px solid var(--room-line); padding: 1px 5px; border-radius: 5px; color: var(--text); }
+#modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(4px); display: none; place-items: center; z-index: 30; }
+#modal.on { display: grid; }
+#modal .in { width: min(760px, 92vw); background: #0d1018; border: 1px solid var(--room-line); border-radius: 16px; padding: 16px; box-shadow: 0 30px 80px -20px rgba(0,0,0,.8); }
+#modal textarea { width: 100%; height: 50vh; background: rgba(0,0,0,.35); color: #d5d9e3; border: 1px solid var(--room-line); border-radius: 10px; font-family: var(--mono); font-size: 11.5px; padding: 10px; resize: vertical; }
+#modal .bar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+#modal .bar b { margin-right: auto; }
+@media (max-width: 1100px) { main { grid-template-columns: 1fr; grid-template-rows: 1fr 45%; } aside { border-left: 0; border-top: 1px solid var(--room-line); } header .stats .stat { display: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .001ms !important; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 32 32"><defs><linearGradient id="ag" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b7cf6"/><stop offset="1" stop-color="#f472b6"/></linearGradient></defs><rect x="3" y="4" width="11" height="8" rx="2.5" fill="url(#ag)"/><rect x="18" y="4" width="11" height="8" rx="2.5" fill="url(#ag)" opacity=".7"/><rect x="10.5" y="20" width="11" height="8" rx="2.5" fill="url(#ag)"/><path d="M8.5 12v4h15v-4M16 16v4" fill="none" stroke="#c4b5fd" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <div>Architecture<small id="sub">what each repo is built with and what it connects to</small></div>
+  </div>
+  <nav class="pages"><a href="/">Office</a><a href="/brain">Brain</a><a href="/architecture" class="on">Architecture</a></nav>
+  <div class="stats" id="stats"></div>
+</header>
+<main>
+  <div id="map-wrap"><div id="map"><div id="loading">Scanning the repositories…</div></div></div>
+  <aside id="side"></aside>
+</main>
+<div id="modal"><div class="in"><div class="bar"><b>Mermaid</b><button class="btn" id="copy">Copy</button><button class="btn" id="close">Close</button></div><textarea id="mm" spellcheck="false"></textarea>
+  <div class="hint" style="margin-top:8px">Paste into a Markdown file inside <code>```mermaid</code> fences, or into a PR description.</div></div></div>
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const KIND_ICON = { database: "🗄️", cache: "⚡", broker: "📮", worker: "⚙️", auth: "🔐", storage: "🪣", observability: "📡", search: "🔍", external: "🌐" };
+const KIND_LABEL = { discovery: "service discovery", database: "database", cache: "cache", broker: "message broker", worker: "background jobs", auth: "auth", storage: "storage", observability: "monitoring", search: "search", external: "external" };
+const LANG_COLOR = { Python: "#3b82f6", TypeScript: "#38bdf8", JavaScript: "#facc15", Java: "#f97316", Kotlin: "#a78bfa", Go: "#22d3ee", Ruby: "#ef4444", PHP: "#818cf8", "C#": "#a3e635", Rust: "#fb923c", SQL: "#94a3b8", Shell: "#86efac" };
+const MAIN_KINDS = ["frontend", "gateway", "api", "service", "worker", "pipeline", "registry"];
+const kc = k => `var(--k-${k || "external"})`;
+let D = null, sel = null, showMinor = false, showInferred = true, showDiscovery = false, focusOn = true, query = "";
+try { showMinor = localStorage.getItem("arch-minor") === "1"; showInferred = localStorage.getItem("arch-inferred") !== "0"; showDiscovery = localStorage.getItem("arch-discovery") === "1"; focusOn = localStorage.getItem("arch-focus") !== "0"; } catch {}
+
+async function load(refresh) {
+  try { const r = await fetch("/api/arch" + (refresh ? "?refresh=1" : "")); D = await r.json(); } catch { $("#loading").textContent = "Could not load the architecture map."; return; }
+  const m = location.hash.match(/(?:repo|node)=([^&]+)/); if (m && !sel) sel = decodeURIComponent(m[1]);
+  render();
+}
+const repoById = id => D.repos.find(r => r.id === id);
+const nodeById = id => D.nodes.find(n => n.id === id);
+function visibleEdges() {
+  if (focused()) return D.edges.filter(e => edgeOn(e) && (e.from === sel || e.to === sel));  // only the selection's own links
+  const shown = new Set(shownIds());
+  return D.edges.filter(e => shown.has(e.from) && shown.has(e.to) && edgeOn(e));
+}
+const edgeOn = e => (showInferred || !["inferred", "declared"].includes(e.confidence)) && (showDiscovery || e.kind !== "discovery");
+const focused = () => !!(sel && focusOn && (repoById(sel) || nodeById(sel)));
+function shownIds() {
+  if (focused()) {  // the selection and everything linked to it, so it all fits on one screen
+    const near = new Set([sel]);
+    for (const e of D.edges) if (edgeOn(e) && (e.from === sel || e.to === sel)) { near.add(e.from); near.add(e.to); }
+    return [...near];
+  }
+  const repos = D.repos.filter(r => showMinor || MAIN_KINDS.includes(r.kind)).map(r => r.id);
+  const used = new Set(D.edges.filter(e => repos.includes(e.from)).map(e => e.to));
+  return [...repos, ...D.nodes.filter(n => used.has(n.id)).map(n => n.id)];
+}
+function select(id) {
+  sel = id;
+  history.replaceState(null, "", sel ? "#node=" + encodeURIComponent(sel) : "#");
+  if (focusOn) { render(); $("#map-wrap").scrollTo({ top: 0 }); } else { highlight(); side(); }
+}
+
+function repoCard(r, compact) {
+  if (compact) {
+    const lang = r.languages[0] ? LANG_COLOR[r.languages[0].lang] || "#64748b" : "var(--room-line)";
+    return `<div class="node repo compact" data-id="${esc(r.id)}" style="--kc:var(--accent);--lc:${lang}" title="${esc([r.framework, r.language].filter(Boolean).join(" · ") + (r.components.length ? " — " + r.components.map(c => c.label).join(", ") : ""))}">
+      <span class="nm">${esc(r.name)}</span><span class="fw">${esc(r.framework || r.language || "")}</span>
+      <span class="dots">${r.components.map(c => `<i style="--kc:${kc(c.kind)}"></i>`).join("")}</span></div>`;
+  }
+  const comps = r.components.map(c => `<span class="chip" style="--kc:${kc(c.kind)}" title="${esc(c.confidence)}">${esc(c.label)}</span>`).join("");
+  return `<div class="node repo" data-id="${esc(r.id)}" style="--kc:var(--accent)">
+    <div class="t"><span class="nm">${esc(r.name)}</span><span class="kind">${esc(r.kind)}</span></div>
+    <div class="sub">${esc([r.framework, r.language].filter(Boolean).join(" · ") || "no code detected")}</div>
+    ${r.languages.length ? `<div class="lb">${r.languages.map(l => `<i style="width:${(l.share * 100).toFixed(1)}%;background:${LANG_COLOR[l.lang] || "#64748b"}" title="${esc(l.lang)} ${Math.round(l.share * 100)}%"></i>`).join("")}</div>` : ""}
+    ${comps ? `<div class="chips">${comps}</div>` : ""}
+  </div>`;
+}
+function compCard(n) {
+  const users = D.edges.filter(e => e.to === n.id).length;
+  return `<div class="node comp" data-id="${esc(n.id)}" style="--kc:${kc(n.kind)}">
+    <span class="ic">${KIND_ICON[n.kind] || "◆"}</span>
+    <div style="min-width:0;flex:1"><div class="t"><span class="nm">${esc(n.label)}</span></div><div class="sub">${esc(KIND_LABEL[n.kind] || n.kind)} · ${users} repo${users === 1 ? "" : "s"}</div></div>
+  </div>`;
+}
+function render() {
+  const shown = new Set(shownIds());
+  const repos = D.repos.filter(r => shown.has(r.id));
+  const comps = D.nodes.filter(n => shown.has(n.id));
+  const degree = id => D.edges.filter(e => e.from === id || e.to === id).length;
+  const byDeg = (a, b) => degree(b.id) - degree(a.id);
+  const ORDER = ["database", "cache", "broker", "storage", "search", "auth", "observability", "external"];
+  const col = {
+    clients: repos.filter(r => ["frontend", "gateway"].includes(r.kind)),
+    services: repos.filter(r => ["api", "service"].includes(r.kind)).sort(byDeg),
+    async: [...repos.filter(r => ["worker", "pipeline"].includes(r.kind)), ...comps.filter(n => n.kind === "worker")],
+    infra: [...repos.filter(r => r.kind === "registry"),
+            ...comps.filter(n => n.kind !== "worker" && !n.id.startsWith("x:")).sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind) || byDeg(a, b))],
+    outside: comps.filter(n => n.id.startsWith("x:")).sort(byDeg),
+  };
+  const minor = focused() ? [] : D.repos.filter(r => !MAIN_KINDS.includes(r.kind));
+  // a crowded column turns into one-line cards, and very crowded services into two sub-columns
+  const compact = col.services.length > (focused() ? 6 : 16) || col.clients.length > 12;
+  const two = col.services.length > 24;
+  const card = x => x.components ? repoCard(x, compact && x.kind !== "gateway" && x.kind !== "registry") : compCard(x);
+  const colHtml = (title, hint, items, extra = "", cls = "") => `<div class="col"><h3>${title} <span>${hint}</span></h3><div class="stack ${cls}">${items.map(card).join("") || `<div class="hint">none</div>`}</div>${extra}</div>`;
+  const selName = sel && (repoById(sel)?.name || nodeById(sel)?.label);
+  // in focus, empty columns step aside so the rest gets the room
+  const cols = [
+    { n: col.clients.length, w: two ? "minmax(170px,.8fr)" : "1fr", html: () => colHtml("Entry points", "frontends and gateways", col.clients, "", compact ? "tight" : "") },
+    { n: col.services.length, w: two ? "minmax(420px,2fr)" : "1fr", html: () => colHtml("Services", `APIs and services · ${col.services.length}`, col.services, "", two ? "two" : compact ? "tight" : "") },
+    { n: col.async.length, w: two ? "minmax(170px,.85fr)" : "1fr", html: () => colHtml("Async & pipelines", "workers, queues, DAGs", col.async) },
+    { n: col.infra.length + col.outside.length, w: two ? "minmax(200px,1fr)" : "1fr", html: () => colHtml("Data & infrastructure", "what they connect to", col.infra, outside) },
+  ].filter(c => c.n || !focused());
+  const bar = focused() ? `<div class="focusbar">◎ Focused on <b>${esc(selName)}</b> · ${shown.size - 1} connected · click another box to move, Esc for everything<button class="btn" id="f-all">Show everything</button></div>` : "";
+  const outside = col.outside.length ? `<h3 style="margin-top:22px">Outside the workspace · ${col.outside.length} <span>services and systems it calls</span></h3>
+    <div class="ext">${col.outside.map(n => `<div class="node" data-id="${esc(n.id)}" style="--kc:${kc("external")}">${esc(n.label)}<span class="n">${n.repos.length > 1 ? "×" + n.repos.length : ""}</span></div>`).join("")}</div>` : "";
+  $("#map").innerHTML = `${bar}
+    <div class="legend">${["http", "database", "broker", "worker", "cache", "auth", "storage"].map(k => `<span><i style="--kc:${kc(k)}"></i>${k === "http" ? "HTTP" : KIND_LABEL[k]}</span>`).join("")}<span><i class="dash" style="--kc:var(--muted)"></i>inferred</span></div>
+    <svg id="edges"></svg>
+    <div class="cols" style="grid-template-columns: ${cols.map(c => c.w).join(" ")}${two ? "; gap: 40px" : ""}">${cols.map(c => c.html()).join("")}</div>
+    ${minor.length ? `<div class="minor"><h3>Libraries, algorithms & scripts · ${minor.length} ${showMinor ? "" : "(not on the map)"}</h3><div class="row">${minor.map(repoCard).join("")}</div></div>` : ""}`;
+  const repoCount = D.repos.length, langs = {};
+  for (const r of D.repos) for (const l of r.languages) langs[l.lang] = (langs[l.lang] || 0) + l.bytes;
+  const top = Object.entries(langs).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([l]) => l).join(", ");
+  $("#stats").innerHTML = `<input id="q" placeholder="Find a service…  ( / )" autocomplete="off" spellcheck="false">
+    <button class="btn ${focusOn ? "on" : ""}" id="t-foc" title="Clicking a box shows only it and what it connects to">Focus on click</button>
+    <span class="stat">repos <b>${repoCount}</b></span><span class="stat">components <b>${D.nodes.length}</b></span><span class="stat">links <b>${D.edges.length}</b></span><span class="stat">${esc(top)}</span>
+    <button class="btn ${showInferred ? "on" : ""}" id="t-inf" title="Links guessed from names (dashed)">Inferred links</button>
+    <button class="btn ${showMinor ? "on" : ""}" id="t-min" title="Put libraries and scripts on the map">Libraries & scripts</button>
+    ${D.edges.some(e => e.kind === "discovery") ? `<button class="btn ${showDiscovery ? "on" : ""}" id="t-dis" title="Links from each service to the registry it registers with">Service discovery</button>` : ""}
+    <button class="btn" id="b-mm">Mermaid</button><button class="btn" id="b-re" title="Scan the repositories again">↻ Rescan</button>`;
+  $("#t-inf").onclick = () => { showInferred = !showInferred; try { localStorage.setItem("arch-inferred", showInferred ? "1" : "0"); } catch {} render(); };
+  if ($("#t-dis")) $("#t-dis").onclick = () => { showDiscovery = !showDiscovery; try { localStorage.setItem("arch-discovery", showDiscovery ? "1" : "0"); } catch {} render(); };
+  $("#t-min").onclick = () => { showMinor = !showMinor; try { localStorage.setItem("arch-minor", showMinor ? "1" : "0"); } catch {} render(); };
+  $("#b-mm").onclick = openMermaid;
+  $("#t-foc").onclick = () => { focusOn = !focusOn; try { localStorage.setItem("arch-focus", focusOn ? "1" : "0"); } catch {} render(); };
+  if ($("#f-all")) $("#f-all").onclick = () => select(null);
+  const q = $("#q");
+  q.value = query;
+  q.oninput = () => { query = q.value.trim().toLowerCase(); highlight(); };
+  q.onkeydown = e => {
+    if (e.key === "Enter") { const m = matches()[0]; if (m) { query = ""; select(m); } }
+    if (e.key === "Escape") { query = ""; q.value = ""; q.blur(); highlight(); e.stopPropagation(); }
+  };
+  $("#b-re").onclick = () => { $("#b-re").textContent = "Scanning…"; load(true); };
+  document.querySelectorAll(".node").forEach(n => {
+    n.addEventListener("click", () => select(sel === n.dataset.id ? null : n.dataset.id));
+    n.addEventListener("mouseenter", () => highlight(n.dataset.id));
+    n.addEventListener("mouseleave", () => highlight());
+  });
+  requestAnimationFrame(() => { drawEdges(); highlight(); });
+  side();
+}
+function drawEdges() {
+  const svg = $("#edges"), box = $("#map").getBoundingClientRect();
+  svg.setAttribute("width", $("#map").scrollWidth); svg.setAttribute("height", $("#map").scrollHeight);
+  const rect = id => { const el = document.querySelector(`.node[data-id="${CSS.escape(id)}"]`); if (!el) return null; const r = el.getBoundingClientRect(); return { l: r.left - box.left, r: r.right - box.left, y: r.top - box.top + r.height / 2, t: r.top - box.top, b: r.bottom - box.top }; };
+  let h = "";
+  const vis = visibleEdges();
+  svg.classList.toggle("dense", vis.length > 120);  // a big system: links stay faint until you point at a box
+  // several links leaving one card fan out a little so they don't stack
+  const outN = {}, inN = {};
+  for (const e of vis) {
+    const a = rect(e.from), b = rect(e.to); if (!a || !b) continue;
+    const io = (outN[e.from] = (outN[e.from] || 0) + 1), ii = (inN[e.to] = (inN[e.to] || 0) + 1);
+    const off = k => ((k % 5) - 2) * 4;
+    let d;
+    if (b.l > a.r + 10) { const x1 = a.r, y1 = a.y + off(io), x2 = b.l, y2 = b.y + off(ii), m = (x2 - x1) * .5; d = `M${x1},${y1} C${x1 + m},${y1} ${x2 - m},${y2} ${x2},${y2}`; }
+    else if (a.l > b.r + 10) { const x1 = a.l, y1 = a.y + off(io), x2 = b.r, y2 = b.y + off(ii), m = (x1 - x2) * .5; d = `M${x1},${y1} C${x1 - m},${y1} ${x2 + m},${y2} ${x2},${y2}`; }
+    else { const x1 = a.r, y1 = a.y + off(io), x2 = b.r, y2 = b.y + off(ii), bow = 40 + Math.abs(y2 - y1) * .15; d = `M${x1},${y1} C${x1 + bow},${y1} ${x2 + bow},${y2} ${x2},${y2}`; }
+    const k = e.kind, dash = ["inferred", "declared"].includes(e.confidence);
+    h += `<path d="${d}" class="${dash ? "dash" : ""}" data-f="${esc(e.from)}" data-t="${esc(e.to)}" stroke="${kc(k)}"/>`;
+    const mx = (a.r + b.l) / 2, my = (a.y + b.y) / 2;
+    if (e.label) h += `<text x="${b.l > a.r ? mx : a.r + 46}" y="${my - 4}" text-anchor="middle" data-f="${esc(e.from)}" data-t="${esc(e.to)}">${esc(e.label.length > 34 ? e.label.slice(0, 33) + "…" : e.label)}</text>`;
+  }
+  svg.innerHTML = h;
+}
+function matches() {
+  if (!query) return [];
+  const all = [...D.repos.map(r => [r.id, r.name]), ...D.nodes.map(n => [n.id, n.label])];
+  return all.filter(([, name]) => name.toLowerCase().includes(query)).sort((a, b) => a[1].toLowerCase().indexOf(query) - b[1].toLowerCase().indexOf(query)).map(([id]) => id);
+}
+function highlight(hover) {
+  const focus = hover || (focused() ? null : sel);  // in focus mode everything on screen is already related
+  const near = new Set(focus ? [focus, ...D.edges.filter(e => e.from === focus || e.to === focus).flatMap(e => [e.from, e.to])] : []);
+  const hits = new Set(matches());
+  document.querySelectorAll(".node").forEach(n => {
+    n.classList.toggle("dim", focus ? !near.has(n.dataset.id) : !!query && !hits.has(n.dataset.id));
+    n.classList.toggle("match", !!query && hits.has(n.dataset.id));
+    n.classList.toggle("sel", n.dataset.id === sel);
+  });
+  document.querySelectorAll("#edges path, #edges text").forEach(p => { const on = focus && (p.dataset.f === focus || p.dataset.t === focus); p.classList.toggle("hl", !!on); p.classList.toggle("dim", !!focus && !on); });
+}
+
+function evList(ev) {
+  return `<ul class="ev">${ev.map(x => { const abs = D.root + "/" + (x.repo ? x.repo + "/" : "") + x.file;
+    return `<li><span class="ty">${esc(x.type)}</span><span><a href="vscode://file/${encodeURI(abs)}:${x.line || 1}" title="Open in VS Code">${esc((x.repo ? x.repo + "/" : "") + x.file)}${x.line ? ":" + x.line : ""}</a><code>${esc(x.text)}</code></span></li>`; }).join("")}</ul>`;
+}
+function conn(label, target, conf, ev, tag) {
+  return `<div class="conn"><div class="h">${tag || ""}<b>${esc(target)}</b><span class="lbl">${esc(label || "")}</span><span class="conf ${esc(conf)}">${esc(conf)}</span></div>${evList(ev)}</div>`;
+}
+function side() {
+  const el = $("#side");
+  const r = sel && repoById(sel), n = sel && !r && nodeById(sel);
+  if (r) {
+    const out = D.edges.filter(e => e.from === r.id && !e.to.startsWith("c:")), inc = D.edges.filter(e => e.to === r.id);
+    el.innerHTML = `<h2>${esc(r.name)} <span class="chip" style="--kc:var(--accent)">${esc(r.kind)}</span></h2>
+      <p class="lead">${esc([r.framework, r.language].filter(Boolean).join(" · ") || "No code detected")} · ${r.files} code files</p>
+      ${r.languages.length ? `<div class="sec"><h4>Languages</h4><div class="box langs">${r.languages.map(l => `<div><span>${esc(l.lang)}</span><span class="bar"><i style="width:${(l.share * 100).toFixed(1)}%;background:${LANG_COLOR[l.lang] || "#64748b"}"></i></span><span class="pc">${Math.round(l.share * 100)}%</span></div>`).join("")}</div></div>` : ""}
+      ${r.notable.length ? `<div class="sec"><h4>Stack</h4><div class="box chips" style="display:flex;flex-wrap:wrap;gap:5px">${r.notable.map(x => `<span class="chip">${esc(x)}</span>`).join("")}</div></div>` : ""}
+      ${r.entrypoints.length ? `<div class="sec"><h4>How it runs</h4><div class="box kv">${r.entrypoints.map(e => `<span>${esc(e.label)}</span><span class="cmd" title="${esc(e.file)}">${esc(e.command)}</span>`).join("")}</div></div>` : ""}
+      ${r.deploy.length ? `<div class="sec"><h4>Build & deploy</h4><div class="box kv">${r.deploy.map(d => `<span>${esc(d.kind)}</span><span class="cmd">${esc(d.file)}</span>`).join("")}</div></div>` : ""}
+      <div class="sec"><h4>Infrastructure · ${r.components.length}</h4><div class="box">${r.components.map(c => conn(KIND_LABEL[c.kind] + (c.detail && c.detail.tasks != null ? ` · ${c.detail.tasks} tasks, ${c.detail.producers} enqueue sites${c.detail.worker ? ", worker command found" : ""}` : "") + (c.env.length ? " · env " + c.env.join(", ") : ""), c.label, c.confidence, c.evidence.map(x => ({ ...x, repo: r.id })), `<span>${KIND_ICON[c.kind] || ""}</span>`)).join("") || `<span class="hint">None detected.</span>`}</div></div>
+      <div class="sec"><h4>Calls · ${out.length}</h4><div class="box">${out.map(e => conn(e.label, e.to.replace(/^x:/, "") + (e.to.startsWith("x:") ? " (not in workspace)" : ""), e.confidence, e.evidence.map(x => ({ ...x, repo: r.id })))).join("") || `<span class="hint">No calls to other services found.</span>`}</div></div>
+      <div class="sec"><h4>Called by · ${inc.length}</h4><div class="box">${inc.map(e => conn(e.label, e.from, e.confidence, e.evidence.map(x => ({ ...x, repo: e.from })))).join("") || `<span class="hint">Nothing in the workspace calls it.</span>`}</div></div>
+      <p class="hint">Click a row to see the evidence; file links open in VS Code. Agents get the same in text with <code>teammap arch ${esc(r.id)}</code>.</p>`;
+  } else if (n) {
+    const users = D.edges.filter(e => e.to === n.id);
+    el.innerHTML = `<h2><span>${KIND_ICON[n.kind] || "◆"}</span>${esc(n.label)}</h2>
+      <p class="lead">${esc(KIND_LABEL[n.kind] || n.kind)}${n.id.startsWith("x:") ? " · a service outside this workspace, named after the client class that calls it" : ""}</p>
+      <div class="sec"><h4>Used by · ${users.length}</h4><div class="box">${users.map(e => { const c = repoById(e.from)?.components.find(c => "c:" + c.id === n.id);
+        return conn((c && c.env.length ? "env " + c.env.join(", ") : e.label), e.from, e.confidence, (c ? c.evidence : e.evidence).map(x => ({ ...x, repo: e.from }))); }).join("")}</div></div>
+      <p class="hint">Confidence: <b>wired</b> = dependency or code plus configuration, <b>used</b> = the code uses it, <b>declared</b> = only listed as a dependency, <b>inferred</b> = guessed from names.</p>`;
+  } else {
+    const kinds = {};
+    for (const r of D.repos) kinds[r.kind] = (kinds[r.kind] || 0) + 1;
+    el.innerHTML = `<h2>Workspace</h2><p class="lead">${esc(D.root)} · scanned in ${D.seconds}s</p>
+      <div class="sec"><h4>Repositories</h4><div class="box kv">${Object.entries(kinds).map(([k, v]) => `<span>${esc(k)}</span><span>${v}</span>`).join("")}</div></div>
+      <div class="sec"><h4>Infrastructure</h4><div class="box">${D.nodes.filter(n => n.id.startsWith("c:")).map(n => `<div class="conn"><div class="h" data-go="${esc(n.id)}"><span>${KIND_ICON[n.kind] || ""}</span><b>${esc(n.label)}</b><span class="lbl">${esc(n.repos.join(", "))}</span></div></div>`).join("")}</div></div>
+      <div class="sec"><h4>How to read it</h4><div class="box hint" style="color:var(--muted)">
+        Every box and link comes from the code or its configuration, with the file and line as evidence. Solid links are certain (an exact URL match, or a dependency the code uses and configures); dashed ones are inferred from names, such as <code>BACKEND_SERVICE_URL</code> → <code>backend</code>.<br><br>
+        Environment variables are read by name only; <code>.env</code> files and <code>secrets/</code> folders are never opened.</div></div>
+      <p class="hint">Click a box for its details. Agents get the same in text with <code>teammap arch</code>.</p>`;
+    el.querySelectorAll("[data-go]").forEach(h => h.addEventListener("click", () => select(h.dataset.go)));
+  }
+  el.querySelectorAll(".conn .h").forEach(h => { if (!h.dataset.go) h.addEventListener("click", () => h.parentElement.classList.toggle("open")); });
+}
+async function openMermaid() {
+  let t = "";
+  try { t = await (await fetch("/api/arch/mermaid" + (showMinor ? "?all=1" : ""))).text(); } catch {}
+  $("#mm").value = t; $("#modal").classList.add("on");
+}
+$("#close").onclick = () => $("#modal").classList.remove("on");
+$("#modal").onclick = e => { if (e.target.id === "modal") $("#modal").classList.remove("on"); };
+$("#copy").onclick = () => { $("#mm").select(); navigator.clipboard?.writeText($("#mm").value); $("#copy").textContent = "Copied"; setTimeout(() => $("#copy").textContent = "Copy", 1200); };
+document.addEventListener("keydown", e => {
+  if (e.key === "/" && document.activeElement?.id !== "q" && document.activeElement?.tagName !== "TEXTAREA") { e.preventDefault(); $("#q")?.focus(); }
+  if (e.key === "Escape") { $("#modal").classList.remove("on"); if (sel) select(null); }
+});
+window.addEventListener("resize", () => requestAnimationFrame(() => { if (D) { drawEdges(); highlight(); } }));
+load();
+</script>
+</body>
+</html>

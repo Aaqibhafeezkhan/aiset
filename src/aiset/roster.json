@@ -1,0 +1,95 @@
+{
+    "team":  "Example Team",
+    "members":  [
+                    {
+                        "id":  "pm",
+                        "name":  "Deniz",
+                        "role":  "Project Manager",
+                        "zone":  "pm",
+                        "color":  "#ec4899",
+                        "knowledge":  null,
+                        "duty":  "Your point of contact. Clarifies, plans, assigns, validates."
+                    },
+                    {
+                        "id":  "backend",
+                        "name":  "Emre",
+                        "role":  "Backend Engineer",
+                        "zone":  "eng",
+                        "color":  "#22c55e",
+                        "knowledge":  "backend.md",
+                        "repos":  [
+
+                                  ],
+                        "duty":  "Builds APIs, business logic, and data access."
+                    },
+                    {
+                        "id":  "frontend",
+                        "name":  "Selin",
+                        "role":  "Frontend Engineer",
+                        "zone":  "eng",
+                        "color":  "#3b82f6",
+                        "knowledge":  "frontend.md",
+                        "repos":  [
+
+                                  ],
+                        "duty":  "Builds user interfaces, accessibility, and API integrations."
+                    },
+                    {
+                        "id":  "platform",
+                        "name":  "Arda",
+                        "role":  "Platform Engineer",
+                        "zone":  "eng",
+                        "color":  "#a855f7",
+                        "knowledge":  "platform.md",
+                        "repos":  [
+
+                                  ],
+                        "duty":  "Maintains shared libraries, developer tooling, and application performance."
+                    },
+                    {
+                        "id":  "tester",
+                        "name":  "Derya",
+                        "role":  "QA Engineer",
+                        "zone":  "qa",
+                        "color":  "#eab308",
+                        "knowledge":  null,
+                        "duty":  "Runs tests, lint \u0026 type-checks; writes tests"
+                    },
+                    {
+                        "id":  "integration-checker",
+                        "name":  "Ece",
+                        "role":  "Integration Checker",
+                        "zone":  "qa",
+                        "color":  "#ef4444",
+                        "knowledge":  "cross-service.md",
+                        "duty":  "Cross-service contracts \u0026 breakage"
+                    },
+                    {
+                        "id":  "devops",
+                        "name":  "Bora",
+                        "role":  "DevOps Engineer",
+                        "zone":  "infra",
+                        "color":  "#f97316",
+                        "knowledge":  "devops.md",
+                        "duty":  "Maintains CI/CD, deployment configuration, and observability."
+                    },
+                    {
+                        "id":  "security",
+                        "name":  "Can",
+                        "role":  "Security Engineer",
+                        "zone":  "infra",
+                        "color":  "#06b6d4",
+                        "knowledge":  "security.md",
+                        "duty":  "Reviews authentication, authorization, and application security."
+                    },
+                    {
+                        "id":  "research",
+                        "name":  "Ada",
+                        "role":  "Research Engineer",
+                        "zone":  "eng",
+                        "color":  "#f59e0b",
+                        "knowledge":  "research.md",
+                        "duty":  "Research and development of new features and improvements."
+                    }
+                ]
+}
