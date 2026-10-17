@@ -96,7 +96,7 @@ Durum: 2026-10-15. Bu belge sistemde şu an neyin olduğunu ve neyin eksik oldu�
 | Windows desteği | ✅ | Yol normalizasyonu, `\` ve `/` ayırıcıları. |
 | Komutlar | ✅ | `pip install -e .` ile `aiset`, `aiset-init` ve `teammap` komutları gelir (`pyproject.toml`). Kurulumsuz da `python src/aiset/<modül>.py` çalışır. Kod 2026-10-17'de `src/aiset/` paketine taşındı (proje adı agent-office → aiset). |
 | Otomatik testler | 🟡 | `tests/`: task kimlikleri, import çözümü ve araştırma araçları (gerçek pytest/unittest/Node çıktılarıyla ayrıştırıcılar; küçük bir workspace üzerinde uçtan uca). Transcript ayrıştırma (`core.py`) için hâlâ test yok. |
-| Windows Git Bash argümanları | ✅ | Git Bash `/medicines` gibi argümanları `C:/Program Files/Git/medicines` yapıyor; `teammap` bunu geri çeviriyor (2026-10-17). |
+| Windows Git Bash argümanları | ✅ | Git Bash `/products` gibi argümanları `C:/Program Files/Git/products` yapıyor; `teammap` bunu geri çeviriyor (2026-10-17). |
 
 ## Eksikler ve öneriler
 

@@ -14,8 +14,8 @@ Durum: 2026-10-17. Kullanım ve sınırlamalar için [README](../README.md#resea
 - Kod: [src/aiset/research.py](../src/aiset/research.py). teammap bu alt komutları `arch` gibi ona devrediyor.
 - Ortak işlevler kopyalanmadı. teammap'te `callers_of` ile `cmd_model` içindeki mantık `call_sites`, `model_uses`, `mirror_types` ve `import_resolver` fonksiyonlarına ayrıldı; mevcut komutların çıktısı aynı kaldı.
 - Agent şablonları güncellendi: engineer (üçü birden), tester (`failures`), integration checker (`impact`), PM (`relevant`, `impact`). Hepsinde aynı kural var: önce kısa sonuç, sonra yalnızca gereken kod veya log satırları. `~` satırları ve "gaps" kodda doğrulanır. Sonuç boş ya da eksikse agent normal araştırmaya devam eder.
-- Değerlendirme düzeneği: [eval/research_eval.py](../eval/research_eval.py) ve medflow görevleri. Görev dosyası medflow'un dosya adlarını içerdiği için aiset reposunda değil, medflow workspace'inde: `medflow/.claude/team/eval/tasks.json`.
-- Yan düzeltme: Git Bash (agent'ların Windows'taki kabuğu) `/medicines` gibi argümanları `C:/Program Files/Git/medicines` yapıyordu. Bu yüzden `teammap endpoint /…` Windows'ta hiç eşleşmiyordu. `teammap` artık bu dönüşümü geri alıyor.
+- Değerlendirme düzeneği: [eval/research_eval.py](../eval/research_eval.py) ve örnek workspace'in görevleri. Görev dosyası o workspace'in dosya adlarını içerdiği için aiset reposunda değil, workspace'in kendisinde: `example-usage/.claude/team/eval/tasks.json`.
+- Yan düzeltme: Git Bash (agent'ların Windows'taki kabuğu) `/products` gibi argümanları `C:/Program Files/Git/products` yapıyordu. Bu yüzden `teammap endpoint /…` Windows'ta hiç eşleşmiyordu. `teammap` artık bu dönüşümü geri alıyor.
 
 ## Doğrulanan davranışlar
 
@@ -37,34 +37,36 @@ Otomatik testler: `python -m unittest discover -s tests` ile 23 testin hepsi ge�
 - **Çıktı sınırı:** `--max-chars` ve `--limit` kesilen kısmı adıyla bildiriyor; `research show` kalan satırları gösteriyor.
 - **Repolar:** Bütün çağrılardan sonra repoların `git status` çıktısı aynı kalıyor.
 
-medflow üzerinde elle karşılaştırma (araç çıktısı ile `git grep`):
+Aşağıdaki karşılaştırma ve ölçümler gerçek bir workspace'te yapıldı: FastAPI backend (`example-api`) ve Next.js frontend (`example-web`), toplam 297 dosya. Proje, repo, dosya ve endpoint adları örnek adlarla değiştirildi; satır numaraları ve sayılar ölçülen değerlerdir.
+
+Örnek workspace üzerinde elle karşılaştırma (araç çıktısı ile `git grep`):
 
 | Sorgu | Araç | grep ile kontrol |
 |---|---|---|
-| `GET /medicines/` tüketicileri | `medflow-api.ts:202` ve `api.medicines.list()` çağıran 6 yer | 6 çağrının 6'sı, fazlası yok |
-| `GET /medicines/{id}` | `medflow-api.ts:203` ve 2 çağıran | 2'nin 2'si |
-| `PATCH /medicines/{id}` | `medflow-api.ts:207` ve `medicine-management.tsx:86` | aynı |
-| `DELETE /medicines/{id}` | `medflow-api.ts:210`, çağıran yok | `medicines.remove(` hiç geçmiyor |
-| Testler | yok | `app/tests/test_medicine.py` boş bir dosya; "test yok" doğru |
+| `GET /products/` tüketicileri | `api-client.ts:202` ve `api.products.list()` çağıran 6 yer | 6 çağrının 6'sı, fazlası yok |
+| `GET /products/{id}` | `api-client.ts:203` ve 2 çağıran | 2'nin 2'si |
+| `PATCH /products/{id}` | `api-client.ts:207` ve `product-management.tsx:86` | aynı |
+| `DELETE /products/{id}` | `api-client.ts:210`, çağıran yok | `products.remove(` hiç geçmiyor |
+| Testler | yok | `app/tests/test_product.py` boş bir dosya; "test yok" doğru |
 
 ## Ölçülen sonuçlar (size modu, gerçek agent çalıştırması değil)
 
-Aynı medflow durumu üzerinde, betiklenmiş adımlarla ölçüldü. Baseline, bugünkü yol: mevcut teammap sorgusu, ardından grep ve okumalar. Treatment ise araştırma komutu ve doğrulamak için yapılan okuma. Değerler token değil, karakterdir.
+Örnek workspace'in aynı durumu üzerinde, betiklenmiş adımlarla ölçüldü. Baseline, bugünkü yol: mevcut teammap sorgusu, ardından grep ve okumalar. Treatment ise araştırma komutu ve doğrulamak için yapılan okuma. Değerler token değil, karakterdir.
 
 | Görev | Adım (baseline → araç) | Okuma | Çıktı karakteri | Beklenen bilgi |
 |---|---|---|---|---|
 | PATCH tüketicileri | 5 → 2 | 2 → 1 | 4.260 → 2.287 | 2/2 → 2/2 |
 | GET liste tüketicileri | 5 → 2 | 2 → 1 | 5.599 → 2.827 | 4/4 → 4/4 |
-| `MedicineResponse` kullanımı | 2 → 1 | 0 → 0 | 1.687 → 2.167 | 3/3 → 3/3 |
+| `ProductResponse` kullanımı | 2 → 1 | 0 → 0 | 1.687 → 2.167 | 3/3 → 3/3 |
 | Batch stok düzeltmesinin yeri | 3 → 2 | 1 → 1 | 5.163 → 5.495 | 4/4 → 4/4 |
 | Başarısız test triyajı | 1 → 1 | 1 → 0 | 3.932 → 2.112 | 5/5 → 5/5 |
 | **Toplam** | **16 → 8** | **6 → 3** | **20.641 → 14.888** | aynı |
 
-Index maliyeti (medflow: 297 dosya): soğuk `teammap index --force` 1,2 s, sıcak 0,2–0,3 s. Index 2,1 MB, kayıtlar yaklaşık 0,14 MB. Araştırma komutu başına süre 0,3–0,4 s; bunun çoğu index'in güncellenmesi.
+Index maliyeti (örnek workspace: 297 dosya): soğuk `teammap index --force` 1,2 s, sıcak 0,2–0,3 s. Index 2,1 MB, kayıtlar yaklaşık 0,14 MB. Araştırma komutu başına süre 0,3–0,4 s; bunun çoğu index'in güncellenmesi.
 
 Nasıl okunmalı:
 - **Karışık sonuç:** Beş görevin ikisinde araç çıktısı daha uzun.
-  - `MedicineResponse` görevinde mevcut `teammap model` zaten kısa bir yanıt veriyordu. `impact` buna boşlukları, importları ve kayıt satırını ekliyor.
+  - `ProductResponse` görevinde mevcut `teammap model` zaten kısa bir yanıt veriyordu. `impact` buna boşlukları, importları ve kayıt satırını ekliyor.
   - Batch görevinde baseline, aranacak kelimeyi (`adjust`) önceden bildiğim için hedefli kaldı. Kelimeyi bilmeyen bir agent daha fazla arama yapardı, ama bu ölçülmedi.
 - **Baseline'ın sınırı:** Baseline adımlarını ben yazdım. Gerçek bir agent daha az ya da daha çok adım atabilir.
 - **Doğruluk:** Doğruluk, beklenen dosya ve sembol adlarının çıktıda geçip geçmediğiyle ölçüldü. Cevabın tamamının doğruluğu ölçülmedi.
@@ -73,7 +75,7 @@ Nasıl okunmalı:
 
 - **Token tasarrufu kanıtlanmadı.** Gerçek agent çalıştırması yapılmadı. Tasarrufu ölçmek için agent modu kullanılmalı:
   ```sh
-  python eval/research_eval.py <medflow>/.claude/team/eval/tasks.json --workspace <medflow> --mode agent --confirm-cost --runs 3
+  python eval/research_eval.py <example-usage>/.claude/team/eval/tasks.json --workspace <example-usage> --mode agent --confirm-cost --runs 3
   ```
   Bu mod Claude Code'un bildirdiği giriş, çıkış, önbellekten okuma ve önbelleğe yazma token'larını, araç çağrılarını, okumaları, tur sayısını, süreyi ve maliyeti kaydeder. Her çalıştırmadan önce ve sonra repoların aynı durumda olduğunu doğrular. Para harcadığı için çalıştırılmadı.
 - **Neden azalabilir:** Daha az tur ve daha az okuma, her turda yeniden gönderilen bağlamı azaltmalı. Ancak bu araç çıktısının agent tarafından doğru kullanılmasına bağlı. Agent `~` satırlarını doğrulamak için yine kod okuyacak.
@@ -82,8 +84,8 @@ Nasıl okunmalı:
 
 ## Bilinen sınırlamalar (bu sürüm)
 
-- **Dil:** Yalnızca Python ve TypeScript. medflow'da başka dilde repo yok.
+- **Dil:** Yalnızca Python ve TypeScript. Örnek workspace'te başka dilde repo yok.
 - **Ada göre eşleştirme:** Çağıranlar adla eşleşiyor. Aynı adlı başka fonksiyonlar karışabilir; dependency injection üzerinden yapılan çağrılar kaçabilir.
-- **`relevant` yalnızca kelime eşleştiriyor:** Türkçe bir görev açıklaması İngilizce kodla eşleşmiyor ("ilaç partisi stok düzeltmesi" sorgusu sonuç vermedi ve bunu açıkça söylüyor).
-- **Zayıf ayna tipi tahmini:** Frontend ayna tipi tahmini (teammap `model` komutundan devralındı) zayıf adaylar verebiliyor. Örneğin `Warehouse` tipi `MedicineResponse` için 6 ortak alanla listelendi; satır inferred olarak işaretli.
+- **`relevant` yalnızca kelime eşleştiriyor:** Türkçe bir görev açıklaması İngilizce kodla eşleşmiyor ("ürün partisi stok düzeltmesi" sorgusu sonuç vermedi ve bunu açıkça söylüyor).
+- **Zayıf ayna tipi tahmini:** Frontend ayna tipi tahmini (teammap `model` komutundan devralındı) zayıf adaylar verebiliyor. Örneğin `Warehouse` tipi `ProductResponse` için 6 ortak alanla listelendi; satır inferred olarak işaretli.
 - **Yalnızca belirli formatlar:** `failures` yalnızca listelenen formatları tanıyor. Jest ve Vitest örnekleri gerçek bir çalıştırmadan alınmadı.

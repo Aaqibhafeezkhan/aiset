@@ -254,7 +254,7 @@ def find_tests(res, repos, imports, tests, target_files, names, literals, limit_
 # -- impact --------------------------------------------------------------------------------------------
 
 def _static_literal(path):
-    """The static part of an endpoint path a caller would spell out: /api/v1/medicines/{id} -> /medicines."""
+    """The static part of an endpoint path a caller would spell out: /api/v1/products/{id} -> /products."""
     segs = [s for s in path.split("/") if s]
     while segs and (segs[0] in ("api",) or re.fullmatch(r"v\d+", segs[0])):
         segs = segs[1:]
@@ -270,8 +270,8 @@ def _static_literal(path):
 def _literal_hits(text, lit, ep):
     """Lines where a frontend spells out an endpoint's path: [(line, same shape and method, property chain)].
 
-    `request('/medicines/')` matches GET /medicines/; `request(`/medicines/${id}`, {method: 'PATCH'})` matches
-    PATCH /medicines/{id}. Only the lines that agree with the endpoint are returned when any do."""
+    `request('/products/')` matches GET /products/; `request(`/products/${id}`, {method: 'PATCH'})` matches
+    PATCH /products/{id}. Only the lines that agree with the endpoint are returned when any do."""
     tail = ep["norm"][ep["norm"].find(lit) + len(lit):] if lit in ep["norm"] else None
     lines = text.splitlines()
     hits = []
@@ -295,7 +295,7 @@ PROPERTY = re.compile(r"^(\s*)(\w+)\s*:\s*(?:async\s+)?(?:\(|function\b|\w+\s*=>
 
 
 def _property_path(lines, i):
-    """For `list: () => request('/x')` inside `medicines: {`, ["medicines", "list"]; None when the line isn't a property."""
+    """For `list: () => request('/x')` inside `products: {`, ["products", "list"]; None when the line isn't a property."""
     m = PROPERTY.match(lines[i])
     if not m:
         return None
@@ -974,7 +974,7 @@ def _stem(w):
 
 
 def _match(q, words):
-    """1 for an exact word, .5 for a shared prefix of at least 5 letters (medicine/medicines, ilaç/ilaçlar), else 0."""
+    """1 for an exact word, .5 for a shared prefix of at least 5 letters (product/products, ürün/ürünler), else 0."""
     if q in words:
         return 1.0
     if len(q) >= 5 and any(len(w) >= 5 and (w.startswith(q) or q.startswith(w)) for w in words):

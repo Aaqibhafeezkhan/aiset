@@ -146,11 +146,11 @@ What each repository in the workspace is built with and what it connects to, rea
 Three questions agents keep answering from scratch, with greps and reads, now take one call each. They reuse the code index, the import graph, the briefs and the episodes, run on the current code every time, and are told to the agents in their files (engineer, tester, integration checker, PM).
 
 ```sh
-teammap impact /medicines/{medicine_id} PATCH   # endpoint: handler, models, consumers, direct callers, tests, episodes
-teammap impact MedicineService                  # function/class: definitions, callers, importers, endpoints, tests
-teammap impact MedicineResponse                 # model: endpoints using it, subclasses, importers, frontend mirrors, tests
-teammap failures /tmp/pharma-core-test.log      # pytest, unittest, jest, vitest, node --test (TAP), JUnit XML
-teammap relevant "medicine batch stock adjustment"   # files, symbols, endpoints, models, brief sections, episodes
+teammap impact /products/{product_id} PATCH   # endpoint: handler, models, consumers, direct callers, tests, episodes
+teammap impact ProductService                  # function/class: definitions, callers, importers, endpoints, tests
+teammap impact ProductResponse                 # model: endpoints using it, subclasses, importers, frontend mirrors, tests
+teammap failures /tmp/example-api-test.log      # pytest, unittest, jest, vitest, node --test (TAP), JUnit XML
+teammap relevant "product batch stock adjustment"   # files, symbols, endpoints, models, brief sections, episodes
 teammap research show <id>                      # a stored result in full;  teammap research list
 ```
 
@@ -159,7 +159,7 @@ Options: `--json`, `--limit N` (rows per section; 8, or 5 for `relevant`), `--al
 **What a result contains.** The research type and parameters; a short summary; findings by section, each with repo, file, line and symbol where there is one, why it was picked and whether it is **exact** (`=`: from the code's structure, such as a route decorator, a resolved import or a type annotation) or **inferred** (`~`: matched by name, by URL suffix, by a path literal or by words); **gaps** (what the index can't see for this question); the inputs' fingerprint, plus each repo's HEAD and number of uncommitted changes; the stored record's path and id; and which sections were cut. `--limit` and `--max-chars` cut the printed text only: the record keeps every row, and the cut is named with the way to see the rest (`--all`, `research show <id>`). Sizes are in characters; nothing claims to count tokens.
 
 **How each one works.**
-- `impact` resolves the query to an endpoint (a path part, with an optional method), a model or a function/class. For an endpoint, consumers are frontend HTTP calls whose resolved URL is the same (exact) or ends the same (inferred). Where a frontend builds URLs at runtime behind a client wrapper (`request('/medicines/')`), it finds the path literal with the same path shape and HTTP method (inferred) and then the code that calls that API-client property (`api.medicines.update()`, inferred). Tests are those that import the code (exact), mention its name or URL (inferred), or import a service whose function the handler calls (inferred).
+- `impact` resolves the query to an endpoint (a path part, with an optional method), a model or a function/class. For an endpoint, consumers are frontend HTTP calls whose resolved URL is the same (exact) or ends the same (inferred). Where a frontend builds URLs at runtime behind a client wrapper (`request('/products/')`), it finds the path literal with the same path shape and HTTP method (inferred) and then the code that calls that API-client property (`api.products.update()`, inferred). Tests are those that import the code (exact), mention its name or URL (inferred), or import a service whose function the handler calls (inferred).
 - `failures` reads a saved test output (a file or `-` for stdin) and lists each failed test with its error type, message and stack frames. Frames inside the indexed repos are mapped to the function around them; other project paths are shown as printed. Failures with the same error type, the same message (numbers and quoted values ignored) and the same innermost project frame are grouped. Each failure keeps its line range in the full log, which is copied to `<team>/graph/research/logs/`. The root cause is always reported as not determined: frames show where an error surfaced, not why. The output is only read; nothing in it is run.
 - `relevant` ranks the index, the briefs' sections and the episodes by the words they share with the query (camelCase and snake_case split, prefixes of five or more letters, rarer words weigh more) and says which words matched where. It has no embeddings and no model behind it, so it doesn't know synonyms or translate: describe the task in the code's language.
 

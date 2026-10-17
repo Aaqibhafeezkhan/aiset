@@ -822,7 +822,7 @@ def _msys_root():
 
 
 def msys_unmangle(arg):
-    """Git Bash on Windows rewrites an argument like /medicines into C:/Program Files/Git/medicines; undo that."""
+    """Git Bash on Windows rewrites an argument like /products into C:/Program Files/Git/products; undo that."""
     if os.name != "nt" or not os.environ.get("MSYSTEM") or not re.match(r"^[A-Za-z]:[\\/]", arg):
         return arg
     root = _msys_root()
