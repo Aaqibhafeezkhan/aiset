@@ -200,6 +200,7 @@ const TYPES = {
   brief:   { label: "Briefs",    icon: "book",    color: "#fbbf24", r: 10 },
   section: { label: "Sections",  icon: "hash",    color: "#fde68a", r: 4 },
   file:    { label: "Files",     icon: "file",    color: "#7dd3fc", r: 4 },
+  codefile: { label: "Code files", icon: "file",   color: "#64748b", r: 3 },
   episode: { label: "Episodes",  icon: "history", color: "#f472b6", r: 8 },
   endpoint: { label: "Endpoints", icon: "route",  color: "#a3e635", r: 5 },
   model:   { label: "Models",    icon: "braces",  color: "#f0abfc", r: 5 },
@@ -207,6 +208,8 @@ const TYPES = {
   code:    { label: "Code graph", icon: "network", color: "#a3e635", r: 5 },
 };
 const kindOf = t => TYPES[t] ? t : "code";  // anything a code graph adds (symbol, endpoint, model…)
+// files from the code index that no agent has opened: the whole repo, filtered separately from the files agents touched
+const kindOfNode = n => n.type === "file" && !n.weight ? "codefile" : kindOf(n.type);
 const TREE_ICON = { dir: "folder", graph: "network" };
 const CODE_TYPES = ["endpoint", "model", "apifn"];
 const EDGE = {
@@ -222,6 +225,7 @@ const EDGE = {
   request:  { color: "rgba(240,171,252,.4)", w: 1, len: 60 },
   response: { color: "rgba(240,171,252,.4)", w: 1, len: 60, dash: [4, 3] },
   "calls-api": { color: "rgba(103,232,249,.6)", w: 1.4, len: 90 },
+  imports:  { color: "rgba(100,116,139,.3)", w: 1, len: 55 },
 };
 const edgeStyle = t => EDGE[t] || { color: "rgba(163,230,53,.35)", w: 1, len: 60 };
 
@@ -229,7 +233,7 @@ let G = null;                        // last payload
 const pos = new Map();               // id -> {x, y, vx, vy, fixed}
 let nodes = [], edges = [], byId = new Map(), adj = new Map();
 let visible = [], visEdges = [];
-const hidden = new Set(["section", "endpoint", "model", "apifn"]);  // the many small nodes; reach them via the tree, search or a focus
+const hidden = new Set(["section", "codefile", "endpoint", "model", "apifn"]);  // the many small nodes; reach them via the tree, search or a focus
 let focusSet = null, selected = null, hover = null, query = "";
 const openTree = new Set(["group:team", "group:repos", "group:episodes", "group:code"]);
 let alpha = 1, autoFit = true, frame = 0;  // keep fitting the view until the layout settles or the user takes over
@@ -291,7 +295,7 @@ function place(list) {
 }
 
 function recompute() {
-  const show = n => !hidden.has(kindOf(n.type)) || (focusSet && focusSet.has(n.id)) || n.id === selected || liveSet.has(n.id);
+  const show = n => !hidden.has(kindOfNode(n)) || (focusSet && focusSet.has(n.id)) || n.id === selected || liveSet.has(n.id);
   visible = nodes.filter(n => show(n) && (!focusSet || focusSet.has(n.id) || liveSet.has(n.id)));
   const vs = new Set(visible.map(n => n.id));
   visEdges = edges.filter(e => vs.has(e.source) && vs.has(e.target));
@@ -655,7 +659,7 @@ function renderStats() {
 }
 function renderFilters() {
   const counts = {};
-  for (const n of nodes) counts[kindOf(n.type)] = (counts[kindOf(n.type)] || 0) + 1;
+  for (const n of nodes) counts[kindOfNode(n)] = (counts[kindOfNode(n)] || 0) + 1;
   $("#filters").innerHTML = Object.entries(TYPES).filter(([k]) => counts[k]).map(([k, t]) =>
     `<span class="fchip ${hidden.has(k) ? "" : "on"}" data-k="${k}"><span class="dot" style="background:${t.color}"></span>${t.label} <b>${counts[k]}</b></span>`).join("");
   $("#filters").querySelectorAll(".fchip").forEach(el => el.addEventListener("click", () => {
@@ -680,7 +684,7 @@ function renderTree() {
     const open = query ? true : openTree.has(t.id);
     const dir = t.type === "dir";
     const icon = dir && open && kids ? "folderOpen" : TREE_ICON[t.type] ?? TYPES[kindOf(t.type)]?.icon;
-    const color = n?.type === "agent" && n.info.color || (dir ? "var(--muted)" : TYPES[kindOf(t.type)]?.color);
+    const color = n?.type === "agent" && n.info.color || (dir ? "var(--muted)" : TYPES[n ? kindOfNode(n) : kindOf(t.type)]?.color);
     const extra = n?.type === "file" ? (n.info.edits ? `<span class="mi ed">${svg("pencil")}${n.info.edits}</span>` : "") + `<span class="mi">${svg("eye")}${n.info.reads || 0}</span>`
       : n?.type === "section" ? `~${fmtTok(n.info.tokens)}t`
       : n?.type === "brief" ? `~${fmtTok(briefTokens(n.id))}t`
@@ -735,7 +739,10 @@ function renderDetail() {
     h += kv([["File", esc(i.path)], ["Sections", secs], ["Whole brief", `~${fmtTok(briefTokens(n.id))} tokens <span class="warn">${briefTokens(n.id) > 6000 ? "· split into sections to save tokens" : ""}</span>`]]);
   }
   if (n.type === "section") { h += kv([["File", `${esc(i.path)}:${i.line}`], ["Size", `~${fmtTok(i.tokens)} tokens`]]); h += `<div class="pre">${esc(i.text)}</div>`; }
-  if (n.type === "file") h += kv([["Path", esc(i.path)], ["Reads", i.reads || 0], ["Edits", i.edits || 0],
+  if (n.type === "file") h += kv([["Path", esc(i.path)], ["Language", { py: "Python", ts: "TypeScript" }[i.lang]], ["Definitions", i.symbols],
+    ["Imports", (adj.get(n.id) || []).filter(x => x.e.type === "imports" && x.dir === "out").length || undefined],
+    ["Imported by", (adj.get(n.id) || []).filter(x => x.e.type === "imports" && x.dir === "in").length || undefined],
+    ["Reads", i.reads || 0], ["Edits", i.edits || 0],
     ["By agent", Object.entries(i.byAgent || {}).map(([a, o]) => `${esc(byId.get("agent:" + a)?.label || a)} (${o.read ? "read " + o.read : ""}${o.read && o.edit ? ", " : ""}${o.edit ? "edit " + o.edit : ""})`).join("<br>")]]);
   if (n.type === "episode") { h += kv(["date", "agents", "outcome", "touched", "contract", "decisions", "gotchas", "cost"].map(k => [k[0].toUpperCase() + k.slice(1), esc(i[k])])); }
   if (n.type === "repo") h += kv([["Path", esc(i.path)]]);

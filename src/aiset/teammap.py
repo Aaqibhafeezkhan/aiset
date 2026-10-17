@@ -26,6 +26,7 @@ Each refresh also writes <team>/graph/<repo>.json, which the office's Brain page
 import ast
 import json
 import os
+import posixpath
 import re
 import subprocess
 import sys
@@ -263,6 +264,47 @@ def resolve_import(mods, rel, imp):
         if cand in mods:
             return mods[cand], imp["name"]
     return None, None
+
+
+def tsconfig_aliases(root):
+    """tsconfig "paths" ("@/*": ["./src/*"]) as [(prefix, repo-relative dir)], longest first.
+
+    Read with regexes rather than json, since tsconfig allows comments and trailing commas."""
+    try:
+        with open(os.path.join(root, "tsconfig.json"), encoding="utf-8") as fh:
+            text = fh.read()
+    except OSError:
+        return []
+    base = (re.search(r'"baseUrl"\s*:\s*"([^"]*)"', text) or [None, "."])[1]
+    block = re.search(r'"paths"\s*:\s*\{(.*?)\}', text, re.S)
+    out = []
+    for alias, target in re.findall(r'"([^"*]*)\*"\s*:\s*\[\s*"([^"*]*)\*"', block.group(1) if block else ""):
+        d = posixpath.normpath(posixpath.join(base, target))
+        out.append((alias, "" if d == "." else d.rstrip("/") + "/"))
+    return sorted(out, key=lambda a: -len(a[0]))
+
+
+TS_SUFFIXES = ("", ".ts", ".tsx", "/index.ts", "/index.tsx")
+
+
+def file_imports(repo):
+    """(importer, imported) file pairs inside one repo; imports of packages are left out."""
+    files, out = repo["files"], set()
+    mods, aliases = py_module_map(repo), tsconfig_aliases(repo["root"])
+    for rel, e in files.items():
+        for imp in e["data"].get("imports") or []:
+            if e["lang"] == "py":
+                target = resolve_import(mods, rel, imp)[0]
+            else:
+                spec = imp.get("from") or ""
+                if spec.startswith("."):
+                    base = posixpath.normpath(posixpath.join(posixpath.dirname(rel), spec))
+                else:
+                    base = next((d + spec[len(a):] for a, d in aliases if spec.startswith(a)), None)
+                target = base and next((base + s for s in TS_SUFFIXES if base + s in files), None)
+            if target and target != rel:
+                out.add((rel, target))
+    return out
 
 
 def is_test(rel):
@@ -679,6 +721,13 @@ def export(repos, L):
         def file_node(rel):
             add(f"file:{name}/{rel}", "file", os.path.basename(rel), repo=name, rel=rel, path=os.path.join(repo["root"], rel))
             return f"file:{name}/{rel}"
+
+        # every indexed file, so the Brain shows the whole repo and not only routers and API callers
+        for rel, e in sorted(repo["files"].items()):
+            add(f"file:{name}/{rel}", "file", os.path.basename(rel), repo=name, rel=rel, path=os.path.join(repo["root"], rel),
+                lang=e["lang"], symbols=len(e["data"].get("symbols") or []))
+        for a, b in sorted(file_imports(repo)):
+            edges.append({"source": f"file:{name}/{a}", "target": f"file:{name}/{b}", "type": "imports"})
 
         groups = defaultdict(list)
         for e in (x for x in L["endpoints"] if x["repo"] == name):

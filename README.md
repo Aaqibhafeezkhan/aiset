@@ -139,7 +139,7 @@ What each repository in the workspace is built with and what it connects to, rea
   teammap index                        # refresh everything, print counts
   ```
 
-  Python is parsed with `ast`, TypeScript with frontend's own `typescript` package (`teammap_ts.js`). The cache in `~/.claude/team/graph/index/` refreshes changed files on every query, and each refresh writes the Brain graph (`~/.claude/team/graph/<repo>.json`). Frontend calls are matched to backend routes by resolved URL; "no backend match" usually means the route doesn't exist on the current branch.
+  Python is parsed with `ast`, TypeScript with frontend's own `typescript` package (`teammap_ts.js`). The cache in `~/.claude/team/graph/index/` refreshes changed files on every query, and each refresh writes the Brain graph (`~/.claude/team/graph/<repo>.json`): every indexed file with the imports between them (Python modules, relative and tsconfig-alias TypeScript imports), plus endpoints, models and API calls. On the Brain page all files are in the Repositories tree; on the map, files no agent has opened are under **Code files**, off by default. Frontend calls are matched to backend routes by resolved URL; "no backend match" usually means the route doesn't exist on the current branch.
 
 ## Renaming agents
 
