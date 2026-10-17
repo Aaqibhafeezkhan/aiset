@@ -8,6 +8,9 @@
   aiset --brain-days 60        how far back the Brain page looks (default 30)
   aiset --workspace DIR        show the team of a workspace made by init_team.py
                                (default: the workspace you're in, else the original ~/.claude team)
+
+Settings (/settings) edits the roster (names, roles, colours, duties, models) and the office's
+own options (<team>/settings.json); --hours and --brain-days override the stored windows.
 """
 import argparse
 import json
@@ -28,7 +31,7 @@ for _i, _a in enumerate(sys.argv):
         os.environ["AISET_WORKSPACE"] = os.path.abspath(sys.argv[_i + 1])
     elif _a.startswith("--workspace="):
         os.environ["AISET_WORKSPACE"] = os.path.abspath(_a.split("=", 1)[1])
-from . import brain, brief_index, sync_names, workspace  # noqa: E402
+from . import brain, brief_index, settings, sync_names, workspace  # noqa: E402
 from .core import Office, board_detail, task_detail, task_routes  # noqa: E402
 
 
@@ -36,12 +39,12 @@ ROSTER = workspace.ROSTER
 _roster_mtime = None
 
 
-def reload_roster(office):
-    """Pick up edits to roster.json without a restart, and copy new names into the agent files."""
+def reload_roster(office, force=False):
+    """Pick up edits to roster.json without a restart, and copy new names and models into the agent files."""
     global _roster_mtime
     try:
         mtime = os.path.getmtime(ROSTER)
-        if mtime == _roster_mtime:
+        if mtime == _roster_mtime and not force:
             return
         roster = workspace.load_roster()
     except (OSError, ValueError) as e:  # mid-edit or invalid JSON: keep the last good roster
@@ -59,9 +62,19 @@ def reload_roster(office):
     return roster
 
 
+def apply_windows(s):
+    """Use the stored time windows, unless --hours / --brain-days were given."""
+    if Handler.office is not None and not Handler.fixed_hours:
+        Handler.office.window = s["hours"] * 3600
+    if Handler.brain_office is not None and not Handler.fixed_days:
+        Handler.brain_office.window = s["brainDays"] * 86400
+
+
 class Handler(BaseHTTPRequestHandler):
     office = None
     brain_office = None  # same parser, longer window
+    fixed_hours = fixed_days = False
+    port = 8765
     lock = threading.Lock()
 
     def log_message(self, *args):
@@ -76,11 +89,25 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]
+        # Explicit allowlist: never expose arbitrary files from the package.
+        assets = {
+            "/favicon.ico": ("favicon.ico", "image/x-icon"),
+            "/site.webmanifest": ("site.webmanifest", "application/manifest+json"),
+            **{"/static/" + name: (name, "image/png") for name in (
+                "aiset-icon.png", "favicon-16.png", "favicon-32.png", "favicon-48.png",
+                "apple-touch-icon.png", "icon-192.png", "icon-512.png",
+            )},
+        }
+        if path in assets:
+            filename, content_type = assets[path]
+            with open(os.path.join(HERE, "static", filename), "rb") as f:
+                return self._send(200, f.read(), content_type)
         if path == "/api/state":
             with self.lock:
                 reload_roster(self.office)
                 brief_index.refresh()
                 state = self.office.state()
+                state["ui"] = settings.load()["ui"]
             return self._send(200, json.dumps(state).encode(), "application/json")
         if path == "/api/detail":
             from urllib.parse import parse_qs, urlparse
@@ -132,7 +159,11 @@ class Handler(BaseHTTPRequestHandler):
             if path.endswith("mermaid"):
                 return self._send(200, archmap.mermaid(data, bool(q.get("all"))).encode(), "text/plain; charset=utf-8")
             return self._send(200, json.dumps(data).encode(), "application/json")
-        page = {"/": "index.html", "/index.html": "index.html", "/brain": "brain.html", "/architecture": "architecture.html"}.get(path)
+        if path == "/api/settings":
+            with self.lock:
+                return self._send(200, json.dumps(self.settings_payload()).encode(), "application/json")
+        page = {"/": "index.html", "/index.html": "index.html", "/brain": "brain.html", "/architecture": "architecture.html",
+                "/settings": "settings.html"}.get(path)
         if page:
             with open(os.path.join(HERE, "static", page), encoding="utf-8") as f:
                 html = f.read()
@@ -143,13 +174,59 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, html.encode("utf-8"), "text/html; charset=utf-8")
         self._send(404, b"not found", "text/plain")
 
+    def settings_payload(self):
+        roster = self.office.roster
+        return {
+            "settings": settings.load(), "roster": roster, "models": settings.MODELS,
+            "agentFiles": settings.agent_files(roster),
+            "fixed": {"hours": self.fixed_hours, "brainDays": self.fixed_days},
+            "paths": {"roster": workspace.norm(ROSTER), "agents": workspace.AGENTS, "settings": settings.PATH,
+                      "workspace": workspace.norm(workspace.WORKSPACE) if workspace.WORKSPACE else None},
+        }
+
+    def _same_origin(self):
+        """Writes come only from the office's own pages: the right Host (no DNS rebinding) and no foreign Origin."""
+        hosts = {f"127.0.0.1:{self.port}", f"localhost:{self.port}"}
+        if self.headers.get("Host") not in hosts:
+            return False
+        origin = self.headers.get("Origin")
+        return origin is None or origin in {"http://" + h for h in hosts}
+
+    def do_POST(self):
+        path = self.path.split("?", 1)[0]
+
+        if path != "/api/settings":
+            return self._send(404, b"not found", "text/plain")
+        # a JSON content type makes a cross-site request preflight, which this server never answers
+        if not self._same_origin() or not (self.headers.get("Content-Type") or "").startswith("application/json"):
+            return self._send(403, b'{"error": "forbidden"}', "application/json")
+        try:
+            body = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 1 << 20)) or b"{}")
+        except ValueError:
+            return self._send(400, b'{"error": "not JSON"}', "application/json")
+        with self.lock:
+            try:
+                if body.get("roster"):
+                    roster = settings.apply_roster(self.office.roster, body["roster"])
+                    with open(ROSTER, "w", encoding="utf-8", newline="\n") as f:
+                        json.dump(roster, f, indent=2, ensure_ascii=False)
+                        f.write("\n")
+                    reload_roster(self.office, force=True)
+                if body.get("settings"):
+                    apply_windows(settings.save(body["settings"]))
+            except ValueError as e:
+                return self._send(400, json.dumps({"error": str(e)}).encode(), "application/json")
+            except OSError as e:
+                return self._send(500, json.dumps({"error": f"couldn't write: {e}"}).encode(), "application/json")
+            return self._send(200, json.dumps(self.settings_payload()).encode(), "application/json")
+
 
 def main():
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # Windows consoles default to cp1252
     ap = argparse.ArgumentParser(description="Live office view of your Claude Code agents.")
     ap.add_argument("--port", type=int, default=8765)
-    ap.add_argument("--hours", type=float, default=12, help="show agents active within this many hours")
-    ap.add_argument("--brain-days", type=float, default=30, help="how far back the Brain page looks")
+    ap.add_argument("--hours", type=float, help="show agents active within this many hours (default: Settings, 12)")
+    ap.add_argument("--brain-days", type=float, help="how far back the Brain page looks (default: Settings, 30)")
     ap.add_argument("--no-browser", action="store_true")
     ap.add_argument("--workspace", help="folder made by init_team.py (read before argparse, see top of file)")
     args = ap.parse_args()
@@ -161,8 +238,10 @@ def main():
         sys.exit(f"could not read {ROSTER}")
     if not workspace.WORKSPACE:
         print("No workspace given: showing the original team. Use --workspace <folder> for another one.")
-    Handler.office = Office(roster, args.hours)
-    Handler.brain_office = Office(roster, args.brain_days * 24)
+    stored = settings.load()
+    Handler.fixed_hours, Handler.fixed_days, Handler.port = args.hours is not None, args.brain_days is not None, args.port
+    Handler.office = Office(roster, args.hours if Handler.fixed_hours else stored["hours"])
+    Handler.brain_office = Office(roster, (args.brain_days if Handler.fixed_days else stored["brainDays"]) * 24)
     Handler.office.history = Handler.brain_office
     server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
     url = f"http://127.0.0.1:{args.port}"
