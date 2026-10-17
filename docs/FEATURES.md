@@ -39,6 +39,7 @@ Durum: 2026-10-15. Bu belge sistemde şu an neyin olduğunu ve neyin eksik oldu�
 | Live feed | ✅ | Tüm takımın tool çağrıları ve mesajları, zaman sırasıyla. |
 | Doğrudan bağlantılar | ✅ | `#open=<agent>`, `#tab=boards`, `#open=task:<id>&view=routes`. |
 | Modern tema | ✅ | Grafit renkler, cam efektli paneller, Inter ve JetBrains Mono, klavye odak halkaları, hareket azaltma desteği. Yalnızca koyu tema. |
+| Ayarlar sayfası (`/settings`) | ✅ | Agent başına model (agent dosyasının `model:` satırına ve PM'in "Pinned models" bölümüne yazılır), isim, rol, renk, görev; takım adı ve PM komutu; side panel sekmeleri, odalar, sayfalar ve göstergeler açılıp kapanır (sekmelerde × da var); zaman pencereleri yeniden başlatmadan değişir. `<team>/settings.json` (2026-10-17). |
 
 ## 3. Token ve maliyet takibi
 

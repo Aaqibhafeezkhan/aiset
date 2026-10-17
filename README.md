@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/branding/aiset-logo.png" alt="aiset — shared agent brain" width="480"></p>
+
 # aiset
 
 A live office view of your AI team, plus the team itself.
@@ -180,6 +182,17 @@ A task file belongs to one workspace (it names its files), so keep it in `<works
 
 Size mode runs each task's scripted steps (commands and reads) for both variants and records steps, reads, output characters, seconds and whether the expected facts appear. It compares output sizes, not tokens, and a scripted baseline is not an agent. Agent mode runs `claude -p` on each task's question, told once not to use the research commands and once to use them, and records what Claude Code reports: input, output, cache-read and cache-write tokens, tool calls by name, reads, turns, duration, cost and whether the answer has the expected facts. It checks that the repositories' HEAD, status and diff are the same before and after every run, and stops if a run changed them. Both modes time a cold and a warm `teammap index` and report the size of the index and of the stored results. Results from 2026-10-17 are in [docs/RESEARCH-TOOLS.md](docs/RESEARCH-TOOLS.md).
 
+## Settings (`/settings`)
+
+Everything you'd otherwise edit by hand, in one page (**Settings** in the top bar):
+
+- **Agents & models**: each agent's model (Default, Inherit, Opus, Sonnet, Haiku, Fable, or any model id), name, role, colour and duty; "Set every engineer to …" changes many at once. Saving writes `roster.json` (`"model"` per member) and the agent files: the model goes into each file's `model:` frontmatter line, and the PM's file gets a **Pinned models** section so it stops passing its own `model` for those agents. `init_team.py` keeps the models when it re-renders. Running sessions keep their model until they restart.
+- **Team**: team name and the PM command shown in the office.
+- **Office layout**: close any side-panel tab (or the whole panel), rooms (Claude sessions, Quality, Infrastructure, Contractors), the Brain and Architecture links, the token pills, assignment lines, the "needs you" banner and the PM hint; pick the first tab and the floor view. Each side-panel tab also has an **×** in the office; closed tabs come back from Settings.
+- **Time windows**: the office window and the Brain/task history, applied without a restart. `--hours` and `--brain-days` still override them for that run.
+
+Layout and windows are stored in `<team>/settings.json`. The page only accepts writes from the office itself (same host, JSON requests).
+
 ## Renaming agents
 
-Edit the `name` fields in `<workspace>/.claude/team/roster.json`, or in `src/aiset/roster.json` when using the bundled sample from a source checkout. The running office picks the change up within a couple of seconds and copies the names into `~/.claude/agents/*.md`, so the agents use their new names too. (You can also run `python src/aiset/sync_names.py` by hand.) Agent sessions that are already running keep the old names until they're restarted.
+Use **Settings**, or edit the `name` fields in `<workspace>/.claude/team/roster.json`, or in `src/aiset/roster.json` when using the bundled sample from a source checkout. The running office picks the change up within a couple of seconds and copies the names into `~/.claude/agents/*.md`, so the agents use their new names too. (You can also run `python src/aiset/sync_names.py` by hand.) Agent sessions that are already running keep the old names until they're restarted.
