@@ -12,6 +12,8 @@ pip install -e .          # adds the commands aiset, aiset-init and teammap
 
 Without installing, run the files directly: `python src/aiset/server.py`, `python src/aiset/teammap.py`, `python src/aiset/init_team.py`. Tests: `python -m unittest discover -s tests`.
 
+The `Makefile` wraps the usual commands (`make` lists them): `make test`, `make check`, `make install`, `make office WS=~/work/shop`, `make init WS=… TEAM=…`, `make index WS=…`, `make impact WS=… Q='/items/{item_id} GET'`, `make relevant WS=… Q="…"`, `make failures WS=… Q=<log>`, `make eval WS=…`, `make eval-agent WS=… RUNS=3` (spends tokens), `make clean`.
+
 Layout: the package is `src/aiset/` (code, `static/`, `templates/`, the sample `roster.json`, `teammap_ts.js`); `tests/` and `docs/` sit next to it.
 
 ## Use it on any project
