@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="480" viewBox="0 0 1200 480" role="img" aria-labelledby="title desc">
+<title id="title">aiset — A shared brain for your AI agents.</title>
+<desc id="desc">Persistent knowledge connects your agents to rules, decisions, code and lessons, ready for the next task.</desc>
+<defs>
+  <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#111329"/><stop offset="1" stop-color="#222044"/></linearGradient>
+  <linearGradient id="line"><stop stop-color="#8d79ef"/><stop offset="1" stop-color="#57c7ce"/></linearGradient>
+  <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#a9a1d9" opacity=".12"/></pattern>
+</defs>
+<rect width="1200" height="480" rx="24" fill="url(#bg)"/>
+<rect width="1200" height="480" rx="24" fill="url(#grid)"/>
+<path d="M0 464H1200" stroke="url(#line)" stroke-width="2" opacity=".6"/>
+<g font-family="Segoe UI,Arial,sans-serif">
+  <text x="64" y="76" fill="#e8e4ff" font-size="30" font-weight="700" letter-spacing="-1">aiset<tspan fill="#57c7ce">.</tspan></text>
+  <text x="64" y="138" fill="#a99ae9" font-size="12" font-weight="600" letter-spacing="3">SHARED MEMORY FOR CODING AGENTS</text>
+  <text x="60" y="205" fill="#f5f3ff" font-size="52" font-weight="700" letter-spacing="-2">A shared brain.</text>
+  <text x="60" y="267" fill="#f5f3ff" font-size="52" font-weight="700" letter-spacing="-2">A smarter next task.</text>
+  <text x="64" y="319" fill="#b9b5d0" font-size="18">Keep the knowledge. Share the context.</text>
+  <text x="64" y="347" fill="#b9b5d0" font-size="18">Spend less effort rediscovering your project.</text>
+  <rect x="64" y="393" width="9" height="9" rx="3" fill="#57c7ce"/>
+  <text x="84" y="402" fill="#d0cbe6" font-size="12" letter-spacing="1.5">LOCAL WORKSPACE · CLAUDE CODE · OPEN SOURCE</text>
+</g>
+<g fill="none" stroke="url(#line)" stroke-width="2">
+  <path d="M790 128C845 128 809 214 864 214"/><path d="M1050 128C995 128 1031 214 976 214"/>
+  <path d="M790 344C845 344 809 258 864 258"/><path d="M1050 344C995 344 1031 258 976 258"/>
+  <circle cx="920" cy="236" r="100" stroke="#9c8be4" stroke-dasharray="3 9" opacity=".25"/>
+</g>
+<g font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle">
+  <rect x="713" y="99" width="154" height="58" rx="13" fill="#24233f" stroke="#4e456f"/><text x="790" y="134" fill="#d9d0ff">Project rules</text>
+  <rect x="973" y="99" width="154" height="58" rx="13" fill="#24233f" stroke="#4e456f"/><text x="1050" y="134" fill="#d9d0ff">Decisions</text>
+  <rect x="713" y="315" width="154" height="58" rx="13" fill="#24233f" stroke="#4e456f"/><text x="790" y="350" fill="#d9d0ff">Code context</text>
+  <rect x="973" y="315" width="154" height="58" rx="13" fill="#24233f" stroke="#4e456f"/><text x="1050" y="350" fill="#d9d0ff">Lessons</text>
+  <rect x="850" y="191" width="140" height="90" rx="24" fill="#383064" stroke="#9780ea" stroke-width="2"/>
+  <circle cx="886" cy="224" r="5" fill="#57c7ce"/><circle cx="920" cy="215" r="5" fill="#b3a1ff"/><circle cx="954" cy="224" r="5" fill="#57c7ce"/>
+  <path d="M891 224L915 216M925 216L949 224" stroke="#b3a1ff" fill="none"/>
+  <text x="920" y="257" fill="#f5f3ff" font-size="17" font-weight="600">Shared brain</text>
+  <text x="920" y="418" fill="#8c85aa" font-size="12" letter-spacing="2">READY FOR THE NEXT TASK</text>
+</g>
+</svg>
