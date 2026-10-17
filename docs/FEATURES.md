@@ -82,6 +82,7 @@ Durum: 2026-10-15. Bu belge sistemde şu an neyin olduğunu ve neyin eksik oldu�
 | Tool whitelist'leri | ✅ | Her agent'ta `tools:` satırı; başlangıç bağlamı yaklaşık 31k yerine 5–8k. |
 | `teammap` kod haritası | ✅ | `endpoint`, `symbol`, `model`, `file`, `search`: "nerede, kim kullanıyor" sorusunu tek çağrıda cevaplar. Python `ast`, TypeScript repo'nun kendi derleyicisiyle. |
 | `teammap arch [repo]` | ✅ | Repo'nun stack'i, nasıl çalıştığı, kullandığı altyapı ve çağırdığı servisler, tek çağrıda. |
+| Araştırma araçları | ✅ | `teammap impact` (endpoint, fonksiyon veya model değişikliğinin etkisi), `teammap failures` (kaydedilmiş test çıktısından hata grupları), `teammap relevant` (göreve ilişkin dosya, sembol, brief bölümü ve episode). Kesin/çıkarım ayrımı, kapsam boşlukları, girdi parmak izine bağlı kayıtlar (`<team>/graph/research/`). Ayrıntı ve ölçümler: [RESEARCH-TOOLS.md](RESEARCH-TOOLS.md). |
 | `teammap code <isim>` | ✅ | Tek bir fonksiyonun yalnızca kendi kodu, satır numaralarıyla; sınıflarda başlık ve metot listesi. "Grep ile bul, sonra oku" iki turunu teke indirir. |
 | Okuma kuralları | ✅ | Ölçüme dayalı: birlikte gereken parçalar tek Bash çağrısında, düzenlenecek kısım `offset`/`limit` ile Read, asla bütün uzun dosya. DB sorgularında `LIMIT`, testlerde önce dar hedef. |
 | Atama boyutu | ✅ | 40–60 tool çağrısına sığan işler; daha büyüğü sıralı parçalara bölünür. |
@@ -94,7 +95,8 @@ Durum: 2026-10-15. Bu belge sistemde şu an neyin olduğunu ve neyin eksik oldu�
 | Salt okunur | ✅ | Claude Code'un zaten yazdığı transcript'leri okur; hiçbir şeye yazmaz (brief index'leri ve isim senkronu hariç). |
 | Windows desteği | ✅ | Yol normalizasyonu, `\` ve `/` ayırıcıları. |
 | Komutlar | ✅ | `pip install -e .` ile `aiset`, `aiset-init` ve `teammap` komutları gelir (`pyproject.toml`). Kurulumsuz da `python src/aiset/<modül>.py` çalışır. Kod 2026-10-17'de `src/aiset/` paketine taşındı (proje adı agent-office → aiset). |
-| Otomatik testler | ❌ | aiset'in kendisi için test yok; transcript ayrıştırma, task eşleştirme ve Bash çözümleme elle doğrulandı. |
+| Otomatik testler | 🟡 | `tests/`: task kimlikleri, import çözümü ve araştırma araçları (gerçek pytest/unittest/Node çıktılarıyla ayrıştırıcılar; küçük bir workspace üzerinde uçtan uca). Transcript ayrıştırma (`core.py`) için hâlâ test yok. |
+| Windows Git Bash argümanları | ✅ | Git Bash `/medicines` gibi argümanları `C:/Program Files/Git/medicines` yapıyor; `teammap` bunu geri çeviriyor (2026-10-17). |
 
 ## Eksikler ve öneriler
 

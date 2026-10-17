@@ -1,0 +1,89 @@
+FFF.FF                                                                   [100%]
+================================== FAILURES ===================================
+_______________________ BillingTest.test_missing_price ________________________
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 57, in testPartExecutor
+    yield
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 623, in run
+    self._callTestMethod(testMethod)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 579, in _callTestMethod
+    if method() is not None:
+       ^^^^^^^^
+  File "{ROOT}\app\tests\test_billing.py", line 13, in test_missing_price
+    total([{"qty": 1}])
+  File "{ROOT}\app\billing.py", line 2, in total
+    return sum(i["qty"] * i["price"] for i in items)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "{ROOT}\app\billing.py", line 2, in <genexpr>
+    return sum(i["qty"] * i["price"] for i in items)
+                          ~^^^^^^^^^
+KeyError: 'price'
+_________________________ BillingTest.test_parse_bad __________________________
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 57, in testPartExecutor
+    yield
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 623, in run
+    self._callTestMethod(testMethod)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 579, in _callTestMethod
+    if method() is not None:
+       ^^^^^^^^
+  File "{ROOT}\app\tests\test_billing.py", line 19, in test_parse_bad
+    parse_qty("four")
+  File "{ROOT}\app\billing.py", line 6, in parse_qty
+    return int(s)
+           ^^^^^^
+ValueError: invalid literal for int() with base 10: 'four'
+_________________________ BillingTest.test_parse_bad2 _________________________
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 57, in testPartExecutor
+    yield
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 623, in run
+    self._callTestMethod(testMethod)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 579, in _callTestMethod
+    if method() is not None:
+       ^^^^^^^^
+  File "{ROOT}\app\tests\test_billing.py", line 22, in test_parse_bad2
+    parse_qty("five")
+  File "{ROOT}\app\billing.py", line 6, in parse_qty
+    return int(s)
+           ^^^^^^
+ValueError: invalid literal for int() with base 10: 'five'
+_________________________ BillingTest.test_total_one __________________________
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 57, in testPartExecutor
+    yield
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 623, in run
+    self._callTestMethod(testMethod)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 579, in _callTestMethod
+    if method() is not None:
+       ^^^^^^^^
+  File "{ROOT}\app\tests\test_billing.py", line 7, in test_total_one
+    self.assertEqual(total([{"qty": 2, "price": 3}]), 7)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 873, in assertEqual
+    assertion_func(first, second, msg=msg)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 866, in _baseAssertEqual
+    raise self.failureException(msg)
+AssertionError: 6 != 7
+_________________________ BillingTest.test_total_two __________________________
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 57, in testPartExecutor
+    yield
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 623, in run
+    self._callTestMethod(testMethod)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 579, in _callTestMethod
+    if method() is not None:
+       ^^^^^^^^
+  File "{ROOT}\app\tests\test_billing.py", line 10, in test_total_two
+    self.assertEqual(total([{"qty": 1, "price": 5}]), 6)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 873, in assertEqual
+    assertion_func(first, second, msg=msg)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\unittest\case.py", line 866, in _baseAssertEqual
+    raise self.failureException(msg)
+AssertionError: 5 != 6
+=========================== short test summary info ===========================
+FAILED app/tests/test_billing.py::BillingTest::test_missing_price - KeyError:...
+FAILED app/tests/test_billing.py::BillingTest::test_parse_bad - ValueError: i...
+FAILED app/tests/test_billing.py::BillingTest::test_parse_bad2 - ValueError: ...
+FAILED app/tests/test_billing.py::BillingTest::test_total_one - AssertionErro...
+FAILED app/tests/test_billing.py::BillingTest::test_total_two - AssertionErro...
+5 failed, 1 passed in 0.01s

@@ -141,6 +141,43 @@ What each repository in the workspace is built with and what it connects to, rea
 
   Python is parsed with `ast`, TypeScript with frontend's own `typescript` package (`teammap_ts.js`). The cache in `~/.claude/team/graph/index/` refreshes changed files on every query, and each refresh writes the Brain graph (`~/.claude/team/graph/<repo>.json`): every indexed file with the imports between them (Python modules, relative and tsconfig-alias TypeScript imports), plus endpoints, models and API calls. On the Brain page all files are in the Repositories tree; on the map, files no agent has opened are under **Code files**, off by default. Frontend calls are matched to backend routes by resolved URL; "no backend match" usually means the route doesn't exist on the current branch.
 
+## Research tools (`teammap impact`, `failures`, `relevant`)
+
+Three questions agents keep answering from scratch, with greps and reads, now take one call each. They reuse the code index, the import graph, the briefs and the episodes, run on the current code every time, and are told to the agents in their files (engineer, tester, integration checker, PM).
+
+```sh
+teammap impact /medicines/{medicine_id} PATCH   # endpoint: handler, models, consumers, direct callers, tests, episodes
+teammap impact MedicineService                  # function/class: definitions, callers, importers, endpoints, tests
+teammap impact MedicineResponse                 # model: endpoints using it, subclasses, importers, frontend mirrors, tests
+teammap failures /tmp/pharma-core-test.log      # pytest, unittest, jest, vitest, node --test (TAP), JUnit XML
+teammap relevant "medicine batch stock adjustment"   # files, symbols, endpoints, models, brief sections, episodes
+teammap research show <id>                      # a stored result in full;  teammap research list
+```
+
+Options: `--json`, `--limit N` (rows per section; 8, or 5 for `relevant`), `--all`, `--max-chars N`, `--repo NAME`, `--fresh`, `--format F` (failures). A missing index, an unknown name or an unreadable test output gives a result that says so (exit code 1), not a guess.
+
+**What a result contains.** The research type and parameters; a short summary; findings by section, each with repo, file, line and symbol where there is one, why it was picked and whether it is **exact** (`=`: from the code's structure, such as a route decorator, a resolved import or a type annotation) or **inferred** (`~`: matched by name, by URL suffix, by a path literal or by words); **gaps** (what the index can't see for this question); the inputs' fingerprint, plus each repo's HEAD and number of uncommitted changes; the stored record's path and id; and which sections were cut. `--limit` and `--max-chars` cut the printed text only: the record keeps every row, and the cut is named with the way to see the rest (`--all`, `research show <id>`). Sizes are in characters; nothing claims to count tokens.
+
+**How each one works.**
+- `impact` resolves the query to an endpoint (a path part, with an optional method), a model or a function/class. For an endpoint, consumers are frontend HTTP calls whose resolved URL is the same (exact) or ends the same (inferred). Where a frontend builds URLs at runtime behind a client wrapper (`request('/medicines/')`), it finds the path literal with the same path shape and HTTP method (inferred) and then the code that calls that API-client property (`api.medicines.update()`, inferred). Tests are those that import the code (exact), mention its name or URL (inferred), or import a service whose function the handler calls (inferred).
+- `failures` reads a saved test output (a file or `-` for stdin) and lists each failed test with its error type, message and stack frames. Frames inside the indexed repos are mapped to the function around them; other project paths are shown as printed. Failures with the same error type, the same message (numbers and quoted values ignored) and the same innermost project frame are grouped. Each failure keeps its line range in the full log, which is copied to `<team>/graph/research/logs/`. The root cause is always reported as not determined: frames show where an error surfaced, not why. The output is only read; nothing in it is run.
+- `relevant` ranks the index, the briefs' sections and the episodes by the words they share with the query (camelCase and snake_case split, prefixes of five or more letters, rarer words weigh more) and says which words matched where. It has no embeddings and no model behind it, so it doesn't know synonyms or translate: describe the task in the code's language.
+
+**Validity and storage.** Every call refreshes the index for changed files (by mtime, so uncommitted edits count) and computes a fingerprint over the indexed files' mtimes, the briefs and episodes (impact, relevant) or the log's SHA-256 and the files its frames point into (failures), and the research and index code itself. A stored result is reused only when that fingerprint and the parameters match; otherwise it is recomputed and replaced. `research show` prints a stored result without re-checking it, and says so. Records live in `<team>/graph/research/` in the workspace; the tools never write to the repositories or to the package.
+
+**Limits.** Python and TypeScript only (other repos are listed as not covered, with `teammap arch impact` for service-level callers). Callers are matched by name, so same-named functions elsewhere show up and calls through dependency injection, `getattr` or callbacks may not. URLs assembled at runtime are found only through path literals. Test discovery is by imports, names and URLs, not by running tests or coverage. The parsers know the formats above; another reporter's output is reported as unrecognized.
+
+**Measuring it.** `eval/research_eval.py` compares the current way (the existing teammap queries, then grep and reads) with the research commands, on the same tasks and the same repository state:
+
+```sh
+python eval/research_eval.py ~/work/shop/.claude/team/eval/tasks.json --workspace ~/work/shop      # size mode
+python eval/research_eval.py ~/work/shop/.claude/team/eval/tasks.json --workspace ~/work/shop --mode agent --confirm-cost --runs 3
+```
+
+A task file belongs to one workspace (it names its files), so keep it in `<workspace>/.claude/team/eval/`. It has `repos` (checked for an unchanged state in agent mode) and `tasks`, each with an `id`, a `question` (agent mode), `expect` (strings the answer should contain) and `baseline` and `treatment` steps: `{"cmd": "teammap impact /x GET"}` (run in the workspace, or in a repo with `"cwd"`; no shell) or `{"read": "repo/path", "lines": [a, b]}` (stands for a Read call). Put only read-only commands in it: they run as written. `python eval/research_eval.py --help` has the details.
+
+Size mode runs each task's scripted steps (commands and reads) for both variants and records steps, reads, output characters, seconds and whether the expected facts appear. It compares output sizes, not tokens, and a scripted baseline is not an agent. Agent mode runs `claude -p` on each task's question, told once not to use the research commands and once to use them, and records what Claude Code reports: input, output, cache-read and cache-write tokens, tool calls by name, reads, turns, duration, cost and whether the answer has the expected facts. It checks that the repositories' HEAD, status and diff are the same before and after every run, and stops if a run changed them. Both modes time a cold and a warm `teammap index` and report the size of the index and of the stored results. Results from 2026-10-17 are in [docs/RESEARCH-TOOLS.md](docs/RESEARCH-TOOLS.md).
+
 ## Renaming agents
 
 Edit the `name` fields in `<workspace>/.claude/team/roster.json`, or in `src/aiset/roster.json` when using the bundled sample from a source checkout. The running office picks the change up within a couple of seconds and copies the names into `~/.claude/agents/*.md`, so the agents use their new names too. (You can also run `python src/aiset/sync_names.py` by hand.) Agent sessions that are already running keep the old names until they're restarted.

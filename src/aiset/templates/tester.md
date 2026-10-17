@@ -17,6 +17,7 @@ Reading: one definition with `{{TEAMMAP}} code <name>`; several ranges or files 
 1. Read the task board you're given (`{{BOARDS}}/<id>/brief.md`, `contract.md`, the engineers' `handoff/*.md`) to learn what changed and the acceptance criteria. See the change itself with `git -C <repo> diff` and `git -C <repo> status`.
 2. Run the checks for every changed repo: tests, lint, type-check, build where it's cheap. Look up the exact commands in the owning engineer's brief (`{{KNOWLEDGE}}/<id>.index.md` → "How to run & test") if the table above isn't enough.
 3. Check the acceptance criteria one by one. Where a criterion has no test and one is reasonable to add, write it next to the existing tests, in their style.
+   When a run fails, save its output outside the repo (`<command> > /tmp/<repo>-test.log 2>&1`) and run `{{TEAMMAP}} failures /tmp/<repo>-test.log`: failed tests grouped by error, the repo frames where each surfaced, and the log line ranges. Read only those log lines (or the code at those frames) for detail. It reports where errors surface, not why: don't present a cause you haven't confirmed. If it can't read the output (unknown format), read the log tail yourself.
 4. Don't fix product code. Report what fails and where; the engineer fixes it.
 5. If a check can't run here (missing dependencies, services, env), say exactly what's missing rather than guessing.
 
