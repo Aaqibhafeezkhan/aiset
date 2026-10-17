@@ -1,0 +1,41 @@
+FFF.FF                                                                   [100%]
+================================== FAILURES ===================================
+_______________________ BillingTest.test_missing_price ________________________
+app\tests\test_billing.py:13: in test_missing_price
+    total([{"qty": 1}])
+app\billing.py:2: in total
+    return sum(i["qty"] * i["price"] for i in items)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\billing.py:2: in <genexpr>
+    return sum(i["qty"] * i["price"] for i in items)
+                          ^^^^^^^^^^
+E   KeyError: 'price'
+_________________________ BillingTest.test_parse_bad __________________________
+app\tests\test_billing.py:19: in test_parse_bad
+    parse_qty("four")
+app\billing.py:6: in parse_qty
+    return int(s)
+           ^^^^^^
+E   ValueError: invalid literal for int() with base 10: 'four'
+_________________________ BillingTest.test_parse_bad2 _________________________
+app\tests\test_billing.py:22: in test_parse_bad2
+    parse_qty("five")
+app\billing.py:6: in parse_qty
+    return int(s)
+           ^^^^^^
+E   ValueError: invalid literal for int() with base 10: 'five'
+_________________________ BillingTest.test_total_one __________________________
+app\tests\test_billing.py:7: in test_total_one
+    self.assertEqual(total([{"qty": 2, "price": 3}]), 7)
+E   AssertionError: 6 != 7
+_________________________ BillingTest.test_total_two __________________________
+app\tests\test_billing.py:10: in test_total_two
+    self.assertEqual(total([{"qty": 1, "price": 5}]), 6)
+E   AssertionError: 5 != 6
+=========================== short test summary info ===========================
+FAILED app/tests/test_billing.py::BillingTest::test_missing_price - KeyError:...
+FAILED app/tests/test_billing.py::BillingTest::test_parse_bad - ValueError: i...
+FAILED app/tests/test_billing.py::BillingTest::test_parse_bad2 - ValueError: ...
+FAILED app/tests/test_billing.py::BillingTest::test_total_one - AssertionErro...
+FAILED app/tests/test_billing.py::BillingTest::test_total_two - AssertionErro...
+5 failed, 1 passed in 0.10s

@@ -17,6 +17,12 @@ Answers "where is X and who uses it" in one call, instead of a string of greps a
   teammap search <text>                  names that match (symbols, endpoints, models, types)
   teammap index [--force]                refresh the index and the Brain graph, print counts
 
+Research (one call instead of a string of greps and reads; exact vs inferred findings, gaps, a stored result id):
+  teammap impact <path-part|symbol|Model> [METHOD]  what a change can reach: consumers, models, importers, tests
+  teammap failures <test-output-file>    failed tests, messages, in-repo frames, repeated errors grouped
+  teammap relevant "<task text>"         files, symbols, endpoints, brief sections and episodes to read first
+  teammap research show <id>             a stored result in full     (teammap impact --help for all options)
+
 Options: --repo <name> limits a query to one repository; --limit N (default 5) caps the matches shown.
 
 The index lives in <team>/graph/index/ (see workspace.py) and refreshes itself on every query: only files whose
@@ -287,23 +293,31 @@ def tsconfig_aliases(root):
 TS_SUFFIXES = ("", ".ts", ".tsx", "/index.ts", "/index.tsx")
 
 
+def import_resolver(repo):
+    """f(rel, imp) -> the repo file one import of file rel points to, or None (a package, or not resolvable)."""
+    files = repo["files"]
+    mods, aliases = py_module_map(repo), tsconfig_aliases(repo["root"])
+
+    def target(rel, imp):
+        if files[rel]["lang"] == "py":
+            return resolve_import(mods, rel, imp)[0]
+        spec = imp.get("from") or ""
+        if spec.startswith("."):
+            base = posixpath.normpath(posixpath.join(posixpath.dirname(rel), spec))
+        else:
+            base = next((d + spec[len(a):] for a, d in aliases if spec.startswith(a)), None)
+        return base and next((base + s for s in TS_SUFFIXES if base + s in files), None)
+    return target
+
+
 def file_imports(repo):
     """(importer, imported) file pairs inside one repo; imports of packages are left out."""
-    files, out = repo["files"], set()
-    mods, aliases = py_module_map(repo), tsconfig_aliases(repo["root"])
-    for rel, e in files.items():
+    out, target = set(), import_resolver(repo)
+    for rel, e in repo["files"].items():
         for imp in e["data"].get("imports") or []:
-            if e["lang"] == "py":
-                target = resolve_import(mods, rel, imp)[0]
-            else:
-                spec = imp.get("from") or ""
-                if spec.startswith("."):
-                    base = posixpath.normpath(posixpath.join(posixpath.dirname(rel), spec))
-                else:
-                    base = next((d + spec[len(a):] for a, d in aliases if spec.startswith(a)), None)
-                target = base and next((base + s for s in TS_SUFFIXES if base + s in files), None)
-            if target and target != rel:
-                out.add((rel, target))
+            t = target(rel, imp)
+            if t and t != rel:
+                out.add((rel, t))
     return out
 
 
@@ -455,8 +469,10 @@ def all_symbols(repos):
                 yield repo["name"], rel, e["lang"], s
 
 
-def callers_of(repos, name, limit=12, obj=None):
-    """Where `name` is called. For TypeScript, obj (e.g. the client class) filters out same-named methods of other objects."""
+def call_sites(repos, name, obj=None):
+    """Where `name` is called, matched by name: [{repo, file, line, caller}]. Python gives the calling function's
+    first line; TypeScript the call's own line. For TypeScript, obj (e.g. the client class) filters out
+    same-named methods of other objects."""
     out = []
     for repo in repos:
         for rel, e in repo["files"].items():
@@ -464,7 +480,7 @@ def callers_of(repos, name, limit=12, obj=None):
             if e["lang"] == "py":
                 for s in d.get("symbols", []):
                     if name in s.get("calls", []) and s["name"] != name:
-                        out.append(f"{repo['name']}/{rel}:{s['line']} {s['qual']}()")
+                        out.append({"repo": repo["name"], "file": rel, "line": s["line"], "caller": s["qual"]})
             else:
                 seen = set()
                 for c in d.get("calls", []):
@@ -472,7 +488,13 @@ def callers_of(repos, name, limit=12, obj=None):
                         continue
                     if c["name"] == name and (c["in"], c["line"]) not in seen:
                         seen.add((c["in"], c["line"]))
-                        out.append(f"{repo['name']}/{rel}:{c['line']} {c['in'] or '(top level)'}")
+                        out.append({"repo": repo["name"], "file": rel, "line": c["line"], "caller": c["in"] or "(top level)"})
+    return out
+
+
+def callers_of(repos, name, limit=12, obj=None):
+    out = [f"{c['repo']}/{c['file']}:{c['line']} {c['caller']}" + ("()" if c["file"].endswith(".py") else "")
+           for c in call_sites(repos, name, obj)]
     return out[:limit], len(out)
 
 
@@ -615,31 +637,49 @@ def camel(s):
     return re.sub(r"_([a-z0-9])", lambda m: m.group(1).upper(), s)
 
 
-def cmd_model(repos, L, args, limit):
-    q = args[0]
-    names = [n for n in L["models"] if n == q] or [n for n in L["models"] if q.lower() in n.lower()]
-    if not names:
-        return print(f"no model matches {q!r}")
-    ts_types = [(r, f, t) for r in repos for f, e in r["files"].items() if e["lang"] == "ts" for t in e["data"].get("types", [])]
-    for n in names[:limit]:
-        for m in L["models"][n]:
-            print(f"model {n}   {m['repo']}/{m['file']}:{m['line']}   bases: {', '.join(m['bases'])}")
-            print(f"  fields    {fmt_fields(m['fields'], 30)}")
-            uses = [e for e in L["endpoints"] if n in model_names(e["response"], L["models"]) or any(n in model_names(p["type"], L["models"]) for p in e["params"])]
-            for e in uses[:6]:
-                role = "response" if n in model_names(e["response"], L["models"]) else "request"
-                print(f"  {role:9} {e['method']} {e['path']}")
-            # the frontend type that most likely mirrors it: same base name, then most shared fields
-            base = re.sub(r"(Schema|Response|Request|Model|Dto|DTO)$", "", n)
-            fset = {camel(x["name"]) for x in m["fields"]} | {x["name"] for x in m["fields"]}
-            scored = []
-            for r, f, t in ts_types:
+def model_uses(L, n):
+    """[("request"|"response", endpoint)] for the endpoints whose annotations name model n."""
+    out = []
+    for e in L["endpoints"]:
+        if n in model_names(e["response"], L["models"]):
+            out.append(("response", e))
+        elif any(n in model_names(p["type"], L["models"]) for p in e["params"]):
+            out.append(("request", e))
+    return out
+
+
+def mirror_types(repos, n, m):
+    """Frontend types that most likely mirror model n (definition m): same base name, then most shared fields.
+    [(same name, shared fields, repo, file, type)], best first."""
+    base = re.sub(r"(Schema|Response|Request|Model|Dto|DTO)$", "", n)
+    fset = {camel(x["name"]) for x in m["fields"]} | {x["name"] for x in m["fields"]}
+    scored = []
+    for r in repos:
+        for f, e in r["files"].items():
+            if e["lang"] != "ts":
+                continue
+            for t in e["data"].get("types", []):
                 tb = re.sub(r"^I(?=[A-Z])", "", t["name"])
                 tb = re.sub(r"(Response|Request|Model|Dto|DTO|Raw)$", "", tb)
                 shared = len(fset & {x["name"] for x in t["members"]})
                 if tb.lower() == base.lower() or (shared >= 3 and shared >= len(t["members"]) * .5):
                     scored.append((tb.lower() == base.lower(), shared, r, f, t))
-            scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    return scored
+
+
+def cmd_model(repos, L, args, limit):
+    q = args[0]
+    names = [n for n in L["models"] if n == q] or [n for n in L["models"] if q.lower() in n.lower()]
+    if not names:
+        return print(f"no model matches {q!r}")
+    for n in names[:limit]:
+        for m in L["models"][n]:
+            print(f"model {n}   {m['repo']}/{m['file']}:{m['line']}   bases: {', '.join(m['bases'])}")
+            print(f"  fields    {fmt_fields(m['fields'], 30)}")
+            for role, e in model_uses(L, n)[:6]:
+                print(f"  {role:9} {e['method']} {e['path']}")
+            scored = mirror_types(repos, n, m)
             for same, shared, r, f, t in scored[:2]:
                 tnames = {x["name"] for x in t["members"]}
                 missing = [x["name"] for x in m["fields"] if x["name"] not in tnames and camel(x["name"]) not in tnames]
@@ -769,8 +809,32 @@ def export(repos, L):
 
 # -- main -------------------------------------------------------------------------------------
 
+def _msys_root():
+    """Git for Windows' install folder (the "/" of Git Bash): the first folder above git.exe with usr/ and etc/."""
+    import shutil
+    git = shutil.which("git")
+    d = os.path.dirname(os.path.realpath(git)) if git else ""
+    while d and os.path.dirname(d) != d:
+        if os.path.isdir(os.path.join(d, "usr")) and os.path.isdir(os.path.join(d, "etc")):
+            return d.replace("\\", "/").rstrip("/")
+        d = os.path.dirname(d)
+    return None
+
+
+def msys_unmangle(arg):
+    """Git Bash on Windows rewrites an argument like /products into C:/Program Files/Git/products; undo that."""
+    if os.name != "nt" or not os.environ.get("MSYSTEM") or not re.match(r"^[A-Za-z]:[\\/]", arg):
+        return arg
+    root = _msys_root()
+    a = arg.replace("\\", "/")
+    if root and a.lower().startswith(root.lower() + "/") and not os.path.exists(arg):
+        return a[len(root):]
+    return arg
+
+
 def main(argv):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # Windows consoles default to cp1252
+    argv = [msys_unmangle(a) for a in argv]
     limit, only, force, args, max_lines = None, None, False, [], 150
     it = iter(argv)
     for a in it:
@@ -790,6 +854,9 @@ def main(argv):
     if args[0] == "arch":  # static scan of the whole workspace, no index needed
         from . import archmap
         return archmap.main(argv[argv.index("arch") + 1:])
+    if args[0] in ("impact", "failures", "relevant", "research"):  # reusable research with stored, validated results
+        from . import research
+        return research.main(argv[argv.index(args[0]):])
     cmd, rest = args[0], args[1:]
     names = [only] if only else [r for r in REPOS if os.path.isdir(os.path.join(CODE_ROOT, r))]
     repos = [load_repo(n, force) for n in names]

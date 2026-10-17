@@ -1,0 +1,66 @@
+TAP version 13
+# Subtest: adds small
+not ok 1 - adds small
+  ---
+  duration_ms: 1.4325
+  location: '{ROOT_ESCAPED}\\js\\calc.test.js:4:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    2 !== 3
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 3
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> ({ROOT}\js\calc.test.js:4:35)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:789:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:517:18)
+    node:internal/test_runner/harness:247:12
+    node:internal/process/task_queues:140:7
+    AsyncResource.runInAsyncScope (node:async_hooks:206:9)
+    AsyncResource.runMicrotask (node:internal/process/task_queues:137:8)
+  ...
+# Subtest: adds big
+not ok 2 - adds big
+  ---
+  duration_ms: 0.1202
+  location: '{ROOT_ESCAPED}\\js\\calc.test.js:5:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    20 !== 21
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 21
+  actual: 20
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> ({ROOT}\js\calc.test.js:5:33)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:789:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:517:18)
+    Test.postRun (node:internal/test_runner/test:885:19)
+    Test.run (node:internal/test_runner/test:831:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:517:7)
+  ...
+# Subtest: adds zero
+ok 3 - adds zero
+  ---
+  duration_ms: 0.0978
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 1
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 55.0091

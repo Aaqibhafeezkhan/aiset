@@ -1,0 +1,91 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-8.4.1, pluggy-1.6.0
+rootdir: {ROOT}
+plugins: anyio-4.6.2.post1
+collected 6 items
+
+app\tests\test_billing.py FFF.FF                                         [100%]
+
+================================== FAILURES ===================================
+_______________________ BillingTest.test_missing_price ________________________
+
+self = <app.tests.test_billing.BillingTest testMethod=test_missing_price>
+
+    def test_missing_price(self):
+>       total([{"qty": 1}])
+
+app\tests\test_billing.py:13: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\billing.py:2: in total
+    return sum(i["qty"] * i["price"] for i in items)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <list_iterator object at 0x0000017A2CA72E60>
+
+>   return sum(i["qty"] * i["price"] for i in items)
+                          ^^^^^^^^^^
+E   KeyError: 'price'
+
+app\billing.py:2: KeyError
+_________________________ BillingTest.test_parse_bad __________________________
+
+self = <app.tests.test_billing.BillingTest testMethod=test_parse_bad>
+
+    def test_parse_bad(self):
+>       parse_qty("four")
+
+app\tests\test_billing.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+s = 'four'
+
+    def parse_qty(s):
+>       return int(s)
+               ^^^^^^
+E       ValueError: invalid literal for int() with base 10: 'four'
+
+app\billing.py:6: ValueError
+_________________________ BillingTest.test_parse_bad2 _________________________
+
+self = <app.tests.test_billing.BillingTest testMethod=test_parse_bad2>
+
+    def test_parse_bad2(self):
+>       parse_qty("five")
+
+app\tests\test_billing.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+s = 'five'
+
+    def parse_qty(s):
+>       return int(s)
+               ^^^^^^
+E       ValueError: invalid literal for int() with base 10: 'five'
+
+app\billing.py:6: ValueError
+_________________________ BillingTest.test_total_one __________________________
+
+self = <app.tests.test_billing.BillingTest testMethod=test_total_one>
+
+    def test_total_one(self):
+>       self.assertEqual(total([{"qty": 2, "price": 3}]), 7)
+E       AssertionError: 6 != 7
+
+app\tests\test_billing.py:7: AssertionError
+_________________________ BillingTest.test_total_two __________________________
+
+self = <app.tests.test_billing.BillingTest testMethod=test_total_two>
+
+    def test_total_two(self):
+>       self.assertEqual(total([{"qty": 1, "price": 5}]), 6)
+E       AssertionError: 5 != 6
+
+app\tests\test_billing.py:10: AssertionError
+=========================== short test summary info ===========================
+FAILED app/tests/test_billing.py::BillingTest::test_missing_price - KeyError:...
+FAILED app/tests/test_billing.py::BillingTest::test_parse_bad - ValueError: i...
+FAILED app/tests/test_billing.py::BillingTest::test_parse_bad2 - ValueError: ...
+FAILED app/tests/test_billing.py::BillingTest::test_total_one - AssertionErro...
+FAILED app/tests/test_billing.py::BillingTest::test_total_two - AssertionErro...
+========================= 5 failed, 1 passed in 0.06s =========================

@@ -1,0 +1,43 @@
+ FAIL  src/cart.test.ts
+  cart
+    ✕ totals two items (4 ms)
+    ✓ empty cart (1 ms)
+    ✕ applies discount (2 ms)
+
+  ● Console
+
+    console.log
+      debug
+
+      at Object.<anonymous> (src/cart.test.ts:2:9)
+
+  ● cart › totals two items
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 7
+    Received: 6
+
+      4 | describe('cart', () => {
+      5 |   it('totals two items', () => {
+    > 6 |     expect(total([{ qty: 2, price: 3 }])).toBe(7);
+        |                                           ^
+      7 |   });
+
+      at Object.<anonymous> (src/cart.test.ts:6:43)
+
+  ● cart › applies discount
+
+    TypeError: Cannot read properties of undefined (reading 'rate')
+
+      10 | export function discount(c, d) {
+    > 11 |   return c * d.rate;
+         |                ^
+
+      at discount (src/cart.ts:11:16)
+      at Object.<anonymous> (src/cart.test.ts:12:12)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 1 passed, 3 total
+Snapshots:   0 total
+Time:        1.2 s

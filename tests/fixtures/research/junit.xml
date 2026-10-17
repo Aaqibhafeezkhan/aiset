@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="6" time="0.061" timestamp="2026-10-17T05:56:32.680009+03:00" hostname="Timur"><testcase classname="app.tests.test_billing.BillingTest" name="test_missing_price" time="0.001"><failure message="KeyError: 'price'">self = &lt;app.tests.test_billing.BillingTest testMethod=test_missing_price&gt;
+
+    def test_missing_price(self):
+&gt;       total([{"qty": 1}])
+
+app\tests\test_billing.py:13: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\billing.py:2: in total
+    return sum(i["qty"] * i["price"] for i in items)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = &lt;list_iterator object at 0x000001BD34EB39D0&gt;
+
+&gt;   return sum(i["qty"] * i["price"] for i in items)
+                          ^^^^^^^^^^
+E   KeyError: 'price'
+
+app\billing.py:2: KeyError</failure></testcase><testcase classname="app.tests.test_billing.BillingTest" name="test_parse_bad" time="0.000"><failure message="ValueError: invalid literal for int() with base 10: 'four'">self = &lt;app.tests.test_billing.BillingTest testMethod=test_parse_bad&gt;
+
+    def test_parse_bad(self):
+&gt;       parse_qty("four")
+
+app\tests\test_billing.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+s = 'four'
+
+    def parse_qty(s):
+&gt;       return int(s)
+               ^^^^^^
+E       ValueError: invalid literal for int() with base 10: 'four'
+
+app\billing.py:6: ValueError</failure></testcase><testcase classname="app.tests.test_billing.BillingTest" name="test_parse_bad2" time="0.000"><failure message="ValueError: invalid literal for int() with base 10: 'five'">self = &lt;app.tests.test_billing.BillingTest testMethod=test_parse_bad2&gt;
+
+    def test_parse_bad2(self):
+&gt;       parse_qty("five")
+
+app\tests\test_billing.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+s = 'five'
+
+    def parse_qty(s):
+&gt;       return int(s)
+               ^^^^^^
+E       ValueError: invalid literal for int() with base 10: 'five'
+
+app\billing.py:6: ValueError</failure></testcase><testcase classname="app.tests.test_billing.BillingTest" name="test_parse_qty" time="0.000" /><testcase classname="app.tests.test_billing.BillingTest" name="test_total_one" time="0.000"><failure message="AssertionError: 6 != 7">self = &lt;app.tests.test_billing.BillingTest testMethod=test_total_one&gt;
+
+    def test_total_one(self):
+&gt;       self.assertEqual(total([{"qty": 2, "price": 3}]), 7)
+E       AssertionError: 6 != 7
+
+app\tests\test_billing.py:7: AssertionError</failure></testcase><testcase classname="app.tests.test_billing.BillingTest" name="test_total_two" time="0.000"><failure message="AssertionError: 5 != 6">self = &lt;app.tests.test_billing.BillingTest testMethod=test_total_two&gt;
+
+    def test_total_two(self):
+&gt;       self.assertEqual(total([{"qty": 1, "price": 5}]), 6)
+E       AssertionError: 5 != 6
+
+app\tests\test_billing.py:10: AssertionError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,37 @@
+ ❯ src/cart.test.ts  (3 tests | 2 failed) 5ms
+   ❯ cart > totals two items
+     → expected 6 to be 7 // Object.is equality
+   ❯ cart > applies discount
+     → Cannot read properties of undefined (reading 'rate')
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/cart.test.ts > cart > totals two items
+AssertionError: expected 6 to be 7 // Object.is equality
+
+- Expected
++ Received
+
+- 7
++ 6
+
+ ❯ src/cart.test.ts:6:43
+      4| describe('cart', () => {
+      5|   it('totals two items', () => {
+      6|     expect(total([{ qty: 2, price: 3 }])).toBe(7);
+       |                                           ^
+      7|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/cart.test.ts > cart > applies discount
+TypeError: Cannot read properties of undefined (reading 'rate')
+ ❯ discount src/cart.ts:11:16
+ ❯ src/cart.test.ts:12:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  10:12:01
+   Duration  412ms

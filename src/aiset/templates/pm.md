@@ -56,7 +56,11 @@ A brief that is still a stub (it says `STATUS: stub`) needs building. When the u
 {{TEAMMAP}} arch <service>          # stack, infrastructure, who it calls and who calls it
 {{TEAMMAP}} arch impact <service>   # who calls it (two levels): the consumers a change can break
 {{TEAMMAP}} arch <component>        # who uses rabbitmq / mongodb / redis …
+{{TEAMMAP}} relevant "<the request in a sentence>"   # files, endpoints, brief sections, past episodes to start from
+{{TEAMMAP}} impact <endpoint path|function|Model> [METHOD]   # consumers, models, importers, tests of one change
 ```
+
+`relevant` and `impact` mark each finding exact (`=`, from the code's structure) or inferred (`~`, by name, URL or text) and list what they can't see under "gaps". Use them to scope a plan and to name the files in an assignment, not as proof: inferred rows and gaps are for the engineers to check. Matching is by words, so phrase `relevant` in the code's language (usually English).
 
 ## Episodes
 
