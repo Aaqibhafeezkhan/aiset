@@ -1,0 +1,69 @@
+# Contributing to Aiset
+
+Thanks for helping. Bug reports, ideas, docs fixes and code are all welcome.
+
+## Ways to contribute
+
+- **Report a bug** or **suggest a feature** with the [issue templates](https://github.com/JamshidS/aiset/issues/new/choose).
+- **Ask a question** or share how you use Aiset in [Discussions](https://github.com/JamshidS/aiset/discussions).
+- **Improve the docs** in `README.md` and `docs/`.
+- **Send a pull request** for an open issue. For anything larger than a small fix, open an issue first so we can agree on the approach before you spend time on it.
+
+Security problems go through [SECURITY.md](SECURITY.md), not public issues.
+
+## Development setup
+
+You need Python 3.9+ and Git. Node.js is only needed if you work on TypeScript indexing.
+
+```sh
+git clone https://github.com/JamshidS/aiset.git
+cd aiset
+python -m pip install -e .
+```
+
+With Make available, `make` lists every shortcut. The ones you'll use most:
+
+```sh
+make check            # compile everything, then run the tests
+make test             # tests only
+make office WS=...    # run the dashboard against a workspace
+make typescript       # install TypeScript for teammap's TS indexer
+```
+
+Without Make: `python -m unittest discover -s tests`.
+
+### Project layout
+
+| Path | What lives there |
+|---|---|
+| `src/aiset/` | the package: dashboard server, `aiset-init`, `teammap`, Brain and architecture maps |
+| `src/aiset/static/`, `templates/` | dashboard front end and agent templates |
+| `tests/` | `unittest` tests and fixtures |
+| `eval/` | research-tool evaluation scripts (`make eval-agent` spends model tokens) |
+| `docs/` | user guide, feature inventory, research results |
+
+## Guidelines
+
+- **No new runtime dependencies.** The package uses only the Python standard library. If you think a dependency is worth it, raise it in an issue first.
+- **Stay compatible with Python 3.9.** Avoid `match`, `X | Y` type unions at runtime, and other 3.10+ features.
+- **Keep the dashboard local.** It binds to `127.0.0.1` and validates `Host`/`Origin`. Don't weaken that.
+- **Match the surrounding code**: naming, comment density and structure.
+- **Add or update tests** for behaviour changes, and make sure `make check` passes.
+- **Update the docs** (`README.md`, `docs/USER-GUIDE.md`, `docs/FEATURES.md`) when you change user-facing behaviour.
+- **Be honest about measurements.** Claims about token or cost savings in docs need evidence from `eval/`.
+
+## Commits and pull requests
+
+1. Branch from `master` (for example `fix/brain-graph-empty-workspace`).
+2. Use [Conventional Commit](https://www.conventionalcommits.org/) prefixes: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`.
+3. Keep each PR focused on one change. Fill in the pull request template.
+4. Link the issue it closes (`Closes #12`).
+5. A maintainer will review. Expect questions; they are about the code, not about you.
+
+## Code of conduct
+
+Be respectful and constructive. Harassment or personal attacks are not tolerated, and maintainers may remove comments, issues or contributors that cross that line.
+
+## License
+
+By contributing, you agree that your contributions are licensed under the [MIT License](LICENSE).
