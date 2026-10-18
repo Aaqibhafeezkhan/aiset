@@ -1,262 +1,269 @@
-<p align="center">
-  <img src="src/aiset/static/aiset-icon.png" alt="aiset shared brain logo" width="64" height="64">
-</p>
+<div align="center">
 
-<p align="center"><strong>aiset</strong> &nbsp; / &nbsp; The shared brain for your AI coding team</p>
+<img src="src/aiset/static/aiset-icon.png" alt="aiset logo" width="72" height="72">
 
-<p align="center">
-  <a href="#quick-start"><strong>Get started →</strong></a> &nbsp; · &nbsp;
-  <a href="docs/USER-GUIDE.md">Explore the guide</a> &nbsp; · &nbsp;
-  <a href="docs/RESEARCH-TOOLS.md">Read the research</a>
-</p>
+# aiset
 
-<p align="center">
-  <img src="docs/branding/readme-hero.svg" alt="A shared brain. A smarter next task. Aiset connects project rules, decisions, code context and lessons in a shared memory." width="1200">
-</p>
+### The shared brain for your AI coding team
 
-<p align="center">
-  <strong>Persistent memory</strong> &nbsp; / &nbsp; <strong>Focused context</strong> &nbsp; / &nbsp; <strong>Visible teamwork</strong>
-  <br>
-  <sub>Built for Claude Code · Python 3.9+ · MIT licensed</sub>
-</p>
+Turn your repositories into a team of Claude Code agents that remember what they learn,<br>
+work in parallel, and show you every step, live.
 
 <br>
 
-## Your team learns. The next task benefits.
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-3776AB?style=flat-square&logo=python&logoColor=white)](pyproject.toml)
+[![Zero dependencies](https://img.shields.io/badge/dependencies-zero-22c55e?style=flat-square)](pyproject.toml)
+[![Built for Claude Code](https://img.shields.io/badge/built%20for-Claude%20Code-D97757?style=flat-square)](https://claude.com/claude-code)
+[![Windows · macOS · Linux](https://img.shields.io/badge/platform-Windows%20·%20macOS%20·%20Linux-6b7280?style=flat-square)](docs/USER-GUIDE.md)
+[![MIT License](https://img.shields.io/badge/license-MIT-8b5cf6?style=flat-square)](LICENSE)
 
-**Aiset gives coding agents a shared, persistent brain for your project.** Save conventions, capture decisions, and carry useful lessons into future sessions. A live office shows how the team uses that knowledge—and where its tokens go.
-
-<table>
-<tr>
-<td width="33%" valign="top">
-
-### 01 · Remember
-
-Keep project conventions, decisions, and lessons in **workspace memory** that survives a chat restart.
-
-</td>
-<td width="33%" valign="top">
-
-### 02 · Retrieve
-
-Find **the context a task needs**: brief sections, relevant code, and earlier episodes—with sources.
-
-</td>
-<td width="33%" valign="top">
-
-### 03 · Reuse
-
-Build on previous discoveries and shared task boards. **Reduce repeated investigation** across the team.
-
-</td>
-</tr>
-</table>
-
-## From one conversation to shared knowledge
-
-<table>
-<tr><th align="left">You set a convention</th><th align="left">The team records it</th><th align="left">A later task retrieves it</th></tr>
-<tr>
-<td width="33%" valign="top">“Use cursor-based pagination for new list endpoints. Save this in the backend brief.”</td>
-<td width="33%" valign="top">The engineer adds it to <strong>Field notes</strong>; the task contract captures the agreement.</td>
-<td width="33%" valign="top">The next engineer reads the brief and uses the saved convention as context.</td>
-</tr>
-</table>
-
-> **Memory is a workflow, not a promise of perfect recall.** Important information must be saved and retrieved. Aiset's agent instructions guide that process; not every chat message is automatically stored as a rule. Review recorded knowledge and refresh it as the project changes.
-
-<details>
-<summary><strong>Inside the brain: what is remembered, and where?</strong></summary>
-
-| Memory | Stored as | Used for |
-|---|---|---|
-| Conventions and pitfalls | Knowledge briefs + dated Field notes | Giving the next task a useful starting point |
-| Roles and working rules | Agent instruction files | Guiding the selected agent in a new session |
-| Requirements and agreements | Task briefs, contracts, handoffs, logs | Keeping agents aligned on active work |
-| Decisions and lessons | Episodes written when tasks close | Finding earlier solutions and their reasoning |
-| Code relationships | Graphs, indexes, research records | Retrieving evidence without reading the whole repo |
-
-Engineers are instructed to read their brief index, relevant sections, and Field notes. When a task closes, the PM writes an episode and carries reusable lessons into the owning engineer's brief.
-
-</details>
+**[Quick start](#quick-start)** &nbsp;·&nbsp; **[Tour](#a-real-run-start-to-finish)** &nbsp;·&nbsp; **[Commands](#commands)** &nbsp;·&nbsp; **[User guide](docs/USER-GUIDE.md)** &nbsp;·&nbsp; **[Research](docs/RESEARCH-TOOLS.md)**
 
 <br>
 
-## See the work. Follow the knowledge.
+<img src="docs/media/office.gif" alt="The aiset Office: a PM and six engineer agents working on a real project, with live status, assignments, models and token costs" width="100%">
 
-<table>
-<tr>
-<td width="50%" valign="top">
+<sub>The Office, live: the PM waits on two engineers fixing bugs in parallel. Real recording, sped up 1.5×.</sub>
 
-### Office
+</div>
 
-Your team's live workspace. Follow assignments, task boards, agent activity, models, tokens, and estimated costs.
+<br>
 
-</td>
-<td width="50%" valign="top">
-
-### Brain
-
-Explore the connections between agents, briefs, episodes, and code. Follow an agent's path through the project.
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### Architecture
-
-See how services and infrastructure connect. Inspect source evidence and distinguish exact links from inferred ones.
-
-</td>
-<td width="50%" valign="top">
-
-### Settings
-
-Shape the team: names, roles, models, layout, and history windows, all in one place.
-
-</td>
-</tr>
-</table>
-
-## Watch a real run
-
-These recordings are from **Beanboard**, a small demo app: three FastAPI services (catalog on PostgreSQL, reviews on MongoDB, and an insights service that calls both) and a React UI, run with Docker Compose. `aiset-init` turned it into a team of seven agents. Nothing below is staged.
-
-**1 · You talk to the PM.** Ask for a feature in plain words. The PM clarifies scope before anyone writes code.
-
-<p align="center"><img src="docs/media/ask-pm.gif" alt="The PM asks which sort options the review list should have before planning a new feature" width="900"></p>
-
-**2 · The team works in the Office.** The PM assigns tasks, engineers pick them up in parallel, and every agent shows its assignment, status, model and token use.
-
-<p align="center"><img src="docs/media/office.gif" alt="The Office: the PM waits for two backend engineers who are fixing bugs in parallel, with Kaan's assignment open" width="900"></p>
-
-**3 · The Brain shows what they read and change.** Live trails link each agent to the briefs, files and services it touches.
-
-<p align="center"><img src="docs/media/brain.gif" alt="The Brain: live trails from each agent to the files and briefs it is reading and writing" width="900"></p>
-
-**4 · The PM reports back.** Findings are ranked with file references and proposed fixes. The full reports stay in the workspace for the next task.
-
-<p align="center"><img src="docs/media/pm-report.png" alt="The PM's ranked findings table with severity, cause, proposed fix and effort, then next steps" width="900"></p>
-
-**5 · The knowledge stays.** After two tasks, the Brain links seven agents to 4 repositories, 5 briefs with 56 sections, 2 episodes, and the code's 13 endpoints, 8 models and 10 frontend API calls. The next task starts from that context.
-
-<p align="center"><img src="docs/media/brain-map.png" alt="The Brain after two tasks: agents, briefs, episodes, endpoints, models and API calls connected in one graph" width="900"></p>
-
-**6 · The architecture is read from the code.** Aiset finds the UI calling all three services, catalog on PostgreSQL, reviews on MongoDB, and insights calling the other two (dashed: inferred from names). Each link has the file and line as evidence.
-
-<p align="center"><img src="docs/media/architecture.png" alt="The Architecture view: the React UI calls three FastAPI services, catalog uses PostgreSQL, reviews uses MongoDB, and insights calls catalog and reviews" width="900"></p>
-
-## Spend context where it matters
-
-**Read sections, not entire briefs.** Share task context instead of repeatedly relaying it. Query code relationships and saved lessons before starting another investigation.
-
-Aiset combines brief indexes, shared boards, source-linked code queries, and focused research output to target unnecessary reading and repeated work.
-
-[See the measurements →](docs/RESEARCH-TOOLS.md) Current results include output-size comparisons, **not proven token savings**. Actual usage depends on the task and how agents use the tools.
-
----
 ## Quick start
 
-**Requirements:** Python 3.9+, Git, and Claude Code for agent sessions. The Python package has no third-party runtime dependencies. TypeScript indexing additionally needs Node.js and an accessible TypeScript installation.
-
-From a clone of this repository:
-
 ```sh
-python -m pip install -e .
+pip install -e .                                   # from a clone: adds aiset, aiset-init, teammap
+aiset-init ~/work/shop --team shop                 # scan the repos, generate the team
+shop-pm                                            # talk to your PM, from any folder
 ```
 
-Create a team for your project folder:
+Then open the office in a second terminal with `aiset` and visit **http://127.0.0.1:8765**.
 
-```sh
-aiset-init ~/work/example-project --team example-project
-```
+Give the PM its first task:
 
-Start the PM. `aiset-init` adds a `<team>-pm` command that works from any folder:
+> *"Build the knowledge briefs. Document the architecture, conventions, test commands and known pitfalls for each repository."*
 
-```sh
-example-project-pm        # same as: cd ~/work/example-project && claude --agent pm
-```
+<sub>Needs Python 3.9+, Git and [Claude Code](https://claude.com/claude-code). TypeScript indexing also uses Node.js. Works with a folder of repositories or a monorepo.</sub>
 
-For the first task, ask:
+<br>
 
-> “Build the knowledge briefs. Document the architecture, conventions, test commands, and known pitfalls for each repository.”
+## Why aiset
 
-In another terminal, open the office:
+Coding agents start every session from zero. They re-read the same files, rediscover the same conventions and repeat the same investigations, and you can't see what they're doing until they're done.
 
-```sh
-aiset --workspace example-project     # a team name or a folder; plain `aiset` shows the newest team
-```
+<table>
+<tr>
+<td width="33%" valign="top">
 
-Visit **http://127.0.0.1:8765**. Use **Brain** to explore the team's knowledge and **Settings** to personalize the team.
+#### Remember
 
-Both folders of repositories and monorepos are supported. Team generation detects repository stacks and can group large workspaces by stack. The bundled sample roster is for exploration; `aiset-init` creates the actual agent files for your project.
+Conventions, decisions and lessons live in **workspace memory**: knowledge briefs, field notes and task episodes that survive a restart and are plain files you can read and edit.
+
+</td>
+<td width="33%" valign="top">
+
+#### Coordinate
+
+`aiset-init` generates a **PM, one engineer per repo or stack, QA and an integration checker**. The PM plans, assigns, and verifies work before reporting back.
+
+</td>
+<td width="33%" valign="top">
+
+#### See
+
+A local dashboard shows **who is doing what, what they read, what it costs**, and how your services connect, read straight from the code.
+
+</td>
+</tr>
+</table>
+
+<br>
+
+## A real run, start to finish
+
+Every frame below comes from **Beanboard**, a small demo app: three FastAPI services (catalog on PostgreSQL, reviews on MongoDB, insights calling both) and a React UI on Docker Compose. One `aiset-init` turned it into a team of seven. Nothing is staged.
+
+### 1 &nbsp;Ask in plain words
+
+You describe a feature. The PM pins down scope before anyone writes code.
+
+<img src="docs/media/ask-pm.gif" alt="The PM asks which sort options the review list should have before planning the feature" width="100%">
+
+### 2 &nbsp;The team works in parallel
+
+The PM writes a task board and hands each engineer an assignment with the contract to follow. You watch status, model and cost per task, then open a task to see every file each agent read and edited.
+
+<img src="docs/media/office-board.gif" alt="The Office task board: two engineers on Sonnet analysing bugs in parallel, then the task detail listing every file read and edited per repository" width="100%">
+
+### 3 &nbsp;Follow every read and edit
+
+The **Brain** draws live trails from each agent to the briefs, files and services it touches.
+
+<img src="docs/media/brain.gif" alt="The Brain: live trails from each agent to the files and briefs it is reading and writing" width="100%">
+
+### 4 &nbsp;Get a verified report
+
+Findings come back ranked, with file and line references, proposed fixes and effort. The full handoffs stay in the workspace.
+
+<img src="docs/media/pm-report.png" alt="The PM's ranked findings table with severity, cause, proposed fix and effort" width="100%">
+
+### 5 &nbsp;The knowledge compounds
+
+After two tasks the Brain connects 7 agents, 4 repositories, 5 briefs with 56 sections and 2 episodes to the code's 13 endpoints, 8 models and 10 frontend API calls. The next task starts there, not from zero.
+
+<img src="docs/media/brain-map.png" alt="The Brain after two tasks: agents, briefs, episodes, endpoints, models and API calls in one graph" width="100%">
+
+### 6 &nbsp;Architecture, read from the code
+
+Services, databases and the calls between them, each backed by a file and line. Solid links are exact; dashed links are inferred from names.
+
+<img src="docs/media/architecture.png" alt="The Architecture view: a React UI calling three FastAPI services backed by PostgreSQL and MongoDB" width="100%">
+
+<br>
+
+## What's inside
+
+| | |
+|---|---|
+| **Office** | Live isometric or classic view of the team: assignments, task boards, activity feed, models, tokens and estimated cost per agent. |
+| **Brain** | One graph of agents, briefs, sections, episodes, files, endpoints, models and API calls. Follow an agent, search anything, focus on a node. |
+| **Architecture** | Static map of frontends, APIs, workers and infrastructure (PostgreSQL, MongoDB, Redis, RabbitMQ, Kafka, Keycloak and more), with evidence for every link. Exports Mermaid. |
+| **Settings** | Names, roles, colours, duties and the **model per agent**: put routine work on Sonnet or Haiku, keep Opus where it matters. |
+| **teammap** | Code-aware research for agents and people: endpoint → handler → frontend callers, change impact, relevant context for a task, test-failure triage. |
+| **Launchers** | `aiset-init` writes a `<team>-pm` command, so the PM is one word away from any folder. |
+
+<br>
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `aiset-init <folder> [--team NAME]` | Detect stacks, generate the roster, agents and brief stubs in `<folder>/.claude/`. Safe to re-run: keeps your names, adds new repos. |
+| `<team>-pm` | Start the PM in its workspace from anywhere. Extra arguments go to Claude Code, e.g. `shop-pm --model sonnet`. |
+| `aiset [--workspace FOLDER\|TEAM]` | Open the office. Without `--workspace`: the workspace you're in, else the team you set up most recently. |
+| `teammap relevant "<task>"` | Files, symbols, endpoints, brief sections and past episodes to read first. |
+| `teammap impact <path\|symbol\|Model> [METHOD]` | What a change can reach: consumers, models, importers, tests. Exact vs inferred. |
+| `teammap failures <log>` | Failed tests, messages and in-repo frames from a saved test run, grouped. |
+| `teammap endpoint` · `model` · `arch` · `symbol` | Direct lookups. `teammap --help` lists them all. |
 
 <details>
-<summary><strong>Research commands · ask the brain before searching from scratch</strong></summary>
+<summary><b>Example: what does changing an endpoint break?</b></summary>
+<br>
 
-
-Run these commands from your initialized workspace:
-
-```sh
-# Find relevant code, brief sections, and previous episodes.
-teammap relevant "product batch stock adjustment"
-
-# Trace the potential impact of an API change.
-teammap impact /products/{product_id} PATCH
-
-# Extract failures from an existing test log.
-teammap failures ./test-output.log
-
-# Inspect a stored research result in full.
-teammap research show <id>
+```console
+$ teammap impact "/api/catalog/beans/{bean_id}" PATCH
+impact · endpoint PATCH /api/catalog/beans/{bean_id}
+  PATCH /api/catalog/beans/{bean_id} is handled by update_bean() in catalog-service/app/routes.py:37
+  4 consumer(s) found (1 exact), 2 model(s), 2 test file(s)
+models (2)
+  = catalog-service/app/schemas.py:18  BeanUpdate  6 fields
+      request parameter payload: BeanUpdate
+  = catalog-service/app/schemas.py:27  Bean  8 fields
+      response_model Bean
+consumers (4)
+  = ui/src/api.ts:50  updateBean  PATCH /api/catalog/beans/{}
+      HTTP call to the same URL
+  ~ ui/src/pages/BeanDetailPage.tsx:40  BeanDetailPage.savePrice
+      calls updateBean() (matched by name)
+  …
 ```
 
-Results include source references, exact or inferred findings, and known gaps. Use `--json` for structured output and `--max-chars` to limit displayed text. See the [research tools guide](docs/USER-GUIDE.md#research-tools-teammap-impact-failures-relevant) for supported formats and options.
-
+`=` is exact (from the code's structure), `~` is inferred (by name, URL or text). Add `--json` for structured output.
 
 </details>
 
-<details>
-<summary><strong>Storage & privacy · your workspace owns the memory</strong></summary>
+<br>
 
+## How it works
 
 ```text
-example-project/
+your-project/
+├── catalog-service/ · reviews-service/ · ui/ …   your code, untouched
 └── .claude/
-    ├── agents/          # Role instructions and working rules
+    ├── agents/          PM, engineers, QA, integration checker (Claude Code loads these)
     └── team/
-        ├── roster.json  # Team members and repository ownership
-        ├── knowledge/   # Persistent briefs, indexes, and Field notes
-        ├── tasks/       # Requirements, contracts, and handoffs
-        ├── episodes/    # Completed tasks, decisions, and lessons
-        └── graph/       # Code graphs, indexes, and research data
+        ├── roster.json  who owns which repo, and on which model
+        ├── knowledge/   briefs: architecture, conventions, pitfalls, dated field notes
+        ├── tasks/       boards, contracts, handoffs
+        ├── episodes/    what each finished task decided and learned
+        └── graph/       code index, Brain graph, stored research results
 ```
 
-The memory is inspectable and editable on disk. Separate workspaces can maintain separate teams. For monorepos, generated `.claude/` files are excluded locally from Git by default; use `--share` when you intend to version them.
+Engineers read their brief's index and only the sections they need. When a task closes, the PM writes an episode and carries the lessons into the owner's brief, which is how the next task starts ahead.
 
-The dashboard runs on localhost and reads Claude Code transcripts. It also updates agent names, settings, brief indexes, and graph caches. Model requests still follow your Claude Code setup; a local dashboard does not mean offline model execution. The dashboard is intended for local use, not public hosting.
+Everything is plain Markdown and JSON in your workspace. In a monorepo, `.claude/` is kept out of git by default; pass `--share` to version it with the team.
 
+> [!NOTE]
+> **Memory is a workflow, not perfect recall.** Agents are instructed to save and retrieve knowledge, but not every chat message becomes a rule. Review the briefs now and then, as you would any documentation.
+
+> [!NOTE]
+> **On token savings:** the research tools return far less text than the greps and reads they replace ([measurements](docs/RESEARCH-TOOLS.md)), but that's output size, not proven end-to-end token savings. Real usage depends on the task.
+
+<br>
+
+## Privacy
+
+- **Local only.** The dashboard binds to `127.0.0.1` and checks `Host` and `Origin` headers. It's not built for public hosting.
+- **No new data flows.** aiset reads the transcripts Claude Code already writes. Model calls go through your own Claude Code setup, nothing else.
+- **No secrets read.** The architecture scan reads env var *names* only, and never opens `.env` files or `secrets/` folders.
+- **Zero runtime dependencies.** Python standard library only.
+
+<br>
+
+## FAQ
+
+<details>
+<summary><b><code>aiset-init</code> is "not recognized" after installing</b></summary>
+<br>
+
+pip put the commands in a folder that isn't on your PATH. That's common with the Microsoft Store Python, which uses `%LOCALAPPDATA%\Packages\PythonSoftwareFoundation.Python.3.x_…\LocalCache\local-packages\Python3xx\Scripts`. Add the folder pip printed in its warning to PATH, then open a new terminal. In the meantime, `python -m aiset.init_team` and `python -m aiset.server` work too.
 
 </details>
 
----
+<details>
+<summary><b>PowerShell says "running scripts is disabled"</b></summary>
+<br>
 
-## Development
+That's PowerShell's execution policy blocking npm's `claude.ps1`. The `<team>-pm` launcher is a `.cmd`, so it isn't affected. For plain `claude`, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, or call `claude.cmd`.
 
-```sh
-python -m unittest discover -s tests
-```
+</details>
 
-The package lives in `src/aiset/`; tests, documentation, and evaluation scripts live in `tests/`, `docs/`, and `eval/`. If Make is available, run `make` to list shortcuts for setup, checks, indexing, and evaluation. Agent evaluation runs can incur model usage costs.
+<details>
+<summary><b>Which models does the team use?</b></summary>
+<br>
 
-- [User guide](docs/USER-GUIDE.md): detailed setup, interface, CLI, and settings.
-- [Feature inventory](docs/FEATURES.md): current functionality and gaps.
-- [Research tools](docs/RESEARCH-TOOLS.md): evaluation results and limitations.
-- [Brand assets](docs/branding/preview.html): selected logo and application icons.
-- [Contributing](CONTRIBUTING.md): setup, guidelines, and how to send a pull request.
-- [Security policy](SECURITY.md): how to report a vulnerability privately.
+Whatever you choose per agent in **Settings**; it's written into each agent file. Without a choice, agents use your Claude Code default.
 
-## License
+</details>
 
-[MIT](LICENSE).
+<details>
+<summary><b>Big workspaces and monorepos?</b></summary>
+<br>
+
+A folder of repos gets one engineer per repo. A monorepo gets one per service folder. Above 12 units, or with `--group stack`, you get one engineer per stack (Java, Node.js, Python, frontend) instead.
+
+</details>
+
+<details>
+<summary><b>The Brain or Office looks empty</b></summary>
+<br>
+
+The office shows one workspace at a time and prints which one at startup. Run `aiset --workspace <team>` to pick a team explicitly.
+
+</details>
+
+<br>
+
+## Contributing
+
+Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup and guidelines (`make check` runs everything), and report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+
+More docs: [User guide](docs/USER-GUIDE.md) · [Feature inventory](docs/FEATURES.md) · [Research tools](docs/RESEARCH-TOOLS.md) · [Brand assets](docs/branding/preview.html)
+
+<br>
+
+<div align="center">
+<img src="src/aiset/static/aiset-icon.png" alt="" width="28" height="28">
+<br>
+<sub>MIT licensed · Built for <a href="https://claude.com/claude-code">Claude Code</a></sub>
+</div>
