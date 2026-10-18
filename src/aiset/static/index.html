@@ -603,7 +603,7 @@ function renderContractors() {
   if (!S.contractors.length) { z.innerHTML = `<div class="empty">No helper agents right now.</div>`; return; }
   z.querySelector(".empty")?.remove();
   for (const c of S.contractors) {
-    const [nm, role, color] = CONTRACTOR[c.agentType] || [c.agentType, "Custom agent", "#94a3b8"];
+    const [nm, , color] = CONTRACTOR[c.agentType] || [c.agentType, "Custom agent", "#94a3b8"];
     const el = upsert(z, c.key, () => deskEl(c.key, color, true));
     setState(el, c.state);
     setBubble(el, c.current || STATE_LABEL[c.state]);
@@ -743,7 +743,7 @@ async function renderTaskDrawer(id) {
 }
 /* ---------- task routes: where each agent went ---------- */
 let taskView = "overview", routeFile = null, routeArea = null;
-const routesCache = {}, openRuns = new Set();
+const routesCache = new Map(), openRuns = new Set();
 const ROUTE_ICON = { read: "📖", edit: "✏️", search: "🔎", shell: "⌨️", test: "🧪", map: "🗺️", db: "🗄️", git: "🌿", delegate: "📨", handback: "📤", ask: "❓", web: "🌐", tool: "🧰" };
 const AREA_HUE = a => { let h = 0; for (const c of a) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
 function taskTabs() {
@@ -789,10 +789,10 @@ function compressSteps(steps) {
 const hm = t => new Date(t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
 const dur = (a, b) => { const m = Math.round((b - a) / 60); return m < 1 ? "<1m" : m < 60 ? m + "m" : Math.floor(m / 60) + "h " + (m % 60) + "m"; };
 async function renderTaskRoutes(id) {
-  let r = routesCache[id];
+  let r = routesCache.get(id);
   if (!r || Date.now() - r.at > 15000) {
     try { const res = await fetch("/api/task/routes?id=" + encodeURIComponent(id)); r = { at: Date.now(), data: res.ok ? await res.json() : null }; } catch { r = { at: Date.now(), data: null }; }
-    routesCache[id] = r;
+    routesCache.set(id, r);
   }
   if (drawerKey !== "task:" + id || taskView !== "routes") return;
   const d = r.data, body = $("#d-body"), keep = body.scrollTop;
@@ -1024,7 +1024,7 @@ function renderIso() {
     isoFit();
   }
   // per-tick updates: state classes, bubbles, plates
-  for (const [id, sl] of Object.entries(isoSlots)) {
+  for (const id of Object.keys(isoSlots)) {
     const m = S.members.find(x => x.id === id), v = memberView(m), top = m.instances[0];
     const g = svg.querySelector(`.iso-desk[data-key="${CSS.escape(id)}"]`);
     setState(g, v.st); g.classList.toggle("sel", selected?.id === id);

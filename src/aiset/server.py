@@ -56,11 +56,11 @@ def reload_roster(office, force=False):
     try:
         mtime = os.path.getmtime(ROSTER)
         if mtime == _roster_mtime and not force:
-            return
+            return None
         roster = workspace.load_roster()
     except (OSError, ValueError) as e:  # mid-edit or invalid JSON: keep the last good roster
         print(f"roster.json not loaded: {e}")
-        return
+        return None
     first = _roster_mtime is None
     _roster_mtime = mtime
     if office is not None:
@@ -99,6 +99,8 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
+        if not self._host_ok():  # a page on another domain that resolves to 127.0.0.1 (DNS rebinding) can't read
+            return self._send(403, b"forbidden", "text/plain")
         path = self.path.split("?", 1)[0]
         # Explicit allowlist: never expose arbitrary files from the package.
         assets = {
@@ -183,7 +185,7 @@ class Handler(BaseHTTPRequestHandler):
             safe = lambda s: "".join(c for c in str(s) if c not in "\"'`<>\\")  # lands in JS strings and HTML
             html = html.replace("__PM_COMMAND__", safe(roster.get("pmCommand", "claude --agent pm"))).replace("__TEAM_NAME__", safe(roster.get("team", "AI Team")))
             return self._send(200, html.encode("utf-8"), "text/html; charset=utf-8")
-        self._send(404, b"not found", "text/plain")
+        return self._send(404, b"not found", "text/plain")
 
     def settings_payload(self):
         roster = self.office.roster
@@ -195,13 +197,19 @@ class Handler(BaseHTTPRequestHandler):
                       "workspace": workspace.norm(workspace.WORKSPACE) if workspace.WORKSPACE else None},
         }
 
+    def _hosts(self):
+        return {f"127.0.0.1:{self.port}", f"localhost:{self.port}"}
+
+    def _host_ok(self):
+        """The request names this server as its Host, so no other domain can reach it by DNS rebinding."""
+        return self.headers.get("Host") in self._hosts()
+
     def _same_origin(self):
-        """Writes come only from the office's own pages: the right Host (no DNS rebinding) and no foreign Origin."""
-        hosts = {f"127.0.0.1:{self.port}", f"localhost:{self.port}"}
-        if self.headers.get("Host") not in hosts:
+        """Writes come only from the office's own pages: the right Host and no foreign Origin."""
+        if not self._host_ok():
             return False
         origin = self.headers.get("Origin")
-        return origin is None or origin in {"http://" + h for h in hosts}
+        return origin is None or origin in {"http://" + h for h in self._hosts()}
 
     def do_POST(self):
         path = self.path.split("?", 1)[0]

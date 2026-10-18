@@ -12,6 +12,7 @@ import os
 import re
 import shlex
 import shutil
+import stat
 
 MARKER = "aiset launcher"
 
@@ -111,7 +112,7 @@ def write_launcher(team, path, bin_dir):
     with open(target, "w", encoding="utf-8", newline="") as f:
         f.write(text)
     if os.name != "nt":
-        os.chmod(target, 0o755)
+        os.chmod(target, os.stat(target).st_mode | stat.S_IXUSR)  # executable for its owner; umask decides the rest
     return target
 
 
