@@ -11,6 +11,8 @@ work in parallel, and show you every step, live.
 
 <br>
 
+[![PyPI](https://img.shields.io/pypi/v/aiset-cli?style=flat-square&color=8d79ef&label=pypi)](https://pypi.org/project/aiset-cli/)
+[![CI](https://img.shields.io/github/actions/workflow/status/JamshidS/aiset/ci.yml?branch=master&style=flat-square&label=CI)](https://github.com/JamshidS/aiset/actions/workflows/ci.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-3776AB?style=flat-square&logo=python&logoColor=white)](pyproject.toml)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-zero-22c55e?style=flat-square)](pyproject.toml)
 [![Built for Claude Code](https://img.shields.io/badge/built%20for-Claude%20Code-D97757?style=flat-square)](https://claude.com/claude-code)
