@@ -3,7 +3,8 @@ import os
 import sys
 import tempfile
 import unittest
-from unittest import mock
+import unittest.mock
+
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
 
@@ -22,7 +23,7 @@ class TaskIdTest(unittest.TestCase):
             f.write("not a task\n")
         with open(os.path.join(self.episodes, "2026-10-18-fix-bugs.md"), "w") as f:
             f.write("TASK: fix bugs\n")
-        patches = [mock.patch.object(core, "BOARDS", self.boards), mock.patch.object(core, "EPISODES", self.episodes)]
+        patches = [unittest.mock.patch.object(core, "BOARDS", self.boards), unittest.mock.patch.object(core, "EPISODES", self.episodes)]
         for p in patches:
             p.start()
             self.addCleanup(p.stop)
