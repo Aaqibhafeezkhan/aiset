@@ -227,6 +227,8 @@ The package lives in `src/aiset/`; tests, documentation, and evaluation scripts 
 - [Feature inventory](docs/FEATURES.md): current functionality and gaps.
 - [Research tools](docs/RESEARCH-TOOLS.md): evaluation results and limitations.
 - [Brand assets](docs/branding/preview.html): selected logo and application icons.
+- [Contributing](CONTRIBUTING.md): setup, guidelines, and how to send a pull request.
+- [Security policy](SECURITY.md): how to report a vulnerability privately.
 
 ## License
 

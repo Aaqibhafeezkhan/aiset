@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/JamshidS/aiset/security/advisories/new
+    about: Please report security issues privately, not as public issues.
+  - name: Questions and ideas
+    url: https://github.com/JamshidS/aiset/discussions
+    about: Ask how to use Aiset or discuss ideas before filing a request.
+  - name: User guide
+    url: https://github.com/JamshidS/aiset/blob/master/docs/USER-GUIDE.md
+    about: Setup, interface, CLI and settings documentation.

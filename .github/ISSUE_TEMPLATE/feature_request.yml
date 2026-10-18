@@ -1,0 +1,57 @@
+name: Feature request
+description: Suggest an idea or improvement for Aiset.
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea. Check [docs/FEATURES.md](https://github.com/JamshidS/aiset/blob/master/docs/FEATURES.md) and [existing issues](https://github.com/JamshidS/aiset/issues) to see if it's already planned.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what gets in the way today?
+      placeholder: "When my team works across 12 repositories, I can't tell which brief ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would you like Aiset to do? Commands, screens or workflow, as concretely as you can.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you use now, or other approaches you thought about.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Memory / knowledge briefs
+        - Office dashboard
+        - Brain view
+        - Architecture view
+        - Settings
+        - aiset-init (team setup)
+        - teammap research tools
+        - Agent templates / instructions
+        - Docs
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I'd be willing to open a pull request for this.
