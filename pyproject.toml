@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,9 +7,34 @@ name = "aiset"
 version = "0.1.0"
 description = "Turn your repositories into an AI engineering team, and watch it work."
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Jamshid Sadik" }]
 requires-python = ">=3.9"
 dependencies = []
+keywords = ["claude-code", "ai-agents", "multi-agent", "developer-tools", "code-intelligence", "dashboard"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.urls]
+Homepage = "https://github.com/JamshidS/aiset"
+Documentation = "https://github.com/JamshidS/aiset/blob/master/docs/USER-GUIDE.md"
+Issues = "https://github.com/JamshidS/aiset/issues"
+Changelog = "https://github.com/JamshidS/aiset/blob/master/CHANGELOG.md"
 
 [project.scripts]
 aiset = "aiset.server:main"
@@ -21,6 +46,13 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 aiset = ["roster.json", "teammap_ts.js", "static/*", "templates/*"]
+
+[tool.ruff]
+target-version = "py39"
+
+[tool.ruff.lint]
+# short names (l, i) and named lambdas are part of the house style
+ignore = ["E731", "E741"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

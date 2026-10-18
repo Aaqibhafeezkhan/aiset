@@ -13,7 +13,7 @@ Q      ?=
 ws_flag = $(if $(WS),--workspace "$(WS)")
 
 .DEFAULT_GOAL := help
-.PHONY: help install typescript test check office init index impact relevant failures eval eval-agent clean
+.PHONY: help install typescript test check lint office init index impact relevant failures eval eval-agent clean
 
 help: ## list the targets
 	@grep -hE '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  make %-12s %s\n", $$1, $$2}'
@@ -32,6 +32,9 @@ test: ## run the tests
 check: ## compile everything, then run the tests
 	$(PYTHON) -m compileall -q $(SRC) eval tests
 	$(PYTHON) -m unittest discover -s tests
+
+lint: ## ruff, as CI runs it (pip install ruff)
+	$(PYTHON) -m ruff check src tests eval
 
 office: ## open the office (WS= optional: without it, the workspace you're in or the default team)
 	$(PYTHON) $(SRC)/server.py $(ws_flag) --port $(PORT)
