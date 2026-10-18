@@ -125,14 +125,15 @@ TASK_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 
 
 def _inside(base, name, suffix=""):
-    """base/name+suffix when name is a plain task name that stays inside base; else None.
+    """base/name+suffix when name is a plain task name; else None.
 
-    Task ids arrive in HTTP requests, so "..", separators and anything else that could leave the folder are refused.
+    Task ids arrive in HTTP requests. A plain name (no separators, no leading dot) can't leave base; the normpath
+    check states that without resolving symlinks, so a task folder that is a symlink still works.
     """
     if not TASK_NAME.fullmatch(name):
         return None
-    root = os.path.realpath(base)
-    path = os.path.realpath(os.path.join(root, name + suffix))
+    root = os.path.normpath(base)
+    path = os.path.normpath(os.path.join(root, name + suffix))
     return path if path.startswith(root + os.sep) else None
 
 

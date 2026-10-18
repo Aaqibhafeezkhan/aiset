@@ -42,8 +42,11 @@ class TaskIdTest(unittest.TestCase):
                 self.assertIsNone(core._board_dir(bad))
                 self.assertIsNone(core.board_detail(bad))
                 self.assertIsNone(core.task_detail(None, bad))
-                path = core._episode_path(bad)
-                self.assertTrue(path is None or os.path.dirname(path) == os.path.realpath(self.episodes))
+                self.assertIsNone(core._episode_path(bad))
+
+    def test_paths_stay_as_configured(self):
+        """No symlink resolution: the folder is reported under BOARDS as configured."""
+        self.assertEqual(core._board_dir("2026-10-18-fix-bugs"), os.path.join(self.boards, "2026-10-18-fix-bugs"))
 
 
 class HostTest(unittest.TestCase):
@@ -54,11 +57,19 @@ class HostTest(unittest.TestCase):
         return h
 
     def test_reads_need_this_servers_host(self):
-        self.assertTrue(self.handler("127.0.0.1:8765")._host_ok())
-        self.assertTrue(self.handler("localhost:8765")._host_ok())
-        for host in ("evil.example:8765", "127.0.0.1:9999", "", None):
+        for host in ("127.0.0.1:8765", "localhost:8765", "LocalHost:8765", "localhost.:8765"):
+            with self.subTest(host=host):
+                self.assertTrue(self.handler(host)._host_ok())
+        for host in ("evil.example:8765", "127.0.0.1:9999", "localhost.evil.example:8765", "127.0.0.1", "", None):
             with self.subTest(host=host):
                 self.assertFalse(self.handler(host)._host_ok())
+
+    def test_port_80_without_a_port_in_the_host(self):
+        h = self.handler("127.0.0.1")
+        h.port = 80
+        self.assertTrue(h._host_ok())
+        h.headers["Origin"] = "http://localhost"
+        self.assertTrue(h._same_origin())
 
     def test_writes_also_refuse_a_foreign_origin(self):
         self.assertTrue(self.handler("127.0.0.1:8765", "http://127.0.0.1:8765")._same_origin())
