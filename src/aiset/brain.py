@@ -455,7 +455,7 @@ def live(office, roster, since=1800):
 
 def task_trails(office, roster, tid):
     """Every agent run on one task as a trail through the graph, in the shape live() returns."""
-    from .core import task_runs_steps, task_meta, current_meta, add_tokens
+    from .core import task_runs_steps, task_meta, current_meta
     members = {m["id"]: m for m in roster["members"]}
     agents, extra_all = [], {}
     for i, (r, steps) in enumerate(task_runs_steps(office, tid)):

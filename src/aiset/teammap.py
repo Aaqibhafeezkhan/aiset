@@ -630,7 +630,7 @@ def cmd_code(repos, L, args, limit, max_lines=150):
                 print(f"  … {end - stop} more lines: Read {path} offset={stop + 1} limit={end - stop}  (or --max {end - start + 1})")
         print()
     if len(hits) > limit:
-        print(f"other matches: " + ", ".join(f"{h[3]['qual']} ({h[0]}/{h[1]}:{h[3]['line']})" for h in hits[limit:limit + 6]))
+        print("other matches: " + ", ".join(f"{h[3]['qual']} ({h[0]}/{h[1]}:{h[3]['line']})" for h in hits[limit:limit + 6]))
 
 
 def camel(s):

@@ -26,6 +26,7 @@ With Make available, `make` lists every shortcut. The ones you'll use most:
 ```sh
 make check            # compile everything, then run the tests
 make test             # tests only
+make lint             # ruff, as CI runs it (pip install ruff)
 make office WS=...    # run the dashboard against a workspace
 make typescript       # install TypeScript for teammap's TS indexer
 ```
@@ -48,7 +49,8 @@ Without Make: `python -m unittest discover -s tests`.
 - **Stay compatible with Python 3.9.** Avoid `match`, `X | Y` type unions at runtime, and other 3.10+ features.
 - **Keep the dashboard local.** It binds to `127.0.0.1` and validates `Host`/`Origin`. Don't weaken that.
 - **Match the surrounding code**: naming, comment density and structure.
-- **Add or update tests** for behaviour changes, and make sure `make check` passes.
+- **Add or update tests** for behaviour changes, and make sure `make check` and `make lint` pass. CI runs both on Linux, Windows and macOS for every pull request.
+- **Note user-facing changes** under `[Unreleased]` in [CHANGELOG.md](CHANGELOG.md).
 - **Update the docs** (`README.md`, `docs/USER-GUIDE.md`, `docs/FEATURES.md`) when you change user-facing behaviour.
 - **Be honest about measurements.** Claims about token or cost savings in docs need evidence from `eval/`.
 
@@ -62,7 +64,7 @@ Without Make: `python -m unittest discover -s tests`.
 
 ## Code of conduct
 
-Be respectful and constructive. Harassment or personal attacks are not tolerated, and maintainers may remove comments, issues or contributors that cross that line.
+Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 
