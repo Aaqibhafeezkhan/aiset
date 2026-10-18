@@ -6,8 +6,9 @@
   aiset --hours 24             include agents active in the last 24 hours (default 12)
   aiset --no-browser           don't open a browser tab
   aiset --brain-days 60        how far back the Brain page looks (default 30)
-  aiset --workspace DIR        show the team of a workspace made by init_team.py
-                               (default: the workspace you're in, else the original ~/.claude team)
+  aiset --workspace DIR|TEAM   show the team of a workspace made by init_team.py, by folder or team name
+                               (default: the workspace you're in, else the team aiset-init set up most
+                               recently, else the original ~/.claude team)
 
 Settings (/settings) edits the roster (names, roles, colours, duties, models) and the office's
 own options (<team>/settings.json); --hours and --brain-days override the stored windows.
@@ -25,12 +26,22 @@ if __name__ == "__main__" and not __package__:  # run as a file: python src/aise
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
     __package__ = "aiset"
 HERE = os.path.dirname(os.path.realpath(__file__))
-# every module reads its paths from workspace.py on import, so settle the workspace first
+from . import registry  # noqa: E402
+
+# every module reads its paths from workspace.py on import, so settle the workspace first:
+# --workspace (a folder or a team name aiset-init registered), the workspace you're in,
+# else the team aiset-init set up most recently
+_picked = None
 for _i, _a in enumerate(sys.argv):
     if _a == "--workspace" and _i + 1 < len(sys.argv):
-        os.environ["AISET_WORKSPACE"] = os.path.abspath(sys.argv[_i + 1])
+        os.environ["AISET_WORKSPACE"] = registry.resolve(sys.argv[_i + 1])
     elif _a.startswith("--workspace="):
-        os.environ["AISET_WORKSPACE"] = os.path.abspath(_a.split("=", 1)[1])
+        os.environ["AISET_WORKSPACE"] = registry.resolve(_a.split("=", 1)[1])
+if not (os.environ.get("AISET_WORKSPACE") or os.environ.get("AGENT_OFFICE_WORKSPACE") or registry.enclosing(os.getcwd())):
+    _known = registry.workspaces()
+    if _known:
+        os.environ["AISET_WORKSPACE"] = _known[0]["path"]
+        _picked = _known
 from . import brain, brief_index, settings, sync_names, workspace  # noqa: E402
 from .core import Office, board_detail, task_detail, task_routes  # noqa: E402
 
@@ -228,7 +239,7 @@ def main():
     ap.add_argument("--hours", type=float, help="show agents active within this many hours (default: Settings, 12)")
     ap.add_argument("--brain-days", type=float, help="how far back the Brain page looks (default: Settings, 30)")
     ap.add_argument("--no-browser", action="store_true")
-    ap.add_argument("--workspace", help="folder made by init_team.py (read before argparse, see top of file)")
+    ap.add_argument("--workspace", help="folder made by init_team.py, or its team name (read before argparse, see top of file)")
     args = ap.parse_args()
     if args.workspace and not os.path.isfile(workspace.ROSTER):
         sys.exit(f"no team in {workspace.WORKSPACE} (expected {workspace.ROSTER}).\n"
@@ -236,8 +247,13 @@ def main():
     roster = reload_roster(None)
     if roster is None:
         sys.exit(f"could not read {ROSTER}")
-    if not workspace.WORKSPACE:
-        print("No workspace given: showing the original team. Use --workspace <folder> for another one.")
+    if _picked:
+        print(f"Not inside a workspace: showing '{_picked[0]['team']}', the team aiset-init set up most recently.")
+        if len(_picked) > 1:
+            print("   Others: " + ", ".join(w["team"] for w in _picked[1:]) + "  (aiset --workspace <team name or folder>)")
+    elif not workspace.WORKSPACE:
+        print("No workspace found and no team set up with aiset-init: showing the original ~/.claude team.\n"
+              "   Run aiset-init <folder> first, or use --workspace <folder>.")
     stored = settings.load()
     Handler.fixed_hours, Handler.fixed_days, Handler.port = args.hours is not None, args.brain_days is not None, args.port
     Handler.office = Office(roster, args.hours if Handler.fixed_hours else stored["hours"])

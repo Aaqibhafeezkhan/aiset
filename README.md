@@ -144,11 +144,10 @@ Create a team for your project folder:
 aiset-init ~/work/example-project --team example-project
 ```
 
-Start the PM from that workspace:
+Start the PM. `aiset-init` adds a `<team>-pm` command that works from any folder:
 
 ```sh
-cd ~/work/example-project
-claude --agent pm
+example-project-pm        # same as: cd ~/work/example-project && claude --agent pm
 ```
 
 For the first task, ask:
@@ -158,7 +157,7 @@ For the first task, ask:
 In another terminal, open the office:
 
 ```sh
-aiset --workspace ~/work/example-project
+aiset --workspace example-project     # a team name or a folder; plain `aiset` shows the newest team
 ```
 
 Visit **http://127.0.0.1:8765**. Use **Brain** to explore the team's knowledge and **Settings** to personalize the team.
