@@ -5,9 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-18
+
 ### Added
 
-- First public release.
+- First public release, on PyPI as `aiset-cli`.
 - `aiset-init`: scans a folder of repositories or a monorepo, detects each stack, and generates a team in `<folder>/.claude/`: a PM, one engineer per repo or stack, a QA engineer and an integration checker, with knowledge brief stubs.
 - `<team>-pm` launcher, written by `aiset-init`, that starts the PM from any folder (`.cmd` on Windows).
 - Workspace registry (`~/.aiset/workspaces.json`): the office finds the most recent team when started outside a workspace, and `aiset --workspace` accepts a team name.
@@ -19,3 +21,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - `teammap`: code map and research commands (`endpoint`, `symbol`, `model`, `arch`, `impact`, `relevant`, `failures`) for Python and TypeScript repositories.
 - Research evaluation scripts in `eval/`.
 - CI on Linux, Windows and macOS for Python 3.9 to 3.13, lint, package build checks and CodeQL.
+
+[Unreleased]: https://github.com/JamshidS/aiset/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/JamshidS/aiset/releases/tag/v0.1.0

@@ -32,7 +32,7 @@ work in parallel, and show you every step, live.
 ## Quick start
 
 ```sh
-pip install -e .                                   # from a clone: adds aiset, aiset-init, teammap
+pipx install aiset-cli                             # or: pip install aiset-cli
 aiset-init ~/work/shop --team shop                 # scan the repos, generate the team
 shop-pm                                            # talk to your PM, from any folder
 ```
@@ -43,7 +43,7 @@ Give the PM its first task:
 
 > *"Build the knowledge briefs. Document the architecture, conventions, test commands and known pitfalls for each repository."*
 
-<sub>Needs Python 3.9+, Git and [Claude Code](https://claude.com/claude-code). TypeScript indexing also uses Node.js. Works with a folder of repositories or a monorepo.</sub>
+<sub>Needs Python 3.9+, Git and [Claude Code](https://claude.com/claude-code). TypeScript indexing also uses Node.js. Works with a folder of repositories or a monorepo. The PyPI package is `aiset-cli` (`aiset` on PyPI is an unrelated project). To hack on aiset itself, clone it and `pip install -e .`.</sub>
 
 <br>
 
@@ -81,7 +81,7 @@ A local dashboard shows **who is doing what, what they read, what it costs**, an
 
 ## A real run, start to finish
 
-Every frame below comes from **Beanboard**, a small demo app: three FastAPI services (catalog on PostgreSQL, reviews on MongoDB, insights calling both) and a React UI on Docker Compose. One `aiset-init` turned it into a team of seven. Nothing is staged.
+Every frame below comes from **[Beanboard](https://github.com/JamshidS/beanboard)**, a small demo app: three FastAPI services (catalog on PostgreSQL, reviews on MongoDB, insights calling both) and a React UI on Docker Compose. One `aiset-init` turned it into a team of seven. Nothing is staged, and you can [run the same demo yourself](https://github.com/JamshidS/beanboard#try-aiset-on-it) in about five minutes.
 
 ### 1 &nbsp;Ask in plain words
 
@@ -264,6 +264,8 @@ More docs: [User guide](docs/USER-GUIDE.md) · [Feature inventory](docs/FEATURES
 
 <div align="center">
 <img src="src/aiset/static/aiset-icon.png" alt="" width="28" height="28">
+<br>
+<sub>If aiset saves you time, a ⭐ helps other developers find it.</sub>
 <br>
 <sub>MIT licensed · Built for <a href="https://claude.com/claude-code">Claude Code</a></sub>
 </div>

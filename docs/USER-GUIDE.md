@@ -9,7 +9,7 @@ Detailed setup, office views, research tools, and settings.
 Python 3.9+. The Python package has no third-party runtime dependencies. Repository discovery uses Git; TypeScript indexing also requires Node.js and a TypeScript installation. Creating and running agent sessions requires Claude Code. From this folder:
 
 ```sh
-pip install -e .          # adds the commands aiset, aiset-init and teammap
+pipx install aiset-cli    # adds the commands aiset, aiset-init and teammap (from a clone: pip install -e .)
 ```
 
 Without installing, run the files directly: `python src/aiset/server.py`, `python src/aiset/teammap.py`, `python src/aiset/init_team.py`. Tests: `python -m unittest discover -s tests`.
