@@ -17,6 +17,8 @@ import json
 import os
 import re
 
+from .registry import enclosing
+
 HERE = os.path.dirname(os.path.realpath(__file__))
 # the checkout (src/aiset -> repo root) for a source tree; the package folder when installed
 APP_DIR = os.path.dirname(os.path.dirname(HERE)) if os.path.basename(os.path.dirname(HERE)) == "src" else HERE
@@ -66,14 +68,7 @@ def _find():
     ws = os.environ.get("AISET_WORKSPACE") or os.environ.get("AGENT_OFFICE_WORKSPACE")
     if ws:
         return os.path.abspath(ws)
-    d = os.getcwd()
-    while True:
-        if os.path.isfile(os.path.join(d, ".claude", "team", "roster.json")):
-            return d
-        parent = os.path.dirname(d)
-        if parent == d:
-            return None
-        d = parent
+    return enclosing(os.getcwd())
 
 
 WORKSPACE = _find()

@@ -24,9 +24,11 @@ Point it at a folder of git repositories (Windows, macOS or Linux):
 
 ```sh
 aiset-init ~/work/example-project --team example-project  # scan repos, write the team into <folder>/.claude
-cd ~/work/example-project && claude --agent pm            # talk to the PM; first ask: "build the knowledge briefs"
-aiset --workspace ~/work/example-project                  # the office for that team
+example-project-pm                                        # talk to the PM, from any folder; first ask: "build the knowledge briefs"
+aiset --workspace example-project                         # the office for that team (team name or folder)
 ```
+
+`aiset-init` also records the team in `~/.aiset/workspaces.json` (`AISET_HOME` moves it) and writes a `<team>-pm` launcher next to its own command (`<team>-pm.cmd` on Windows, so PowerShell's script policy doesn't block it). The launcher runs `claude --agent pm` in the workspace and passes on extra arguments, e.g. `example-project-pm --model sonnet`. Skip it with `--no-launcher`. The office picks its team in this order: `--workspace` (folder or team name), the workspace you're in, then the team `aiset-init` set up most recently; it prints which one it chose.
 
 `init_team.py` makes one engineer per repo (stack detected from `package.json`, `requirements.txt`/`pyproject.toml`, Gradle/Maven, `go.mod`; compose/nginx-only repos get a DevOps engineer), plus the PM, QA engineer and integration checker. Everything lives in the workspace, so several teams can coexist:
 
@@ -37,7 +39,7 @@ aiset --workspace ~/work/example-project                  # the office for that 
 
 Edit names, roles and duties in `<folder>/.claude/team/roster.json` and run `init_team.py` again: new repos are added, your names are kept, and agent files are re-rendered (except the ones where you deleted the "generated" marker line). `teammap` finds the workspace from the current directory; it parses TypeScript with the repo's own `typescript`, or with aiset's (`npm install --no-save typescript` in this folder) before the frontends have `node_modules`.
 
-Without a workspace (no `--workspace`, not inside one), everything below works as before: `~/.claude/agents`, `~/.claude/team`, the checkout root as the code root (the package directory in a non-editable installation) and the package's `src/aiset/roster.json`.
+Without a workspace (no `--workspace`, not inside one, and for the office: no team set up with `aiset-init`), everything below works as before: `~/.claude/agents`, `~/.claude/team`, the checkout root as the code root (the package directory in a non-editable installation) and the package's `src/aiset/roster.json`.
 
 ## Use the example team
 
