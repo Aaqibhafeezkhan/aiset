@@ -291,7 +291,7 @@ def _graph_nodes():
                         if n.get("type") in out:
                             out[n["type"]].append(n)
             except (OSError, ValueError):
-                pass
+                pass  # a graph file being rewritten or invalid: skip it this round
         return out
     return _cached("graph", stamp, make)
 

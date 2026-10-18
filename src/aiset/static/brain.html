@@ -514,7 +514,7 @@ function drawTrails(vis) {
     const dim = TASK && openAgent && a.key !== openAgent ? .22 : 1;  // task mode: the agent opened on the right stands out
     for (let i = 1; i < ids.length; i++) {
       const [x1, y1] = toScreen(pos.get(ids[i - 1])), [x2, y2] = toScreen(pos.get(ids[i]));
-      const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
+      const dx = x2 - x1, dy = y2 - y1;
       const cx = (x1 + x2) / 2 - dy * .18, cy = (y1 + y2) / 2 + dx * .18;  // bow each hop so return trips don't overlap
       const recent = i / (ids.length - 1), last = i === ids.length - 1;
       ctx.globalAlpha = ((active ? .2 : .1) + (active ? .8 : .45) * recent) * (TASK ? (dim < 1 ? dim : 1.7) : 1);
@@ -736,7 +736,7 @@ function renderDetail() {
   const d = $("#detail"), n = selected && byId.get(selected);
   d.classList.toggle("on", !!n);
   if (!n) return;
-  const i = n.info, t = TYPES[kindOf(n.type)];
+  const i = n.info;
   let h = `<h3><span class="dot" style="background:${n.color}"></span>${esc(n.label)} <span class="tag">${esc(n.type)}</span></h3><div class="sub">${esc(subtitle(n))}</div>`;
   const kv = rows => `<div class="kv">${rows.filter(r => r[1] !== undefined && r[1] !== "").map(([k, v]) => `<span>${k}</span><span>${v}</span>`).join("")}</div>`;
   if (n.type === "agent") h += kv([["Duty", esc(i.duty)]]);

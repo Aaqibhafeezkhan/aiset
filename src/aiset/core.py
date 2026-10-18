@@ -121,16 +121,34 @@ def _legacy_id(tid):
     return re.sub(r"^(\d{4})-(\d\d)-(\d\d)-", r"\1\2\3-", tid)
 
 
+TASK_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
+
+
+def _inside(base, name, suffix=""):
+    """base/name+suffix when name is a plain task name; else None.
+
+    Task ids arrive in HTTP requests. A plain name (no separators, no leading dot) can't leave base; the normpath
+    check states that without resolving symlinks, so a task folder that is a symlink still works.
+    """
+    if not TASK_NAME.fullmatch(name):
+        return None
+    root = os.path.normpath(base)
+    path = os.path.normpath(os.path.join(root, name + suffix))
+    return path if path.startswith(root + os.sep) else None
+
+
 def _board_dir(tid):
     """Board folder of a task, under either date format; None if there is none."""
     tid = task_id(os.path.basename(tid))
-    return next((d for d in (os.path.join(BOARDS, n) for n in (tid, _legacy_id(tid))) if os.path.isdir(d)), None)
+    dirs = (_inside(BOARDS, n) for n in (tid, _legacy_id(tid)))
+    return next((d for d in dirs if d and os.path.isdir(d)), None)
 
 
 def _episode_path(tid):
+    """Episode file of a task, under either date format; None for a name that isn't a task id."""
     tid = task_id(os.path.basename(tid))
-    return next((p for p in (os.path.join(EPISODES, n + ".md") for n in (tid, _legacy_id(tid))) if os.path.exists(p)),
-                os.path.join(EPISODES, tid + ".md"))
+    paths = [p for p in (_inside(EPISODES, n, ".md") for n in (tid, _legacy_id(tid))) if p]
+    return next((p for p in paths if os.path.exists(p)), paths[0] if paths else None)
 
 
 def expand_vars(cmd):
@@ -449,6 +467,8 @@ def knowledge_info(filename):
 
 
 def _read(path, limit=20000):
+    if not path:
+        return None
     try:
         with open(path, encoding="utf-8") as f:
             return f.read(limit)
@@ -540,6 +560,8 @@ def task_detail(office, tid):
         meta = current_meta(office, tid, time.time())
     else:
         tid = task_id(os.path.basename(tid))
+        if not TASK_NAME.fullmatch(tid):
+            return None
         meta = task_meta(tid)
     return {**meta, "board": board_detail(tid) if meta["hasBoard"] else None,
             "episode": _read(_episode_path(tid)) if meta["hasEpisode"] else None,

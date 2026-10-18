@@ -676,7 +676,7 @@ def fingerprint():
         try:
             h.update(str(os.path.getmtime(os.path.join(HERE, mod))).encode())
         except OSError:
-            pass
+            pass  # an installed package may not ship the module; its absence is part of the fingerprint
     for name in repo_dirs():
         for full, _ in _walk(os.path.join(CODE_ROOT, name)):
             try:
@@ -697,7 +697,7 @@ def cached(force=False):
             if data.get("fingerprint") == fp:
                 return data
         except (OSError, ValueError):
-            pass
+            pass  # no usable cache: build the map again
     data = build()
     data["fingerprint"] = fp
     try:
@@ -705,7 +705,7 @@ def cached(force=False):
         with open(CACHE_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f)
     except OSError:
-        pass
+        pass  # a read-only workspace still gets the map, just without the cache
     return data
 
 

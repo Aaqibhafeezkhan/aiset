@@ -198,7 +198,7 @@ def load_repo(name, force=False):
             if c.get("version") == VERSION:
                 cache = c
         except (OSError, ValueError):
-            pass
+            pass  # no usable cache: every file is parsed again
     files = {rel: "py" for rel in git_files(root, ["*.py"])}
     files.update({rel: "ts" for rel in git_files(root, ["*.ts", "*.tsx"])})
     old, new, todo_ts, changed = cache["files"], {}, [], 0
@@ -519,7 +519,8 @@ def cmd_endpoint(repos, L, args, limit):
     method = args[1].upper() if len(args) > 1 else None
     hits = [e for e in L["endpoints"] if q.lower() in e["path"].lower() and (not method or e["method"] == method)]
     if not hits:
-        return print(f"no endpoint matches {q!r}" + (" — try a shorter part of the path" if "/" in q else ""))
+        print(f"no endpoint matches {q!r}" + (" — try a shorter part of the path" if "/" in q else ""))
+        return
     hits.sort(key=lambda e: (len(e["path"]), e["path"]))
     for e in hits[:limit]:
         print(f"{e['method']} {e['path']}   [{e['repo']}]")
@@ -557,7 +558,8 @@ def cmd_symbol(repos, L, args, limit):
     q = args[0]
     hits = _best_hits(repos, q)
     if not hits:
-        return print(f"no symbol matches {q!r}")
+        print(f"no symbol matches {q!r}")
+        return
     shown_callers = set()
     for r, f, lang, s in hits[:limit]:
         sig = ", ".join(f"{p['name']}: {p['type']}" if p["type"] else p["name"] for p in s.get("params", [])) if lang == "py" else s.get("params", "")
@@ -596,7 +598,8 @@ def cmd_code(repos, L, args, limit, max_lines=150):
     q = args[0]
     hits = _best_hits(repos, q)
     if not hits:
-        return print(f"no symbol matches {q!r}  (try: teammap search {q})")
+        print(f"no symbol matches {q!r}  (try: teammap search {q})")
+        return
     for r, f, lang, s in hits[:limit]:
         path = os.path.join(CODE_ROOT, r, f)
         try:
@@ -672,7 +675,8 @@ def cmd_model(repos, L, args, limit):
     q = args[0]
     names = [n for n in L["models"] if n == q] or [n for n in L["models"] if q.lower() in n.lower()]
     if not names:
-        return print(f"no model matches {q!r}")
+        print(f"no model matches {q!r}")
+        return
     for n in names[:limit]:
         for m in L["models"][n]:
             print(f"model {n}   {m['repo']}/{m['file']}:{m['line']}   bases: {', '.join(m['bases'])}")
@@ -697,7 +701,8 @@ def cmd_file(repos, L, args, limit):
     q = args[0]
     hits = [(r, f, e) for r in repos for f, e in r["files"].items() if q in f]
     if not hits:
-        return print(f"no file matches {q!r}")
+        print(f"no file matches {q!r}")
+        return
     hits.sort(key=lambda x: len(x[1]))
     for r, f, e in hits[:limit]:
         d = e["data"]
