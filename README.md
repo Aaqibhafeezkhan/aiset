@@ -119,6 +119,34 @@ Shape the team: names, roles, models, layout, and history windows, all in one pl
 </tr>
 </table>
 
+## Watch a real run
+
+These recordings are from **Beanboard**, a small demo app: three FastAPI services (catalog on PostgreSQL, reviews on MongoDB, and an insights service that calls both) and a React UI, run with Docker Compose. `aiset-init` turned it into a team of seven agents. Nothing below is staged.
+
+**1 · You talk to the PM.** Ask for a feature in plain words. The PM clarifies scope before anyone writes code.
+
+<p align="center"><img src="docs/media/ask-pm.gif" alt="The PM asks which sort options the review list should have before planning a new feature" width="900"></p>
+
+**2 · The team works in the Office.** The PM assigns tasks, engineers pick them up in parallel, and every agent shows its assignment, status, model and token use.
+
+<p align="center"><img src="docs/media/office.gif" alt="The Office: the PM waits for two backend engineers who are fixing bugs in parallel, with Kaan's assignment open" width="900"></p>
+
+**3 · The Brain shows what they read and change.** Live trails link each agent to the briefs, files and services it touches.
+
+<p align="center"><img src="docs/media/brain.gif" alt="The Brain: live trails from each agent to the files and briefs it is reading and writing" width="900"></p>
+
+**4 · The PM reports back.** Findings are ranked with file references and proposed fixes. The full reports stay in the workspace for the next task.
+
+<p align="center"><img src="docs/media/pm-report.png" alt="The PM's ranked findings table with severity, cause, proposed fix and effort, then next steps" width="900"></p>
+
+**5 · The knowledge stays.** After two tasks, the Brain links seven agents to 4 repositories, 5 briefs with 56 sections, 2 episodes, and the code's 13 endpoints, 8 models and 10 frontend API calls. The next task starts from that context.
+
+<p align="center"><img src="docs/media/brain-map.png" alt="The Brain after two tasks: agents, briefs, episodes, endpoints, models and API calls connected in one graph" width="900"></p>
+
+**6 · The architecture is read from the code.** Aiset finds the UI calling all three services, catalog on PostgreSQL, reviews on MongoDB, and insights calling the other two (dashed: inferred from names). Each link has the file and line as evidence.
+
+<p align="center"><img src="docs/media/architecture.png" alt="The Architecture view: the React UI calls three FastAPI services, catalog uses PostgreSQL, reviews uses MongoDB, and insights calls catalog and reviews" width="900"></p>
+
 ## Spend context where it matters
 
 **Read sections, not entire briefs.** Share task context instead of repeatedly relaying it. Query code relationships and saved lessons before starting another investigation.
