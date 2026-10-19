@@ -28,7 +28,7 @@ example-project-pm                                        # talk to the PM, from
 aiset --workspace example-project                         # the office for that team (team name or folder)
 ```
 
-`aiset-init` also records the team in `~/.aiset/workspaces.json` (`AISET_HOME` moves it) and writes a `<team>-pm` launcher next to its own command (`<team>-pm.cmd` on Windows, so PowerShell's script policy doesn't block it). The launcher runs `claude --agent pm` in the workspace and passes on extra arguments, e.g. `example-project-pm --model sonnet`. Skip it with `--no-launcher`. The office picks its team in this order: `--workspace` (folder or team name), the workspace you're in, then the team `aiset-init` set up most recently; it prints which one it chose.
+`aiset-init` also records the team in `~/.aiset/workspaces.json` (`AISET_HOME` moves it) and writes a `<team>-pm` launcher next to its own command (`<team>-pm.cmd` on Windows, so PowerShell's script policy doesn't block it). The launcher runs `claude --agent pm` in the workspace and passes on extra arguments, e.g. `example-project-pm --model sonnet`. When the launcher is on `PATH`, the office footer suggests its command. If it is unavailable or you pass `--no-launcher`, the existing `pmCommand` stays in the roster. The office picks its team in this order: `--workspace` (folder or team name), the workspace you're in, then the team `aiset-init` set up most recently; it prints which one it chose.
 
 `init_team.py` makes one engineer per repo (stack detected from `package.json`, `requirements.txt`/`pyproject.toml`, Gradle/Maven, `go.mod`; compose/nginx-only repos get a DevOps engineer), plus the PM, QA engineer and integration checker. Everything lives in the workspace, so several teams can coexist:
 

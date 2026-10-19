@@ -423,6 +423,10 @@ def main():
         print(f"command: {name} starts the PM from any folder ({launcher})")
         if on_path:
             pm_cmd = name
+            roster["pmCommand"] = name
+            with open(roster_path, "w", encoding="utf-8", newline="\n") as f:
+                json.dump(roster, f, indent=2, ensure_ascii=False)
+                f.write("\n")
         else:
             print(f"         {bin_dir} is not on PATH yet: add it, or run the file by its full path")
     elif not args.no_launcher:
