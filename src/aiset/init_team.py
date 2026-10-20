@@ -388,6 +388,7 @@ def main():
         with open(roster_path, encoding="utf-8") as f:
             old = json.load(f)
     group = args.group or (old or {}).get("group") or ("stack" if len(repos) > 12 else "repo")
+    old_team = (old or {}).get("team")  # build_roster renames the old roster in place
     roster, added = build_roster(ws, args.team, repos, old, group)
     hidden = False
     if is_monorepo(ws) and not args.share:  # keep the team out of the project's git
@@ -423,6 +424,15 @@ def main():
         print(f"command: {name} starts the PM from any folder ({launcher})")
         if on_path:
             pm_cmd = name
+            ours = {"claude --agent pm"}  # values we wrote; one edited in Settings stays
+            if old_team:
+                ours.add(registry.slug(old_team) + "-pm")  # the launcher name before a team rename
+            current = roster.get("pmCommand", "claude --agent pm")
+            if current in ours and current != name:
+                roster["pmCommand"] = name
+                with open(roster_path, "w", encoding="utf-8", newline="\n") as f:
+                    json.dump(roster, f, indent=2, ensure_ascii=False)
+                    f.write("\n")
         else:
             print(f"         {bin_dir} is not on PATH yet: add it, or run the file by its full path")
     elif not args.no_launcher:

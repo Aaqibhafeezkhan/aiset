@@ -127,7 +127,7 @@ Services, databases and the calls between them, each backed by a file and line. 
 
 | | |
 |---|---|
-| **Office** | Live isometric or classic view of the team: assignments, task boards, activity feed, models, tokens and estimated cost per agent. |
+| **Office** | Live isometric or classic view of the team: assignments, task boards, activity feed, models, tokens and estimated cost per agent. Its footer uses the `<team>-pm` command when the launcher is available on `PATH`. |
 | **Brain** | One graph of agents, briefs, sections, episodes, files, endpoints, models and API calls. Follow an agent, search anything, focus on a node. |
 | **Architecture** | Static map of frontends, APIs, workers and infrastructure (PostgreSQL, MongoDB, Redis, RabbitMQ, Kafka, Keycloak and more), with evidence for every link. Exports Mermaid. |
 | **Settings** | Names, roles, colours, duties and the **model per agent**: put routine work on Sonnet or Haiku, keep Opus where it matters. |
@@ -141,7 +141,7 @@ Services, databases and the calls between them, each backed by a file and line. 
 | Command | What it does |
 |---|---|
 | `aiset-init <folder> [--team NAME]` | Detect stacks, generate the roster, agents and brief stubs in `<folder>/.claude/`. Safe to re-run: keeps your names, adds new repos. |
-| `<team>-pm` | Start the PM in its workspace from anywhere. Extra arguments go to Claude Code, e.g. `shop-pm --model sonnet`. |
+| `<team>-pm` | Start the PM in its workspace from anywhere. The office footer suggests this command when its launcher is on `PATH`. Extra arguments go to Claude Code, e.g. `shop-pm --model sonnet`. |
 | `aiset [--workspace FOLDER\|TEAM]` | Open the office. Without `--workspace`: the workspace you're in, else the team you set up most recently. |
 | `teammap relevant "<task>"` | Files, symbols, endpoints, brief sections and past episodes to read first. |
 | `teammap impact <path\|symbol\|Model> [METHOD]` | What a change can reach: consumers, models, importers, tests. Exact vs inferred. |
