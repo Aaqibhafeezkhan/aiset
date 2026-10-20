@@ -14,6 +14,9 @@ sys.path.insert(
 from aiset import init_team, registry  # noqa: E402
 
 
+LAUNCHER = "demo-pm.cmd" if os.name == "nt" else "demo-pm"
+
+
 class PMCommandTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -60,7 +63,7 @@ class PMCommandTest(unittest.TestCase):
         roster = self.run_init()
 
         self.assertEqual(roster["pmCommand"], "demo-pm")
-        self.assertTrue(os.path.isfile(os.path.join(self.bin_dir, "demo-pm")))
+        self.assertTrue(os.path.isfile(os.path.join(self.bin_dir, LAUNCHER)))
 
     def test_no_launcher_preserves_an_existing_pm_command(self):
         team_dir = os.path.join(self.workspace, ".claude", "team")
@@ -79,19 +82,36 @@ class PMCommandTest(unittest.TestCase):
         roster = self.run_init(on_path=False)
 
         self.assertEqual(roster["pmCommand"], "claude --agent pm")
-        self.assertTrue(os.path.isfile(os.path.join(self.bin_dir, "demo-pm")))
+        self.assertTrue(os.path.isfile(os.path.join(self.bin_dir, LAUNCHER)))
 
     def test_foreign_launcher_name_keeps_the_existing_command(self):
         os.makedirs(self.bin_dir)
-        launcher_name = "demo-pm.cmd" if os.name == "nt" else "demo-pm"
-        with open(
-            os.path.join(self.bin_dir, launcher_name), "w", encoding="utf-8"
-        ) as f:
+        with open(os.path.join(self.bin_dir, LAUNCHER), "w", encoding="utf-8") as f:
             f.write("another command\n")
 
         roster = self.run_init()
 
         self.assertEqual(roster["pmCommand"], "claude --agent pm")
+
+    def seed_roster(self, **fields):
+        team_dir = os.path.join(self.workspace, ".claude", "team")
+        os.makedirs(team_dir)
+        with open(os.path.join(team_dir, "roster.json"), "w", encoding="utf-8") as f:
+            json.dump({"team": "Demo", "members": [], **fields}, f)
+
+    def test_custom_pm_command_survives_a_rerun(self):
+        self.seed_roster(pmCommand="claude --agent pm --model opus")
+
+        roster = self.run_init()
+
+        self.assertEqual(roster["pmCommand"], "claude --agent pm --model opus")
+
+    def test_team_rename_updates_the_launcher_command(self):
+        self.seed_roster(team="Old Name", pmCommand="old-name-pm")
+
+        roster = self.run_init()
+
+        self.assertEqual(roster["pmCommand"], "demo-pm")
 
 
 if __name__ == "__main__":
