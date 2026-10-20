@@ -446,6 +446,25 @@ def project_name(dirname):
     return name
 
 
+def workspace_project(dirname):
+    """True when a ~/.claude/projects folder holds this workspace's own sessions.
+
+    Claude Code names the folder after the workspace path, and folders inside
+    the workspace get ``<workspace slug>-<path inside it>``. Matching on the
+    bare prefix therefore lets siblings through: with workspace
+    ``C:\\work\\app``, the folder for ``C:\\work\\apples`` also starts with
+    ``c--work-app``, so its sessions, tokens and cost landed on the floor too.
+    Requiring an exact match or a ``-`` boundary keeps them out.
+
+    ``app`` and ``app-old`` still share a prefix; telling those apart needs the
+    ``cwd`` recorded in the transcript, which this filter doesn't read.
+    """
+    folder = str(dirname or "").lower()
+    if not WS_SLUG:
+        return True
+    return folder == WS_SLUG or folder.startswith(WS_SLUG + "-")
+
+
 def knowledge_info(filename):
     if not filename:
         return None
@@ -841,7 +860,7 @@ class Office:
                 continue
             if now - max([mtime] + [m for _, m in subs]) > self.window:
                 continue
-            if WS_SLUG and not os.path.basename(os.path.dirname(path)).lower().startswith(WS_SLUG):
+            if not workspace_project(os.path.basename(os.path.dirname(path))):
                 continue
             project = project_name(os.path.basename(os.path.dirname(path)))
             lead = self._get(path, "main", project)
