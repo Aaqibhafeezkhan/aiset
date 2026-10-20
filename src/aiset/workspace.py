@@ -60,8 +60,26 @@ def root_pattern(root):
 
 
 def slug(path):
-    """The folder name Claude Code gives a project under ~/.claude/projects (lowercased)."""
-    return re.sub(r"[^a-z0-9]", "-", str(path).lower())
+    """The folder name Claude Code gives a project under ~/.claude/projects (lowercased).
+
+    Claude Code keeps ``[A-Za-z0-9]`` and turns everything else into ``-``, then
+    lowercases. Substituting before lowercasing matters: in Python
+    ``"İ".lower()`` is two characters (``i`` plus a combining dot), so
+    lowercasing first spends two dashes on one character and the result no
+    longer matches the folder Claude Code made -- ``C:\\Users\\İsmail\\shop``
+    came out as ``c--users-i-smail-shop`` instead of ``c--users--smail-shop``,
+    and the office found no sessions for the workspace.
+
+    Characters outside the BMP are replaced per UTF-16 code unit, which is how
+    Claude Code sees them, so one emoji becomes two dashes.
+    """
+    out = []
+    for ch in str(path):
+        if ("a" <= ch <= "z") or ("A" <= ch <= "Z") or ("0" <= ch <= "9"):
+            out.append(ch)
+        else:
+            out.append("-" * (2 if ord(ch) > 0xFFFF else 1))
+    return "".join(out).lower()
 
 
 def _find():
