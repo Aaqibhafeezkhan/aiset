@@ -26,7 +26,7 @@ def index_path(brief):
 
 
 def build(brief):
-    with open(brief, encoding="utf-8") as f:
+    with open(brief, encoding="utf-8", errors="replace") as f:
         lines = f.read().splitlines()
     heads = [(i + 1, len(m.group(1)), m.group(2).strip())
              for i, l in enumerate(lines) if (m := re.match(r"^(##|###) (.+)", l))]

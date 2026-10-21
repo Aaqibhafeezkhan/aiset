@@ -470,7 +470,7 @@ def knowledge_info(filename):
         return None
     path = os.path.join(KNOWLEDGE, filename)
     try:
-        with open(path, encoding="utf-8") as f:
+        with open(path, encoding="utf-8", errors="replace") as f:
             text = f.read()
     except OSError:
         return {"file": path, "exists": False}
@@ -489,7 +489,7 @@ def _read(path, limit=20000):
     if not path:
         return None
     try:
-        with open(path, encoding="utf-8") as f:
+        with open(path, encoding="utf-8", errors="replace") as f:
             return f.read(limit)
     except OSError:
         return None

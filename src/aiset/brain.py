@@ -23,7 +23,7 @@ EPISODE_FIELDS = ("TASK", "DATE", "AGENTS", "OUTCOME", "TOUCHED", "CONTRACT", "D
 def brief_sections(filename):
     """[(level, title, first line, text)] for the ## and ### headings of a brief."""
     try:
-        with open(os.path.join(KNOWLEDGE, filename), encoding="utf-8") as f:
+        with open(os.path.join(KNOWLEDGE, filename), encoding="utf-8", errors="replace") as f:
             lines = f.read().splitlines()
     except OSError:
         return []
@@ -43,7 +43,7 @@ def read_episodes():
         if os.path.basename(path) == "index.md":
             continue
         try:
-            with open(path, encoding="utf-8") as f:
+            with open(path, encoding="utf-8", errors="replace") as f:
                 text = f.read()
         except OSError:
             continue

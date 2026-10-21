@@ -108,7 +108,7 @@ PROJECTS = norm(os.path.join(HOME, ".claude", "projects"))
 
 
 def load_roster():
-    with open(ROSTER, encoding="utf-8") as f:
+    with open(ROSTER, encoding="utf-8-sig") as f:
         return json.load(f)
 
 
