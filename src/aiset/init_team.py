@@ -147,6 +147,10 @@ def scan(ws):
         if mono:  # commands run from the monorepo root
             checks = [f"cd {name} && {c}" for c in checks]
         repos.append({"name": name, "kind": kind, "stack": stack, "checks": checks, "summary": readme_summary(d)})
+    if mono and not repos and any(os.path.isfile(os.path.join(ws, f)) for f in UNIT_FILES):
+        kind, stack, checks = detect(ws)
+        repos.append({"name": ".", "kind": kind, "stack": stack, "checks": checks,
+                      "summary": readme_summary(ws)})
     return repos
 
 
@@ -203,8 +207,9 @@ ROLE = {"backend": ("Backend Engineer", "eng"), "frontend": ("Frontend Engineer"
 def engineer(repo, name, color):
     role, zone = ROLE[repo["kind"]]
     duty = f"{repo['name']} · {repo['stack']}" + (f" · {repo['summary']}" if repo["summary"] else "")
-    return {"id": repo["name"], "name": name, "role": role, "zone": zone, "color": color,
-            "knowledge": repo["name"] + ".md", "repos": [repo["name"]], "stack": repo["stack"],
+    member_id = "root" if repo["name"] == "." else repo["name"]
+    return {"id": member_id, "name": name, "role": role, "zone": zone, "color": color,
+            "knowledge": member_id + ".md", "repos": [repo["name"]], "stack": repo["stack"],
             "checks": repo["checks"], "duty": duty}
 
 

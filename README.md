@@ -271,3 +271,6 @@ More docs: [User guide](docs/USER-GUIDE.md) · [Feature inventory](docs/FEATURES
 <br>
 <sub>MIT licensed · Built for <a href="https://claude.com/claude-code">Claude Code</a></sub>
 </div>
+
+
+For a single-package Git repository with its manifest at the root, `aiset-init . --no-launcher` treats the root as one unit when no service subfolders are detected. Checks run at the repository root; generated team files remain excluded from Git unless `--share` is supplied.

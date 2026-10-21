@@ -117,3 +117,6 @@ In priority order. "Why it matters" describes what is gained once it's solved.
 | 11 | **No light theme** | The UI is dark only. | An optional light theme. |
 
 When one of the items above is picked up, update this table: a finished item moves to its section as ✅.
+
+
+For a single-package Git repository with its manifest at the root, `aiset-init . --no-launcher` treats the root as one unit when no service subfolders are detected. Checks run at the repository root; generated team files remain excluded from Git unless `--share` is supplied.
