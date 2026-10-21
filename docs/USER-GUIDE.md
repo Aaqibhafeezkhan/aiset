@@ -147,6 +147,8 @@ What each repository in the workspace is built with and what it connects to, rea
 
   Python is parsed with `ast`, TypeScript with frontend's own `typescript` package (`teammap_ts.js`). The cache in `~/.claude/team/graph/index/` refreshes changed files on every query, and each refresh writes the Brain graph (`~/.claude/team/graph/<repo>.json`): every indexed file with the imports between them (Python modules, relative and tsconfig-alias TypeScript imports), plus endpoints, models and API calls. On the Brain page all files are in the Repositories tree; on the map, files no agent has opened are under **Code files**, off by default. Frontend calls are matched to backend routes by resolved URL; "no backend match" usually means the route doesn't exist on the current branch.
 
+Repository-relative paths use `/` on every platform, including Windows architecture evidence. Git-tracked non-ASCII filenames are indexed. `teammap file` resolves its importers with the same Python/TypeScript resolver as the code graph, including relative imports, directory indexes and tsconfig aliases.
+
 ## Research tools (`teammap impact`, `failures`, `relevant`)
 
 Three questions agents keep answering from scratch, with greps and reads, now take one call each. They reuse the code index, the import graph, the briefs and the episodes, run on the current code every time, and are told to the agents in their files (engineer, tester, integration checker, PM).
