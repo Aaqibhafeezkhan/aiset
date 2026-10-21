@@ -181,10 +181,11 @@ def py_extract(text):
 
 def git_files(repo, patterns):
     try:
-        out = subprocess.run(["git", "-C", repo, "ls-files", *patterns], capture_output=True, text=True, encoding="utf-8", timeout=30).stdout
+        out = subprocess.run(["git", "-C", repo, "-c", "core.quotepath=off", "ls-files", "-z", *patterns],
+                             capture_output=True, text=True, encoding="utf-8", timeout=30).stdout
     except (OSError, subprocess.SubprocessError):
         return []
-    return [l for l in out.splitlines() if l and "/node_modules/" not in l and not l.endswith(".d.ts")]
+    return [rel for rel in out.split("\0") if rel and "/node_modules/" not in rel and not rel.endswith(".d.ts")]
 
 
 def load_repo(name, force=False):
@@ -718,16 +719,7 @@ def cmd_file(repos, L, args, limit):
             tgt = f"→ {a['endpoint']['repo']} {a['endpoint']['file']}:{a['endpoint']['line']}" if a["endpoint"] else "(no backend match)"
             print(f"  api call  {a['in']}: {a['method']} {a['path']} {tgt}")
         # who imports it
-        stem = re.sub(r"\.(py|tsx?)$", "", f)
-        mod = stem.replace("/", ".")
-        importers = []
-        for f2, e2 in r["files"].items():
-            for imp in e2["data"].get("imports", []):
-                src = imp.get("from") or imp.get("module") or ""
-                if (e2["lang"] == "ts" and src.startswith(".") and os.path.normpath(os.path.join(os.path.dirname(f2), src)) in (stem, stem.rsplit("/index", 1)[0])) \
-                        or (e2["lang"] == "py" and (src == mod or f"{src}.{imp.get('name')}" == mod or mod.endswith("." + src) and src)):
-                    importers.append(f2)
-                    break
+        importers = sorted(source for source, target in file_imports(r) if target == f)
         if importers:
             print(f"  imported by {len(importers)}: " + ", ".join(importers[:10]) + (" …" if len(importers) > 10 else ""))
         eps = episodes_touching([f"{r['name']}/{f}"])

@@ -94,7 +94,7 @@ Legend: ✅ works · 🟡 partial / limited · ❌ missing
 |---|---|---|
 | No dependencies | ✅ | Only the Python 3 standard library; the repo's own `typescript` package for parsing TypeScript. |
 | Read-only | ✅ | Reads the transcripts Claude Code already writes; writes to nothing (except brief indexes and the name sync). |
-| Windows support | ✅ | Path normalisation, `\` and `/` separators. |
+| Windows support | ✅ | Path normalisation, `\` and `/` separators. Architecture evidence uses `/`, with workflow/DAG detection and test-file exclusion. Non-ASCII Git filenames are preserved. |
 | Commands | ✅ | `pip install -e .` provides the `aiset`, `aiset-init` and `teammap` commands (`pyproject.toml`). Without installing, `python src/aiset/<module>.py` works too. The code moved into the `src/aiset/` package on 2026-10-17 (project renamed agent-office → aiset). |
 | Automated tests | 🟡 | `tests/`: task ids, import resolution and the research tools (parsers checked against real pytest/unittest/Node output; end to end on a small workspace). Transcript parsing (`core.py`) still has no tests. |
 | Windows Git Bash arguments | ✅ | Git Bash turns arguments like `/products` into `C:/Program Files/Git/products`; `teammap` converts them back (2026-10-17). |
