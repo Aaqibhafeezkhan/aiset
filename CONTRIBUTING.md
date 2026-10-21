@@ -11,6 +11,16 @@ Thanks for helping. Bug reports, ideas, docs fixes and code are all welcome.
 
 Security problems go through [SECURITY.md](SECURITY.md), not public issues.
 
+## Picking an issue and opening your first PR
+
+Look for issues labeled [`good first issue`](https://github.com/JamshidS/aiset/labels/good%20first%20issue) or [`help wanted`](https://github.com/JamshidS/aiset/labels/help%20wanted). Check for existing comments and pull requests, then comment on the issue before starting so others know you are working on it. If no pull request is opened after a week, someone else may take it.
+
+For your first pull request from a fork, CI waits for a maintainer to approve the workflow run. A missing CI result does not mean the checks failed. If you have a workflow run from your fork, link it in the PR while you wait.
+
+AI-assisted contributions are welcome, including work prepared with Claude Code or Codex. The same standards apply: read and understand every line you submit, make sure tests cover the change and pass locally, and say what was generated in the PR description.
+
+Keep one issue per pull request and leave unrelated formatting changes and renames out of it.
+
 ## Development setup
 
 You need Python 3.9+ and Git. Node.js is only needed if you work on TypeScript indexing.
