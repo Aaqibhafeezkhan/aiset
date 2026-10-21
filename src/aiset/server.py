@@ -248,6 +248,8 @@ class Handler(BaseHTTPRequestHandler):
 def main():
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # Windows consoles default to cp1252
     ap = argparse.ArgumentParser(description="Live office view of your Claude Code agents.")
+    from . import __version__
+    ap.add_argument("--version", action="version", version="aiset " + __version__)
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--hours", type=float, help="show agents active within this many hours (default: Settings, 12)")
     ap.add_argument("--brain-days", type=float, help="how far back the Brain page looks (default: Settings, 30)")
@@ -287,3 +289,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

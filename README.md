@@ -271,3 +271,6 @@ More docs: [User guide](docs/USER-GUIDE.md) · [Feature inventory](docs/FEATURES
 <br>
 <sub>MIT licensed · Built for <a href="https://claude.com/claude-code">Claude Code</a></sub>
 </div>
+
+
+To report the installed package version without starting the dashboard or initializing a team, run `aiset --version`, `aiset-init --version`, or `teammap --version`.

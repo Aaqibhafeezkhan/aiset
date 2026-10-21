@@ -117,3 +117,6 @@ In priority order. "Why it matters" describes what is gained once it's solved.
 | 11 | **No light theme** | The UI is dark only. | An optional light theme. |
 
 When one of the items above is picked up, update this table: a finished item moves to its section as ✅.
+
+
+To report the installed package version without starting the dashboard or initializing a team, run `aiset --version`, `aiset-init --version`, or `teammap --version`.

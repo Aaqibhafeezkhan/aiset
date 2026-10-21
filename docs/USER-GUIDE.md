@@ -200,3 +200,6 @@ Layout and windows are stored in `<team>/settings.json`. The page only accepts w
 ## Renaming agents
 
 Use **Settings**, or edit the `name` fields in `<workspace>/.claude/team/roster.json`, or in `src/aiset/roster.json` when using the bundled sample from a source checkout. The running office picks the change up within a couple of seconds and copies the names into `~/.claude/agents/*.md`, so the agents use their new names too. (You can also run `python src/aiset/sync_names.py` by hand.) Agent sessions that are already running keep the old names until they're restarted.
+
+
+To report the installed package version without starting the dashboard or initializing a team, run `aiset --version`, `aiset-init --version`, or `teammap --version`.
