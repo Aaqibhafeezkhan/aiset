@@ -80,18 +80,27 @@ PRICES = {
     "claude-opus-5-5": (4, 20, 0.20, 5, 8), "claude-opus-5": (5, 25, 0.50, 6.25, 10),
     "claude-sonnet-5-5": (2, 10, 0.20, 2.5, 4), "claude-sonnet-5": (2, 10, 0.20, 2.5, 4),
     "claude-haiku-5-5": (0.10, 0.50, 0.01, 0.125, 0.20),
+    # older models still in use (pinned in Settings, or inside the Brain window)
+    "claude-opus-4-8": (5, 25, 0.50, 6.25, 10), "claude-opus-4-7": (5, 25, 0.50, 6.25, 10),
+    "claude-opus-4-6": (5, 25, 0.50, 6.25, 10), "claude-sonnet-4-6": (3, 15, 0.30, 3.75, 6),
+    "claude-haiku-4-5": (1, 5, 0.10, 1.25, 2),
 }
 FAMILY_PRICES = {"fable": PRICES["claude-fable-5-1"], "opus": PRICES["claude-opus-5-5"],
                  "sonnet": PRICES["claude-sonnet-5-5"], "haiku": PRICES["claude-haiku-5-5"]}
+# A prompt (input plus cache tokens) over the limit is billed at these rates instead.
+LONG_PROMPT_PRICES = {"claude-haiku-5-5": (100_000, (0.50, 2.50, 0.05, 0.625, 1))}
 
 
 def usage_cost(model, u):
     """Dollar cost of one API message's usage block."""
-    p = next((v for k, v in sorted(PRICES.items(), key=lambda kv: -len(kv[0])) if (model or "").startswith(k)), None) \
-        or FAMILY_PRICES.get(model_family(model))
+    key = next((k for k in sorted(PRICES, key=len, reverse=True) if (model or "").startswith(k)), None)
+    p = PRICES.get(key) or FAMILY_PRICES.get(model_family(model))
     if not p:
         return 0.0
     write = u.get("cache_creation_input_tokens") or 0
+    long_prompt = LONG_PROMPT_PRICES.get(key)
+    if long_prompt and (u.get("input_tokens") or 0) + (u.get("cache_read_input_tokens") or 0) + write > long_prompt[0]:
+        p = long_prompt[1]
     split = u.get("cache_creation") or {}
     w1h = split.get("ephemeral_1h_input_tokens") or 0
     w5m = split.get("ephemeral_5m_input_tokens", write - w1h) or 0

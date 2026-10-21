@@ -12,6 +12,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- Cost estimates price `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6`, `claude-sonnet-4-6` and `claude-haiku-4-5` at their own list prices instead of the current generation's (Haiku 4.5 came out about ten times too cheap), and Haiku 5.5 prompts over 100K tokens at its long-prompt rate.
 - Architecture scans use forward-slash repository paths on Windows, so workflow files and DAG folders are detected and test files stay out of infrastructure evidence. `teammap` preserves non-ASCII Git filenames, and `teammap file` resolves importers through the same Python/TypeScript resolver as the code graph, including tsconfig aliases.
 - Sessions are matched to their workspace the way Claude Code names project folders. `slug()` lowercased before replacing, and `"İ".lower()` is two characters, so a workspace under a non-ASCII path (or one with an emoji in it) never matched and the office showed no sessions at all. Sibling folders no longer leak in either: with workspace `C:\work\app`, sessions from `C:\work\apples` and `C:\work\app2` used to appear on the floor and in the token and cost totals.
 - The office footer now suggests the `<team>-pm` launcher when `aiset-init` writes it and the command is on `PATH`; `--no-launcher` and unavailable launchers keep the roster's existing PM command, and so does a `pmCommand` you edited in Settings.
