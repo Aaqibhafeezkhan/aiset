@@ -59,18 +59,18 @@ def sync(roster):
         path = os.path.join(AGENTS, m["id"] + ".md")
         if not os.path.exists(path):
             continue
-        with open(path, encoding="utf-8") as f:
+        with open(path, encoding="utf-8", errors="surrogateescape") as f:
             text = f.read()
         new = re.sub(r'^(description: ")[^"·]+?( · )', lambda x: x.group(1) + m["name"] + x.group(2), text, count=1, flags=re.M)
         new = re.sub(r"(You are \*\*).+?(, the )", lambda x: x.group(1) + m["name"] + x.group(2), new, count=1)
         new = set_model(new, m.get("model"))
         if new != text:
-            with open(path, "w", encoding="utf-8", newline="\n") as f:
+            with open(path, "w", encoding="utf-8", errors="surrogateescape", newline="\n") as f:
                 f.write(new)
             changed.append(m["id"])
     pm = os.path.join(AGENTS, "pm.md")
     if os.path.exists(pm):
-        with open(pm, encoding="utf-8") as f:
+        with open(pm, encoding="utf-8", errors="surrogateescape") as f:
             text = f.read()
         new = text
         for m in roster["members"]:
@@ -78,7 +78,7 @@ def sync(roster):
                          lambda x: x.group(1) + m["name"] + x.group(2), new, count=1, flags=re.M)
         new = set_pinned(new, roster)
         if new != text:
-            with open(pm, "w", encoding="utf-8", newline="\n") as f:
+            with open(pm, "w", encoding="utf-8", errors="surrogateescape", newline="\n") as f:
                 f.write(new)
             changed.append("pm table")
     return changed

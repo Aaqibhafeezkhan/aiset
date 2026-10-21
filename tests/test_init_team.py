@@ -99,6 +99,17 @@ class PMCommandTest(unittest.TestCase):
         with open(os.path.join(team_dir, "roster.json"), "w", encoding="utf-8") as f:
             json.dump({"team": "Demo", "members": [], **fields}, f)
 
+    def test_a_roster_saved_with_a_bom_is_still_read(self):
+        team_dir = os.path.join(self.workspace, ".claude", "team")
+        os.makedirs(team_dir)
+        # PowerShell 5.1's Set-Content -Encoding utf8 writes a BOM
+        with open(os.path.join(team_dir, "roster.json"), "w", encoding="utf-8-sig") as f:
+            json.dump({"team": "Demo", "pmCommand": "custom-pm", "members": []}, f)
+
+        roster = self.run_init("--no-launcher")
+
+        self.assertEqual(roster["pmCommand"], "custom-pm")
+
     def test_custom_pm_command_survives_a_rerun(self):
         self.seed_roster(pmCommand="claude --agent pm --model opus")
 
