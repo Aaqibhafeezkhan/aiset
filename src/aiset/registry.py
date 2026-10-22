@@ -43,7 +43,7 @@ def enclosing(d):
 def workspaces():
     """Registered workspaces that still have a team, most recently initialised first."""
     try:
-        with open(_file(), encoding="utf-8") as f:
+        with open(_file(), encoding="utf-8-sig") as f:
             items = json.load(f).get("workspaces", [])
     except (OSError, ValueError):
         return []

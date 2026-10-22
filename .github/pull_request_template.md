@@ -10,6 +10,8 @@ Closes #
 
 ## Checklist
 
+- [ ] Read the [issue selection and first-PR guidance](../CONTRIBUTING.md#picking-an-issue-and-opening-your-first-pr), including `good first issue` and AI-assisted contributions
+
 - [ ] `make check` (or `python -m unittest discover -s tests`) passes
 - [ ] Tests added or updated for behaviour changes
 - [ ] Docs updated for user-facing changes (`README.md`, `docs/`)

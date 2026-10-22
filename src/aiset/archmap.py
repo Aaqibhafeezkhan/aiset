@@ -235,7 +235,7 @@ def _deps(repo_path, files):
     """Python, npm and JVM dependency names, each with where it was declared."""
     py, npm, jvm = {}, {}, {}
     for path, f in files:
-        rel = os.path.relpath(path, repo_path)
+        rel = os.path.relpath(path, repo_path).replace(os.sep, "/")
         if re.match(r"requirements.*\.txt$", f):
             for i, line in enumerate(_read(path).splitlines(), 1):
                 m = re.match(r"\s*([A-Za-z0-9_.\-\[\]]+)", line)
@@ -321,7 +321,7 @@ def scan_repo(name):
     detectors = [(d, [re.compile(p, re.M) for p in d["code"]]) for d in DETECTORS]
     has_dags = False
     for full, f in files:
-        rel = os.path.relpath(full, path)
+        rel = os.path.relpath(full, path).replace(os.sep, "/")
         ext = os.path.splitext(f)[1].lower()
         if f.startswith(".env") and not f.endswith((".example", ".sample")) or "/secrets/" in "/" + rel:
             continue

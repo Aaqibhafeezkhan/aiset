@@ -131,7 +131,7 @@ Services, databases and the calls between them, each backed by a file and line. 
 | **Brain** | One graph of agents, briefs, sections, episodes, files, endpoints, models and API calls. Follow an agent, search anything, focus on a node. |
 | **Architecture** | Static map of frontends, APIs, workers and infrastructure (PostgreSQL, MongoDB, Redis, RabbitMQ, Kafka, Keycloak and more), with evidence for every link. Exports Mermaid. |
 | **Settings** | Names, roles, colours, duties and the **model per agent**: put routine work on Sonnet or Haiku, keep Opus where it matters. |
-| **teammap** | Code-aware research for agents and people: endpoint → handler → frontend callers, change impact, relevant context for a task, test-failure triage. |
+| **teammap** | Code-aware research for agents and people: endpoint → handler → frontend callers, change impact, relevant context for a task, test-failure triage. Indexes non-ASCII filenames and resolves relative and tsconfig-alias importers. |
 | **Launchers** | `aiset-init` writes a `<team>-pm` command, so the PM is one word away from any folder. |
 
 <br>

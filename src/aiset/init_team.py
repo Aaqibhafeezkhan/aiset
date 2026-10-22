@@ -57,7 +57,7 @@ def fwd(p):
 
 def _read(path, limit=200000):
     try:
-        with open(path, encoding="utf-8", errors="replace") as f:
+        with open(path, encoding="utf-8-sig", errors="replace") as f:
             return f.read(limit)
     except OSError:
         return ""
@@ -390,7 +390,7 @@ def main():
     roster_path = os.path.join(team_dir, "roster.json")
     old = None
     if os.path.exists(roster_path):
-        with open(roster_path, encoding="utf-8") as f:
+        with open(roster_path, encoding="utf-8-sig") as f:
             old = json.load(f)
     group = args.group or (old or {}).get("group") or ("stack" if len(repos) > 12 else "repo")
     old_team = (old or {}).get("team")  # build_roster renames the old roster in place

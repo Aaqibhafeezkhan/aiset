@@ -74,7 +74,7 @@ def _clean(s):
 
 def load():
     try:
-        with open(PATH, encoding="utf-8") as f:
+        with open(PATH, encoding="utf-8-sig") as f:
             return _clean(json.load(f))
     except (OSError, ValueError):
         return _clean({})
