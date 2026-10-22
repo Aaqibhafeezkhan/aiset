@@ -12,6 +12,8 @@ Python 3.9+. The Python package has no third-party runtime dependencies. Reposit
 pipx install aiset-cli    # adds the commands aiset, aiset-init and teammap (from a clone: pip install -e .)
 ```
 
+Check which version is installed with `aiset --version` (also `aiset-init --version`, `teammap --version`); it doesn't start the office or touch a workspace.
+
 Without installing, run the files directly: `python src/aiset/server.py`, `python src/aiset/teammap.py`, `python src/aiset/init_team.py`. Tests: `python -m unittest discover -s tests`.
 
 The `Makefile` wraps the usual commands (`make` lists them): `make test`, `make check`, `make install`, `make office WS=~/work/shop`, `make init WS=… TEAM=…`, `make index WS=…`, `make impact WS=… Q='/items/{item_id} GET'`, `make relevant WS=… Q="…"`, `make failures WS=… Q=<log>`, `make eval WS=…`, `make eval-agent WS=… RUNS=3` (spends tokens), `make clean`.

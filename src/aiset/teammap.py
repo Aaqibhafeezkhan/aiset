@@ -831,6 +831,10 @@ def msys_unmangle(arg):
 
 def main(argv):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # Windows consoles default to cp1252
+    if argv == ["--version"]:
+        from . import __version__
+        print("teammap " + __version__)
+        return 0
     argv = [msys_unmangle(a) for a in argv]
     limit, only, force, args, max_lines = None, None, False, [], 150
     it = iter(argv)

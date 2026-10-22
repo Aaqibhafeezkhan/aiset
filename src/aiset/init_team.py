@@ -368,6 +368,8 @@ def write_briefs(ws, roster):
 def main():
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # Windows consoles default to cp1252
     ap = argparse.ArgumentParser(description="Set up an AI team inside a folder of repositories.")
+    from . import __version__
+    ap.add_argument("--version", action="version", version="aiset-init " + __version__)
     ap.add_argument("folder")
     ap.add_argument("--team", help="team name shown in the office (default: folder name)")
     ap.add_argument("--force", action="store_true", help="overwrite agent files even if you edited them")
