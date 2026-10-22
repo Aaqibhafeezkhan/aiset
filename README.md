@@ -263,6 +263,14 @@ Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) fo
 
 More docs: [User guide](docs/USER-GUIDE.md) · [Feature inventory](docs/FEATURES.md) · [Research tools](docs/RESEARCH-TOOLS.md) · [Brand assets](docs/branding/preview.html)
 
+### Contributors
+
+Thanks to everyone who has helped build aiset.
+
+<a href="https://github.com/JamshidS/aiset/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=JamshidS/aiset" alt="aiset contributors">
+</a>
+
 <br>
 
 <div align="center">
