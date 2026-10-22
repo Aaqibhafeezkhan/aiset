@@ -12,6 +12,8 @@ Python 3.9+. The Python package has no third-party runtime dependencies. Reposit
 pipx install aiset-cli    # adds the commands aiset, aiset-init and teammap (from a clone: pip install -e .)
 ```
 
+Check which version is installed with `aiset --version` (also `aiset-init --version`, `teammap --version`); it doesn't start the office or touch a workspace.
+
 Without installing, run the files directly: `python src/aiset/server.py`, `python src/aiset/teammap.py`, `python src/aiset/init_team.py`. Tests: `python -m unittest discover -s tests`.
 
 The `Makefile` wraps the usual commands (`make` lists them): `make test`, `make check`, `make install`, `make office WS=~/work/shop`, `make init WS=… TEAM=…`, `make index WS=…`, `make impact WS=… Q='/items/{item_id} GET'`, `make relevant WS=… Q="…"`, `make failures WS=… Q=<log>`, `make eval WS=…`, `make eval-agent WS=… RUNS=3` (spends tokens), `make clean`.
@@ -200,6 +202,3 @@ Layout and windows are stored in `<team>/settings.json`. The page only accepts w
 ## Renaming agents
 
 Use **Settings**, or edit the `name` fields in `<workspace>/.claude/team/roster.json`, or in `src/aiset/roster.json` when using the bundled sample from a source checkout. The running office picks the change up within a couple of seconds and copies the names into `~/.claude/agents/*.md`, so the agents use their new names too. (You can also run `python src/aiset/sync_names.py` by hand.) Agent sessions that are already running keep the old names until they're restarted.
-
-
-To report the installed package version without starting the dashboard or initializing a team, run `aiset --version`, `aiset-init --version`, or `teammap --version`.

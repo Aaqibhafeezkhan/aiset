@@ -147,6 +147,7 @@ Services, databases and the calls between them, each backed by a file and line. 
 | `teammap impact <path\|symbol\|Model> [METHOD]` | What a change can reach: consumers, models, importers, tests. Exact vs inferred. |
 | `teammap failures <log>` | Failed tests, messages and in-repo frames from a saved test run, grouped. |
 | `teammap endpoint` · `model` · `arch` · `symbol` | Direct lookups. `teammap --help` lists them all. |
+| `aiset --version` · `aiset-init --version` · `teammap --version` | Print the installed version. Doesn't start the office or touch a workspace. |
 
 <details>
 <summary><b>Example: what does changing an endpoint break?</b></summary>
@@ -271,6 +272,3 @@ More docs: [User guide](docs/USER-GUIDE.md) · [Feature inventory](docs/FEATURES
 <br>
 <sub>MIT licensed · Built for <a href="https://claude.com/claude-code">Claude Code</a></sub>
 </div>
-
-
-To report the installed package version without starting the dashboard or initializing a team, run `aiset --version`, `aiset-init --version`, or `teammap --version`.
