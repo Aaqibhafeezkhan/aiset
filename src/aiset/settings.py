@@ -105,34 +105,44 @@ def apply_roster(roster, edit):
     Only these fields change: team, pmCommand, and per existing member name, role, color, duty, model.
     Members are matched by id; ids, zones, repos and knowledge files stay as init_team.py wrote them.
     """
+    if not isinstance(edit, dict):
+        raise ValueError("roster edit must be an object")
     out = copy.deepcopy(roster)
+    if not isinstance(out, dict) or not isinstance(out.get("members"), list):
+        raise ValueError("roster must be an object with a 'members' list")
     if "team" in edit:
         out["team"] = _text(edit["team"], 60, "Team name")
     if "pmCommand" in edit:
         out["pmCommand"] = _text(edit["pmCommand"], 160, "PM command")
-    by_id = {m["id"]: m for m in out["members"]}
-    for e in edit.get("members") or []:
-        m = by_id.get(e.get("id"))
-        if m is None:
-            raise ValueError(f"unknown agent {e.get('id')!r}")
-        if "name" in e:
-            m["name"] = _text(e["name"], 40, "Name")
-        if "role" in e:
-            m["role"] = _text(e["role"], 60, "Role")
-        if "duty" in e:
-            m["duty"] = _text(e["duty"], 400, "Duty")
-        if "color" in e:
-            if not COLOR_RE.match(str(e["color"])):
-                raise ValueError(f"{m['name']}: colour must look like #22c55e")
-            m["color"] = e["color"].lower()
-        if "model" in e:
-            model = str(e["model"] or "").strip().lower()
-            if model and not MODEL_RE.match(model):
-                raise ValueError(f"{m['name']}: {model!r} isn't a model alias or id")
-            if model:
-                m["model"] = model
-            else:
-                m.pop("model", None)
+    by_id = {m["id"]: m for m in out["members"] if isinstance(m, dict) and "id" in m}
+    members = edit.get("members")
+    if members is not None:
+        if not isinstance(members, list):
+            raise ValueError("members must be a list")
+        for e in members:
+            if not isinstance(e, dict):
+                raise ValueError("each member edit must be an object")
+            m = by_id.get(e.get("id"))
+            if m is None:
+                raise ValueError(f"unknown agent {e.get('id')!r}")
+            if "name" in e:
+                m["name"] = _text(e["name"], 40, "Name")
+            if "role" in e:
+                m["role"] = _text(e["role"], 60, "Role")
+            if "duty" in e:
+                m["duty"] = _text(e["duty"], 400, "Duty")
+            if "color" in e:
+                if not COLOR_RE.match(str(e["color"])):
+                    raise ValueError(f"{m['name']}: colour must look like #22c55e")
+                m["color"] = e["color"].lower()
+            if "model" in e:
+                model = str(e["model"] or "").strip().lower()
+                if model and not MODEL_RE.match(model):
+                    raise ValueError(f"{m['name']}: {model!r} isn't a model alias or id")
+                if model:
+                    m["model"] = model
+                else:
+                    m.pop("model", None)
     return out
 
 
