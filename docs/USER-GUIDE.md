@@ -39,6 +39,8 @@ aiset --workspace example-project                         # the office for that 
 
 **Monorepos** work too: when the folder is itself one git repository, every top-level folder with a build file (`pom.xml`, `package.json`, `requirements.txt`, `Dockerfile`…) is a service. Above 12 services (or with `--group stack`) the team gets one engineer per stack (Java, Node.js, Python, frontend) instead of one per service, and the DevOps engineer owns the root CI and build files. A monorepo's `.claude/` is added to `.git/info/exclude`, so the team stays on your machine; `--share` lets git see it.
 
+A single-package repository with its manifest at the root becomes one unit (`root`, checks run at the repository root). If a service folder is added later, the root engineer keeps the root and is told the service folders belong to their own engineers; member ids stay unique (a service called `root`, `pm` or `tester` gets `root-2`, `pm-2`, ...).
+
 Edit names, roles and duties in `<folder>/.claude/team/roster.json` and run `init_team.py` again: new repos are added, your names are kept, and agent files are re-rendered (except the ones where you deleted the "generated" marker line). `teammap` finds the workspace from the current directory; it parses TypeScript with the repo's own `typescript`, or with aiset's (`npm install --no-save typescript` in this folder) before the frontends have `node_modules`.
 
 Without a workspace (no `--workspace`, not inside one, and for the office: no team set up with `aiset-init`), everything below works as before: `~/.claude/agents`, `~/.claude/team`, the checkout root as the code root (the package directory in a non-editable installation) and the package's `src/aiset/roster.json`.
@@ -203,6 +205,3 @@ Layout and windows are stored in `<team>/settings.json`. The page only accepts w
 ## Renaming agents
 
 Use **Settings**, or edit the `name` fields in `<workspace>/.claude/team/roster.json`, or in `src/aiset/roster.json` when using the bundled sample from a source checkout. The running office picks the change up within a couple of seconds and copies the names into `~/.claude/agents/*.md`, so the agents use their new names too. (You can also run `python src/aiset/sync_names.py` by hand.) Agent sessions that are already running keep the old names until they're restarted.
-
-
-For a single-package Git repository with its manifest at the root, `aiset-init . --no-launcher` treats the root as one unit when no service subfolders are detected. Checks run at the repository root; generated team files remain excluded from Git unless `--share` is supplied.

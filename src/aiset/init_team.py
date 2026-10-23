@@ -206,10 +206,21 @@ ROLE = {"backend": ("Backend Engineer", "eng"), "frontend": ("Frontend Engineer"
         "infra": ("DevOps Engineer", "infra"), "other": ("Engineer", "eng")}
 
 
-def engineer(repo, name, color):
+FIXED_IDS = ("pm", "tester", "integration-checker")  # members every roster has
+
+
+def unique_id(base, taken):
+    """base, or base-2, base-3… when the roster already has that id (a service folder called pm, root…)."""
+    member_id, n = base, 2
+    while member_id in taken:
+        member_id, n = f"{base}-{n}", n + 1
+    return member_id
+
+
+def engineer(repo, name, color, taken=FIXED_IDS):
     role, zone = ROLE[repo["kind"]]
     duty = f"{repo['name']} · {repo['stack']}" + (f" · {repo['summary']}" if repo["summary"] else "")
-    member_id = "root" if repo["name"] == "." else repo["name"]
+    member_id = unique_id("root" if repo["name"] == "." else repo["name"], taken)
     return {"id": member_id, "name": name, "role": role, "zone": zone, "color": color,
             "knowledge": member_id + ".md", "repos": [repo["name"]], "stack": repo["stack"],
             "checks": repo["checks"], "duty": duty}
@@ -236,7 +247,8 @@ def build_roster(ws, team, repos, old, group="repo"):
         free = [n for n in NAMES if n not in taken]
         added = []
         for i, repo in enumerate(r for r in repos if r["name"] not in owned):
-            m = engineer(repo, free[i % len(free)] if free else repo["name"], COLORS[(len(roster["members"]) + i) % len(COLORS)])
+            ids = set(FIXED_IDS) | {x["id"] for x in roster["members"]}
+            m = engineer(repo, free[i % len(free)] if free else repo["name"], COLORS[(len(roster["members"]) + i) % len(COLORS)], ids)
             # engineers go before QA so the office keeps its order
             at = next((k for k, x in enumerate(roster["members"]) if x["zone"] in ("qa", "infra") and m["zone"] == "eng"), len(roster["members"]))
             roster["members"].insert(at, m)
@@ -269,7 +281,7 @@ def build_roster(ws, team, repos, old, group="repo"):
         return {"team": name, "pmCommand": "claude --agent pm", "group": "stack", "members": members}, [r["name"] for r in repos]
     for i, repo in enumerate(order):
         if repo["kind"] != "infra":
-            members.append(engineer(repo, NAMES[i % len(NAMES)], COLORS[i % len(COLORS)]))
+            members.append(engineer(repo, NAMES[i % len(NAMES)], COLORS[i % len(COLORS)], set(FIXED_IDS) | {x["id"] for x in members}))
     members += [
         {"id": "tester", "name": "Derya", "role": "QA Engineer", "zone": "qa", "color": "#eab308", "knowledge": None,
          "duty": "Runs tests, lint & type-checks; writes tests"},
@@ -277,9 +289,25 @@ def build_roster(ws, team, repos, old, group="repo"):
          "knowledge": "integration-checker.md", "duty": "Cross-repo contracts, auth, env & compose wiring"},
     ]
     for i, repo in enumerate(r for r in order if r["kind"] == "infra"):
-        members.append(engineer(repo, NAMES[(len(members) + i) % len(NAMES)], "#f97316"))
+        members.append(engineer(repo, NAMES[(len(members) + i) % len(NAMES)], "#f97316", {x["id"] for x in members}))
     name = team or os.path.basename(os.path.abspath(ws))
     return {"team": name, "pmCommand": "claude --agent pm", "members": members}, [r["name"] for r in repos]
+
+
+ROOT_SCOPE = " · outside the service folders, which have their own engineers"
+
+
+def scope_root_owner(roster, repos):
+    """Once services appear in subfolders, scan() stops returning "."; the engineer who kept owning
+    the root unit keeps it, but their duty now says the service folders are someone else's."""
+    if not repos or any(r["name"] == "." for r in repos):
+        return []
+    scoped = []
+    for m in roster["members"]:
+        if "." in (m.get("repos") or []) and ROOT_SCOPE not in m.get("duty", ""):
+            m["duty"] = m.get("duty", "") + ROOT_SCOPE
+            scoped.append(m["name"])
+    return scoped
 
 
 def render(template, values):
@@ -409,6 +437,7 @@ def main():
     group = args.group or (old or {}).get("group") or ("stack" if len(repos) > 12 else "repo")
     old_team = (old or {}).get("team")  # build_roster renames the old roster in place
     roster, added = build_roster(ws, args.team, repos, old, group)
+    rescoped = scope_root_owner(roster, repos) if is_monorepo(ws) else []
     if args.no_nudge:
         roster["nudge"] = False
     hidden = False
@@ -435,6 +464,8 @@ def main():
         owner = next((m["name"] for m in roster["members"] if r["name"] in (m.get("repos") or [])), "-")
         print(f"  {r['name']:30} {r['stack']:32} → {owner}")
     print(f"roster:  {roster_path}" + (f"  (added: {', '.join(added)})" if added and old else ""))
+    if rescoped:
+        print(f"root:    {', '.join(rescoped)} still owns the repository root; the service folders now belong to their own engineers")
     print(f"agents:  {', '.join(written) or 'up to date'}" + (f"  (kept your edits: {', '.join(kept)})" if kept else ""))
     if briefs:
         print(f"briefs:  {', '.join(briefs)} (stubs)")

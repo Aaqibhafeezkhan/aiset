@@ -17,8 +17,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
-- `aiset-init` supports single-package repositories whose manifest is at the root, with one root engineer and root-relative checks when no service subfolders are found.
-
+- `aiset-init` supports single-package repositories whose manifest is at the root, with one root engineer and root-relative checks when no service subfolders are found. Member ids are allocated uniquely (`root`, then `root-2`, ...; a service folder named like `pm` or `tester` no longer overwrites that agent), and the root engineer is scoped once service folders appear.
 - A team file that isn't UTF-8 (PowerShell 5.1 writes the ANSI codepage by default) no longer breaks the office: Markdown and text files are read with a replacement character for the bad bytes, and a name sync keeps them as they were. JSON files saved with a UTF-8 BOM (`roster.json`, `settings.json`, the workspace registry, a repo's `package.json`) load as usual instead of failing or silently falling back to defaults.
 - Architecture scans use forward-slash repository paths on Windows, so workflow files and DAG folders are detected and test files stay out of infrastructure evidence. `teammap` preserves non-ASCII Git filenames, and `teammap file` resolves importers through the same Python/TypeScript resolver as the code graph, including tsconfig aliases.
 - Sessions are matched to their workspace the way Claude Code names project folders. `slug()` lowercased before replacing, and `"İ".lower()` is two characters, so a workspace under a non-ASCII path (or one with an emoji in it) never matched and the office showed no sessions at all. Sibling folders no longer leak in either: with workspace `C:\work\app`, sessions from `C:\work\apples` and `C:\work\app2` used to appear on the floor and in the token and cost totals.
@@ -44,4 +43,3 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 [Unreleased]: https://github.com/JamshidS/aiset/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/JamshidS/aiset/releases/tag/v0.1.0
-
