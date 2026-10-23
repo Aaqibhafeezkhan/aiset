@@ -16,6 +16,7 @@ the original single-team layout is used: ~/.claude/agents, ~/.claude/team, the a
 import json
 import os
 import re
+import shutil
 
 from .registry import enclosing
 
@@ -105,6 +106,12 @@ BOARDS = TEAM + "/tasks"
 EPISODES = TEAM + "/episodes"
 GRAPHS = TEAM + "/graph"
 PROJECTS = norm(os.path.join(HOME, ".claude", "projects"))
+
+
+def script_command(name):
+    """How an agent file runs one of aiset's scripts: `python "<package>/<name>.py"`, which works in any shell."""
+    py = "python" if shutil.which("python") else "python3"
+    return f'{py} "{os.path.join(HERE, name + ".py").replace(chr(92), "/")}"'
 
 
 def load_roster():

@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 
 - `aiset --version`, `aiset-init --version` and `teammap --version` print the package version without initializing a workspace.
+- Engineers, QA and the integration checker get a PreToolUse hook (`nudge.py`) that suggests the matching `teammap` command when they grep for a symbol or route, or read a long source file whole. It never blocks a call, makes each suggestion once per session, and runs only while those agents work. `aiset-init --no-nudge` leaves it out. The task detail counts each agent's `teammap` calls (🗺️) next to its reads and searches.
 
 ### Security
 

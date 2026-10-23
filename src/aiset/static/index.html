@@ -806,7 +806,7 @@ async function renderTaskRoutes(id) {
   // 1. who went where, in one line per run
   h += `<div class="sec"><h4>🧭 Agents on this task <a class="maplink" href="/brain#task=${encodeURIComponent(id)}">🧠 Show on the Brain map</a></h4><div class="box rsum">${d.runs.map((x, i) => { const [nm, c] = who(x.agent); const k = x.counts;
     return `<button class="rs" data-i="${i}" style="--c:${c}"><span class="dot" style="background:${c}"></span><b style="color:${c}">${esc(nm)}</b>${x.lead ? `<span class="mutedtx">lead</span>` : ""}
-      <span class="nums"><span title="files">📂 ${x.files}</span>${k.read ? `<span title="reads">📖 ${k.read}</span>` : ""}${k.edit ? `<span title="edits">✏️ ${k.edit}</span>` : ""}${k.search ? `<span title="searches">🔎 ${k.search}</span>` : ""}${k.test ? `<span title="test runs">🧪 ${k.test}</span>` : ""}${k.db ? `<span title="db queries">🗄️ ${k.db}</span>` : ""}${k.delegate ? `<span title="assignments">📨 ${k.delegate}</span>` : ""}</span>
+      <span class="nums"><span title="files">📂 ${x.files}</span>${k.read ? `<span title="reads">📖 ${k.read}</span>` : ""}${k.edit ? `<span title="edits">✏️ ${k.edit}</span>` : ""}${k.search ? `<span title="searches">🔎 ${k.search}</span>` : ""}${k.map ? `<span title="teammap calls">🗺️ ${k.map}</span>` : ""}${k.test ? `<span title="test runs">🧪 ${k.test}</span>` : ""}${k.db ? `<span title="db queries">🗄️ ${k.db}</span>` : ""}${k.delegate ? `<span title="assignments">📨 ${k.delegate}</span>` : ""}</span>
       <span class="when">${hm(x.start)} · ${dur(x.start, x.end)}</span></button>`; }).join("")}</div></div>`;
   // 2. files x agents
   const fl = d.files.filter(f => !routeArea || f.area === routeArea);

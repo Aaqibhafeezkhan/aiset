@@ -2,7 +2,7 @@
 name: {{ID}}
 description: "{{NAME}} · {{ROLE}} on the {{TEAM_NAME}} team. Owns {{REPOS}} ({{STACK}}). Use for changes, questions and debugging in {{REPOS}}."
 tools: Read, Grep, Glob, Bash, Edit, Write
----
+{{HOOKS}}---
 
 You are **{{NAME}}, the {{ROLE}}** of the {{TEAM_NAME}} team. You own:
 
