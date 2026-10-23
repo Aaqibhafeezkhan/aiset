@@ -45,7 +45,11 @@ Give the PM its first task:
 
 > *"Build the knowledge briefs. Document the architecture, conventions, test commands and known pitfalls for each repository."*
 
-<sub>Needs Python 3.9+, Git and [Claude Code](https://claude.com/claude-code). TypeScript indexing also uses Node.js. Works with a folder of repositories or a monorepo. The PyPI package is `aiset-cli` (`aiset` on PyPI is an unrelated project). To hack on aiset itself, clone it and `pip install -e .`.</sub>
+> [!TIP]
+> Agents working in parallel spend tokens in parallel. The office shows the cost per agent and task as it happens, and **Settings** lets you put routine roles on Sonnet or Haiku.
+
+<sub>Needs Python 3.9+, Git and [Claude Code](https://claude.com/claude-code); TypeScript indexing also uses Node.js. Works with a folder of repositories or a monorepo; a single repository with its project at the root isn't supported yet ([#36](https://github.com/JamshidS/aiset/issues/36)).</sub><br>
+<sub>The PyPI package is `aiset-cli`; `aiset` on PyPI is an unrelated project.</sub>
 
 <br>
 
@@ -131,7 +135,7 @@ Services, databases and the calls between them, each backed by a file and line. 
 | **Brain** | One graph of agents, briefs, sections, episodes, files, endpoints, models and API calls. Follow an agent, search anything, focus on a node. |
 | **Architecture** | Static map of frontends, APIs, workers and infrastructure (PostgreSQL, MongoDB, Redis, RabbitMQ, Kafka, Keycloak and more), with evidence for every link. Exports Mermaid. |
 | **Settings** | Names, roles, colours, duties and the **model per agent**: put routine work on Sonnet or Haiku, keep Opus where it matters. |
-| **teammap** | Code-aware research for agents and people: endpoint → handler → frontend callers, change impact, relevant context for a task, test-failure triage. Indexes non-ASCII filenames and resolves relative and tsconfig-alias importers. |
+| **teammap** | Code-aware research for agents and people: endpoint → handler → frontend callers, change impact, relevant context for a task, test-failure triage. |
 | **Launchers** | `aiset-init` writes a `<team>-pm` command, so the PM is one word away from any folder. |
 
 <br>
@@ -216,6 +220,14 @@ Everything is plain Markdown and JSON in your workspace. In a monorepo, `.claude
 ## FAQ
 
 <details>
+<summary><b>How is this different from Claude Code subagents?</b></summary>
+<br>
+
+aiset is built on them. `aiset-init` writes the subagent files for you, one per repo or stack, with each agent's repos, test commands and brief. On top it adds what subagents don't have on their own: a PM that plans and verifies, memory that carries over between tasks (briefs, field notes, episodes), `teammap` research tools, and a dashboard that shows what every agent is doing and what it costs.
+
+</details>
+
+<details>
 <summary><b><code>aiset-init</code> is "not recognized" after installing</b></summary>
 <br>
 
@@ -259,9 +271,17 @@ The office shows one workspace at a time and prints which one at startup. Run `a
 
 ## Contributing
 
-Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup and guidelines (`make check` runs everything), and report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+Issues and pull requests are welcome. A good place to start is an issue labeled [**good first issue**](https://github.com/JamshidS/aiset/labels/good%20first%20issue): each one names the files to change and how to test it. To work on aiset itself, clone it, `pip install -e .`, and run `make check`. [CONTRIBUTING.md](CONTRIBUTING.md) has the full workflow; report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
 More docs: [User guide](docs/USER-GUIDE.md) · [Feature inventory](docs/FEATURES.md) · [Research tools](docs/RESEARCH-TOOLS.md) · [Brand assets](docs/branding/preview.html)
+
+### Contributors
+
+Thanks to everyone who has helped build aiset.
+
+<a href="https://github.com/JamshidS/aiset/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=JamshidS/aiset" alt="aiset contributors">
+</a>
 
 <br>
 
