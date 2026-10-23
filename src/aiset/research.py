@@ -22,6 +22,7 @@ index file mtimes (committed or not) plus the tool version and parameters; other
 Results are stored in <team>/graph/research/ (see workspace.py); nothing is written into the repositories, and
 test output is only read, never executed.
 """
+import argparse
 import hashlib
 import json
 import os
@@ -829,7 +830,8 @@ def _frame_loc(fr):
 
 def _is_library(path):
     p = norm(path)
-    return bool(re.search(r"(^|/)(site-packages|dist-packages|node_modules|lib/python\d[\d.]*|internal/|<frozen )", p)) \
+    return bool(re.search(r"(^|/)(site-packages|dist-packages|node_modules|lib/python\d[\d.]*|<frozen )", p)) \
+        or bool(re.match(r"^internal/(?:modules|process|bootstrap)/.*\.js$", p)) \
         or p.startswith(("node:", "<"))
 
 
@@ -1186,25 +1188,16 @@ def emit(res, as_json, limit, max_chars):
 # -- main -------------------------------------------------------------------------------------------
 
 def _parse(argv):
-    opts = {"json": False, "limit": None, "all": False, "max_chars": None, "repo": None, "fresh": False, "format": None,
-            "kind": None, "section": None}
-    args, it = [], iter(argv)
-    for a in it:
-        if a == "--json":
-            opts["json"] = True
-        elif a == "--all":
-            opts["all"] = True
-        elif a == "--fresh":
-            opts["fresh"] = True
-        elif a in ("--limit", "--max-chars", "--repo", "--format", "--kind", "--section"):
-            v = next(it, None)
-            if v is None:
-                raise SystemExit(f"{a} needs a value")
-            key = a[2:].replace("-", "_")
-            opts[key] = int(v) if key in ("limit", "max_chars") else v
-        else:
-            args.append(a)
-    return args, opts
+    parser = argparse.ArgumentParser(prog="teammap", add_help=False, allow_abbrev=False)
+    for name in ("json", "all", "fresh"):
+        parser.add_argument("--" + name, action="store_true")
+    for name in ("limit", "max-chars"):
+        parser.add_argument("--" + name, type=int)
+    parser.add_argument("--repo", choices=teammap.REPOS)
+    for name in ("format", "kind", "section"):
+        parser.add_argument("--" + name)
+    opts, args = parser.parse_known_args(argv)
+    return args, vars(opts)
 
 
 def main(argv):
