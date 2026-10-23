@@ -138,6 +138,26 @@ class ServerMalformedInputTest(unittest.TestCase):
                 self.handler.do_POST()
                 self.assertEqual(self.sent[0][0], 400)
 
+    def test_post_settings_rejects_non_string_member_id(self):
+        self.handler.path = "/api/settings"
+        self.handler.headers = {
+            "Host": "127.0.0.1:8765",
+            "Origin": "http://127.0.0.1:8765",
+            "Content-Type": "application/json",
+        }
+        for bad_payload in (
+            b'{"roster": {"members": [{"id": ["x"]}]}}',
+            b'{"roster": {"members": [{"id": {"nested": 1}}]}}',
+            b'{"roster": {"members": [{"id": 42}]}}',
+        ):
+            with self.subTest(payload=bad_payload):
+                self.sent.clear()
+                self.handler.headers["Content-Length"] = str(len(bad_payload))
+                self.handler.rfile = io.BytesIO(bad_payload)
+                self.handler.do_POST()
+                self.assertEqual(self.sent[0][0], 400)
+                self.assertIn(b"each member edit needs a string 'id'", self.sent[0][1])
+
     def test_post_settings_negative_content_length_does_not_hang(self):
         self.handler.path = "/api/settings"
         self.handler.headers = {

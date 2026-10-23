@@ -110,6 +110,10 @@ class RosterEditTest(unittest.TestCase):
             {"members": "not a list"},
             {"members": ["not a dict"]},
             {"members": [123]},
+            {"members": [{"id": ["x"]}]},
+            {"members": [{"id": {"nested": "dict"}}]},
+            {"members": [{"id": 123}]},
+            {"members": [{"id": None}]},
         ):
             with self.assertRaises(ValueError, msg=str(edit)):
                 settings.apply_roster(ROSTER, edit)
