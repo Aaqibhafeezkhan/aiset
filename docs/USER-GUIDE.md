@@ -12,6 +12,8 @@ Python 3.9+. The Python package has no third-party runtime dependencies. Reposit
 pipx install aiset-cli    # adds the commands aiset, aiset-init and teammap (from a clone: pip install -e .)
 ```
 
+Check which version is installed with `aiset --version` (also `aiset-init --version`, `teammap --version`); it doesn't start the office or touch a workspace.
+
 Without installing, run the files directly: `python src/aiset/server.py`, `python src/aiset/teammap.py`, `python src/aiset/init_team.py`. Tests: `python -m unittest discover -s tests`.
 
 The `Makefile` wraps the usual commands (`make` lists them): `make test`, `make check`, `make install`, `make office WS=~/work/shop`, `make init WS=… TEAM=…`, `make index WS=…`, `make impact WS=… Q='/items/{item_id} GET'`, `make relevant WS=… Q="…"`, `make failures WS=… Q=<log>`, `make eval WS=…`, `make eval-agent WS=… RUNS=3` (spends tokens), `make clean`.
@@ -128,6 +130,7 @@ What each repository in the workspace is built with and what it connects to, rea
 
 - **Tool whitelists**: every agent file has a `tools:` line. Without one, an agent carries every tool, connector and skill definition (~31k tokens) on every turn; with it, it starts at ~5k.
 - **Brief indexes**: `brief_index.py` writes `<name>.index.md` (sections, line ranges, token sizes) next to each knowledge brief; agents read the index and then only the sections they need. The office refreshes stale indexes on every poll; run `python src/aiset/brief_index.py <name>.md` after rewriting a brief.
+- **teammap nudge**: the engineer, QA and integration-checker files carry a `PreToolUse` hook (`nudge.py`). When one of them greps for a symbol or a route, or reads a long source file whole, the agent gets one line with the `teammap` command that answers it (`symbol`, `code`, `endpoint`, `file`). The call still runs; each suggestion comes once per session; plain-text searches, non-code files and repos teammap can't index are left alone. It only runs while those agents work, not in your own sessions. Claude Code runs hooks from agent files only in a folder you've trusted: the first `claude` (or `<team>-pm`) in the workspace asks, and a `claude -p` run doesn't count as accepting. `aiset-init --no-nudge` leaves it out (remembered as `"nudge": false` in `roster.json`). The task detail shows each agent's teammap calls (🗺️) next to its reads (📖) and searches (🔎), so you can see whether it's used.
 - **Task boards**: shared memory per request (brief, contract, handoffs, log), so the PM doesn't relay between agents. Rules are in `pm.md` and each engineer's file.
 - **`teammap`** (`src/aiset/teammap.py`, installed as the `teammap` command): a code map of the repositories configured in your team's roster.
 
