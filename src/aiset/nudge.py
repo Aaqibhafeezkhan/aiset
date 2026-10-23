@@ -180,12 +180,12 @@ def _seen(session, key):
         with open(path, encoding="utf-8") as f:
             if key in f.read().splitlines():
                 return True
-    except OSError:
+    except OSError:  # no file yet: nothing suggested in this session so far
         pass
     try:
         with open(path, "a", encoding="utf-8") as f:
             f.write(key + "\n")
-    except OSError:
+    except OSError:  # can't record it: the suggestion may come again, which beats staying silent
         pass
     return False
 
