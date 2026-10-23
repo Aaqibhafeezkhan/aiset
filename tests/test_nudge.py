@@ -42,6 +42,10 @@ class NudgeTest(unittest.TestCase):
         self.assertIn("`teammap symbol BeanService`", self.suggest("Grep", {"pattern": "BeanService", "path": self.api}))
         self.assertIn("`teammap symbol save_all`", self.suggest("Grep", {"pattern": r"save_all\(", "path": self.api}))
         self.assertIn("`teammap endpoint /api/items`", self.suggest("Grep", {"pattern": r"\/api\/items", "path": self.api}))
+        # a function and its model in one go, as agents search
+        self.assertIn("`teammap symbol update_bean` gives its definition, signature, callers and callees in one call, then `symbol UpdateBean`",
+                      self.suggest("Grep", {"pattern": "update_bean|UpdateBean", "path": self.api}))
+        self.assertIsNone(self.suggest("Grep", {"pattern": "update_bean|timeout.*", "path": self.api}))
 
     def test_grep_it_leaves_alone(self):
         for inp in ({"pattern": "todo", "path": self.api},  # a plain word: as likely text as a name
@@ -74,7 +78,11 @@ class NudgeTest(unittest.TestCase):
         self.assertIn("symbol BeanService", self.suggest("Bash", {"command": "grep -rn BeanService app | head -20"}, self.api))
         self.assertIn("symbol BeanService", self.suggest("Bash", {"command": "cd api && rg -n -e BeanService app"}, self.api))
         self.assertIn("symbol BeanService", self.suggest("Bash", {"command": "git grep BeanService"}, self.api))
+        # what an agent actually ran: cd into the repo, grep with BRE alternation, then a sed
+        cmd = f'cd "{self.api}" && grep -rn "BeanUpdate\\|update_bean\\|@router" --include=*.py . ; echo ---; sed -n 1,5p app/big.py'
+        self.assertIn("symbol BeanUpdate` gives", self.suggest("Bash", {"command": cmd}))
         self.assertIn("has 450 lines", self.suggest("Bash", {"command": "cat app/big.py"}, self.api))
+        self.assertIn("has 450 lines", self.suggest("Bash", {"command": f'cd "{self.api}" && cat app/big.py'}))
         self.assertIsNone(self.suggest("Bash", {"command": "cat app/big.py | head -40"}, self.api))
         self.assertIsNone(self.suggest("Bash", {"command": "python teammap.py symbol BeanService; grep -rn BeanService app"}, self.api))
         self.assertIsNone(self.suggest("Bash", {"command": "pytest -q"}, self.api))

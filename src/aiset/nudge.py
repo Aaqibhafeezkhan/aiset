@@ -53,7 +53,20 @@ def _repo(ws, path):
 
 
 def _grep_query(pattern):
-    """(teammap subcommand, query) for a grep pattern the index answers, else None."""
+    """[(teammap subcommand, query)] for a grep pattern the index answers, else [].
+
+    An alternation (`update_bean|UpdateBean`, or grep's `a\\|b`) counts when every part is a name or a
+    decorator, the way agents look for a function and its model in one go.
+    """
+    parts = [x for x in re.split(r"\\?\|", pattern.strip()) if x]
+    found = [_term_query(x) for x in parts]
+    if not all(q or re.fullmatch(r"@?[\w.]+", x) for x, q in zip(parts, found)):
+        return []
+    return [q for q in found if q]
+
+
+def _term_query(pattern):
+    """(teammap subcommand, query) for one search term the index answers, else None."""
     p = pattern.strip().replace("\\/", "/")
     m = ROUTE.match(p)
     if m and len(m.group(1)) > 2:
@@ -100,23 +113,24 @@ def _lines(path):
 
 def suggest(ws, tool, inp, cwd, teammap="teammap"):
     """(key, message) for a tool call worth a suggestion, or None to stay silent."""
-    def where(p):
+    def where(p, base=None):
         p = os.path.expanduser(p or "")
-        return norm(os.path.normpath(p if os.path.isabs(p) else os.path.join(cwd or ws, p)))
+        return norm(os.path.normpath(p if os.path.isabs(p) else os.path.join(base or cwd or ws, p)))
 
-    def for_grep(pattern, paths, filters=""):
+    def for_grep(pattern, paths, filters="", base=None):
         if not pattern or re.search(r"\.(md|json|ya?ml|toml|txt|lock|csv|html|css)\b", filters):
             return None
-        q = _grep_query(pattern)
-        hits = [_repo(ws, where(p)) for p in (paths or [cwd or ws])]
-        if not q or not hits or not all(hits):
+        qs = _grep_query(pattern)[:3]
+        if not qs or not all(_repo(ws, where(p, base)) for p in (paths or ["."])):
             return None
-        sub, name = q
+        sub, name = qs[0]
         what = {"endpoint": "the handler, its request/response models and the frontend callers",
                 "code": "just that definition with line numbers",
                 "symbol": "its definition, signature, callers and callees"}[sub]
-        return f"{sub}:{name}", (f"aiset: `{teammap} {sub} {name}` gives {what} in one call. "
-                                 "Use teammap first for names and routes; grep for text it doesn't index.")
+        more = "".join(f", then `{s} {n}`" for s, n in qs[1:])
+        return " ".join(f"{s}:{n}" for s, n in qs), (
+            f"aiset: `{teammap} {sub} {name}` gives {what} in one call{more}. "
+            "Use teammap first for names and routes; grep for text it doesn't index.")
 
     def for_read(path):
         if not path.endswith(SOURCE_EXT):
@@ -141,16 +155,20 @@ def suggest(ws, tool, inp, cwd, teammap="teammap"):
         cmd = inp.get("command", "")
         if "teammap" in cmd:
             return None
-        segments = list(_shell_segments(cmd))
+        segments, here = list(_shell_segments(cmd)), None
         for tok in segments:
             verb, args = os.path.basename(tok[0]), tok[1:]
+            if verb == "cd" and args:
+                here = where(args[0], here)
+                continue
             if verb == "git" and args[:1] == ["grep"]:
                 verb, args = "grep", args[1:]
             if verb in GREP_CMDS:
                 pattern, paths = _grep_args(args)
-                return for_grep(pattern, paths, " ".join(a for a in args if "." in a and a not in paths))
-            if verb == "cat" and len(args) == 1 and len(segments) == 1:  # piped into head/grep: a partial read
-                return for_read(where(args[0]))
+                return for_grep(pattern, paths, " ".join(a for a in args if "." in a and a not in paths), here)
+            # a cat on its own (after an optional cd); piped into head or grep it's a partial read
+            if verb == "cat" and len(args) == 1 and len(segments) - (here is not None) == 1:
+                return for_read(where(args[0], here))
     return None
 
 
