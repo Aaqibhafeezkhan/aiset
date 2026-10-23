@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - `aiset --version`, `aiset-init --version` and `teammap --version` print the package version without initializing a workspace.
 - Engineers, QA and the integration checker get a PreToolUse hook (`nudge.py`) that suggests the matching `teammap` command when they grep for a symbol or route, or read a long source file whole. It never blocks a call, makes each suggestion once per session, and runs only while those agents work. `aiset-init --no-nudge` leaves it out. The task detail counts each agent's `teammap` calls (🗺️) next to its reads and searches.
 
+### Changed
+
+- teammap code and symbol now list cross-file candidates (exit 3), accept --path to select a file, show same-name alternatives for qualified matches, and return exit 4 when no symbol matches.
+
 ### Security
 
 - The office now refuses read requests whose `Host` isn't its own address. Before, only writes were checked, so a web page using DNS rebinding could read the dashboard's data, including transcript excerpts.
