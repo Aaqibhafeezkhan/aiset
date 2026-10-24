@@ -14,6 +14,8 @@
 
 A folder of git repositories gets one unit per repo. A monorepo (the folder is itself a git repo) gets
 one unit per top-level folder that has a build file (pom.xml, package.json, requirements.txt, Dockerfile…).
+A monorepo with a build file at its root and no service folders is a single root unit (id root); if service
+folders appear later, the root engineer keeps the root and its repo and checks stay in root.md.
 
 What it writes (see workspace.py for how the office finds it):
 
@@ -297,13 +299,28 @@ def build_roster(ws, team, repos, old, group="repo"):
 ROOT_SCOPE = " · outside the service folders, which have their own engineers"
 
 
+def carry_root_unit(ws, repos, old):
+    """scan() stops returning "." once a service folder appears. While a member of the old roster still
+    owns it, keep the root unit in ``repos`` (built with detect(ws)) so root.md keeps its own repo and checks."""
+    if not old or any(r["name"] == "." for r in repos):
+        return repos
+    if not any("." in (m.get("repos") or []) for m in old.get("members", [])):
+        return repos
+    kind, stack, checks = detect(ws)
+    return repos + [{"name": ".", "kind": kind, "stack": stack, "checks": checks, "summary": readme_summary(ws)}]
+
+
 def scope_root_owner(roster, repos):
     """Once services appear in subfolders, scan() stops returning "."; the engineer who kept owning
-    the root unit keeps it, but their duty now says the service folders are someone else's."""
+    the root unit keeps it, but their duty now says the service folders are someone else's.
+    ``repos`` is the scan() result. The note is left out when the same member also owns those folders
+    (--group stack), because nothing is handed to anyone else then."""
     if not repos or any(r["name"] == "." for r in repos):
         return []
     scoped = []
     for m in roster["members"]:
+        if any(r["name"] in (m.get("repos") or []) for r in repos):
+            continue
         if "." in (m.get("repos") or []) and ROOT_SCOPE not in m.get("duty", ""):
             m["duty"] = m.get("duty", "") + ROOT_SCOPE
             scoped.append(m["name"])
@@ -423,7 +440,7 @@ def main():
                     help="don't add the hook that points agents' greps at teammap (kept in roster.json as \"nudge\": false)")
     args = ap.parse_args()
     ws = os.path.abspath(args.folder)
-    repos = scan(ws)
+    scanned = repos = scan(ws)
     if not repos:
         raise SystemExit(f"no git repositories (or, in a monorepo, service folders) under {ws}")
     team_dir = os.path.join(ws, ".claude", "team")
@@ -434,10 +451,12 @@ def main():
     if os.path.exists(roster_path):
         with open(roster_path, encoding="utf-8-sig") as f:
             old = json.load(f)
+    if is_monorepo(ws):
+        repos = carry_root_unit(ws, scanned, old)
     group = args.group or (old or {}).get("group") or ("stack" if len(repos) > 12 else "repo")
     old_team = (old or {}).get("team")  # build_roster renames the old roster in place
     roster, added = build_roster(ws, args.team, repos, old, group)
-    rescoped = scope_root_owner(roster, repos) if is_monorepo(ws) else []
+    rescoped = scope_root_owner(roster, scanned) if is_monorepo(ws) else []
     if args.no_nudge:
         roster["nudge"] = False
     hidden = False
@@ -459,7 +478,7 @@ def main():
         bin_dir, on_path = registry.scripts_dir()
         launcher = registry.write_launcher(roster["team"], ws, bin_dir)
 
-    print(f"Team '{roster['team']}' in {ws}" + (f"  (monorepo, {len(repos)} services, one engineer per {group})" if is_monorepo(ws) else ""))
+    print(f"Team '{roster['team']}' in {ws}" + (f"  (monorepo, {len(scanned)} service{'' if len(scanned) == 1 else 's'}, one engineer per {group})" if is_monorepo(ws) else ""))
     for r in repos:
         owner = next((m["name"] for m in roster["members"] if r["name"] in (m.get("repos") or [])), "-")
         print(f"  {r['name']:30} {r['stack']:32} → {owner}")

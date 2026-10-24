@@ -105,6 +105,10 @@ class UniqueMemberIdTest(unittest.TestCase):
             owner = next(m for m in second["members"] if m["id"] == "root")
             self.assertEqual(owner["repos"], ["."])
             self.assertEqual(owner["duty"].count("service folders"), 1)
+            root_md = (root / ".claude/agents/root.md").read_text(encoding="utf-8")
+            self.assertIn("pytest", root_md)  # the root engineer keeps its own checks
+            self.assertIn("You own:\n\n- `.` at ", root_md)  # its own unit, not the new service's
+            self.assertNotIn("- `svc` (", root_md)
             self.assertTrue(any("still owns the repository root" in str(c.args[0]) for c in out.call_args_list if c.args))
             third, _ = _init(root, tmp)  # idempotent: the note is not appended twice
             self.assertEqual(next(m for m in third["members"] if m["id"] == "root")["duty"].count("service folders"), 1)
