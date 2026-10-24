@@ -831,16 +831,24 @@ def _frame_loc(fr):
 def _is_library(path):
     p = norm(path)
     return bool(re.search(r"(^|/)(site-packages|dist-packages|node_modules|lib/python\d[\d.]*|<frozen )", p)) \
-        or bool(re.match(r"^internal/(?:modules|process|bootstrap)/.*\.js$", p)) \
+        or bool(re.match(r"^internal/.*\.[cm]?js$", p)) \
         or p.startswith(("node:", "<"))
 
 
 def _map_frame(fr, repos_by_name, base_repo):
     """repo/rel for a stack frame inside the workspace's repos; None for libraries and unknown paths."""
     p = norm(fr["path"])
+    absolute = os.path.isabs(fr["path"]) or re.match(r"^[a-zA-Z]:", p)
+    order = ([base_repo] if base_repo else []) + [n for n in repos_by_name if n != base_repo]
+    if not absolute:
+        p = p.lstrip("./")
+        for name in order:
+            r = repos_by_name.get(name)
+            if r and p in r["files"]:  # indexed project files take precedence over Node's internal/ paths
+                return name, p
     if _is_library(p):
         return None
-    if os.path.isabs(fr["path"]) or re.match(r"^[a-zA-Z]:", p):
+    if absolute:
         rel = relative(p, CODE_ROOT)
         if rel:
             repo, _, rest = rel.partition("/")
@@ -851,11 +859,9 @@ def _map_frame(fr, repos_by_name, base_repo):
             if rr:
                 return name, rr
         return None
-    p = p.lstrip("./")
-    order = ([base_repo] if base_repo else []) + [n for n in repos_by_name if n != base_repo]
     for name in order:
         r = repos_by_name.get(name)
-        if r and (p in r["files"] or os.path.isfile(os.path.join(r["root"], p))):
+        if r and os.path.isfile(os.path.join(r["root"], p)):
             return name, p
     return None
 

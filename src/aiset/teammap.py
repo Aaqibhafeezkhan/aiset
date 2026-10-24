@@ -50,7 +50,7 @@ INDEX = os.path.join(GRAPHS, "index")
 # Index only the repositories configured in the active roster.
 REPOS = roster_repos()
 HTTP = {"get", "post", "put", "patch", "delete", "head", "options"}
-VERSION = 7
+VERSION = 8
 
 
 # -- Python extraction ---------------------------------------------------------------------
@@ -131,9 +131,14 @@ def py_extract(text):
                         r = route_from(d, cls, qual, child.lineno)
                         if d.func.attr == "api_route":
                             methods = _kw(d, "methods")
-                            ms = [m.value for m in getattr(methods, "elts", [])
-                                  if isinstance(m, ast.Constant) and isinstance(m.value, str)] or ["GET"]
-                            f["routes"].extend(dict(r, method=m.upper()) for m in ms)
+                            if methods is None:
+                                ms = ["GET"]
+                            elif isinstance(methods, (ast.List, ast.Tuple, ast.Set)) and all(
+                                    isinstance(m, ast.Constant) and isinstance(m.value, str) for m in methods.elts):
+                                ms = list(dict.fromkeys(m.value.upper() for m in methods.elts))
+                            else:
+                                ms = ["UNKNOWN"]
+                            f["routes"].extend(dict(r, method=m) for m in ms)
                         else:
                             f["routes"].append(r)
                 visit(child, stack + [child.name], cls)
