@@ -1,0 +1,1 @@
+{"type":"assistant","timestamp":"2026-10-23T00:00:00Z","message":{"id":"message-2","content":[{"type":"tool_use","id":"tool-2","name":"AskUserQuestion","input":{"questions":[{"question":"Which option should I use?"}]}}]}}
