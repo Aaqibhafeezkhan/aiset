@@ -92,7 +92,7 @@ class ServerMalformedInputTest(unittest.TestCase):
 
     def test_brain_live_invalid_since_falls_back_to_1800(self):
         self.handler.headers = {"Host": "127.0.0.1:8765"}
-        for bad_since in ("abc", "", "nan-not-a-number", "invalid"):
+        for bad_since in ("abc", "", "nan-not-a-number", "invalid", "nan", "inf", "-inf", "-100"):
             with self.subTest(since=bad_since):
                 self.handler.path = f"/api/brain/live?since={bad_since}"
                 self.sent.clear()
@@ -167,7 +167,15 @@ class ServerMalformedInputTest(unittest.TestCase):
             "Content-Length": "-1",
         }
         self.sent.clear()
-        self.handler.rfile = io.BytesIO(b'{"ignored": true}')
+        mock_rfile = unittest.mock.MagicMock()
+
+        def fail_on_negative_read(size):
+            if size < 0:
+                self.fail(f"rfile.read called with negative size: {size}")
+            return b""
+
+        mock_rfile.read.side_effect = fail_on_negative_read
+        self.handler.rfile = mock_rfile
         self.handler.settings_payload = lambda: {"ok": True}
         self.handler.do_POST()
         self.assertEqual(self.sent[0][0], 200)
@@ -178,9 +186,12 @@ class ReloadRosterTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.roster_path = os.path.join(self.tmp.name, "roster.json")
-        from aiset import workspace
+        from aiset import sync_names, workspace
+        self.addCleanup(setattr, sync_names, "AGENTS", sync_names.AGENTS)
+        sync_names.AGENTS = self.tmp.name
         self.addCleanup(setattr, server, "ROSTER", server.ROSTER)
         self.addCleanup(setattr, workspace, "ROSTER", workspace.ROSTER)
+        self.addCleanup(setattr, server, "_roster_mtime", server._roster_mtime)
         server.ROSTER = self.roster_path
         workspace.ROSTER = self.roster_path
         self.office = unittest.mock.MagicMock()
@@ -203,6 +214,23 @@ class ReloadRosterTest(unittest.TestCase):
             with self.subTest(shape=bad):
                 with open(self.roster_path, "w", encoding="utf-8") as f:
                     json.dump(bad, f)
+                result = server.reload_roster(self.office, force=True)
+                self.assertIsNone(result)
+                self.assertEqual(self.office.roster, self.good_roster)
+
+    def test_reload_roster_rejects_non_string_member_id_or_name(self):
+        bad_members = [
+            {"id": 123, "name": "X"},
+            {"id": "pm", "name": 5},
+            {"id": ["pm"], "name": "X"},
+            {"id": "pm", "name": ["X"]},
+            {"id": "", "name": "X"},
+            {"id": "pm", "name": ""},
+        ]
+        for member in bad_members:
+            with self.subTest(member=member):
+                with open(self.roster_path, "w", encoding="utf-8") as f:
+                    json.dump({"team": "Bad", "members": [member]}, f)
                 result = server.reload_roster(self.office, force=True)
                 self.assertIsNone(result)
                 self.assertEqual(self.office.roster, self.good_roster)

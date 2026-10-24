@@ -15,6 +15,7 @@ own options (<team>/settings.json); --hours and --brain-days override the stored
 """
 import argparse
 import json
+import math
 import os
 import threading
 import webbrowser
@@ -61,8 +62,14 @@ def reload_roster(office, force=False):
         if not isinstance(roster, dict) or not isinstance(roster.get("members"), list):
             raise ValueError("roster must be an object with a 'members' list")
         for m in roster["members"]:
-            if not isinstance(m, dict) or not m.get("id") or not m.get("name"):
-                raise ValueError("each member must be an object with 'id' and 'name'")
+            if (
+                not isinstance(m, dict)
+                or not isinstance(m.get("id"), str)
+                or not m["id"]
+                or not isinstance(m.get("name"), str)
+                or not m["name"]
+            ):
+                raise ValueError("each member must be an object with non-empty string 'id' and 'name'")
     except (OSError, ValueError) as e:  # mid-edit, invalid JSON or bad shape: keep the last good roster
         print(f"roster.json not loaded: {e}")
         return None
@@ -76,7 +83,7 @@ def reload_roster(office, force=False):
         changed = sync_names.sync(roster)
         if changed and not first:
             print("roster changed → updated agent files:", ", ".join(changed))
-    except (OSError, ValueError) as e:
+    except (OSError, ValueError, TypeError) as e:
         print(f"agent files not updated: {e}")
     return roster
 
@@ -164,6 +171,8 @@ class Handler(BaseHTTPRequestHandler):
             from urllib.parse import parse_qs, urlparse
             try:
                 since = float(parse_qs(urlparse(self.path).query).get("since", ["1800"])[0])
+                if not math.isfinite(since) or since < 0:
+                    since = 1800.0
             except (ValueError, TypeError):
                 since = 1800.0
             with self.lock:
