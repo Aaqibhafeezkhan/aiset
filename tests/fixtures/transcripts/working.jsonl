@@ -1,0 +1,1 @@
+{"type":"assistant","timestamp":"2026-10-23T00:00:00Z","message":{"id":"message-1","content":[{"type":"tool_use","id":"tool-1","name":"Bash","input":{"command":"pytest tests"}}]}}
