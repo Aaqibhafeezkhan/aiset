@@ -44,14 +44,16 @@ class TranscriptStateTest(unittest.TestCase):
         self.assertEqual(transcript.state(BASE_TIME + 599)[0], THINKING)
         self.assertEqual(transcript.state(BASE_TIME + 600)[0], IDLE)
 
-    def test_tool_call_is_working_before_two_minutes(self):
+    def test_tool_call_is_working_up_to_two_minutes(self):
         transcript = self.transcript("working.jsonl")
         self.assertEqual(transcript.state(BASE_TIME + 119)[0], WORKING)
         self.assertEqual(transcript.state(BASE_TIME + 120)[0], WORKING)
 
     def test_tool_call_waits_for_approval_after_two_minutes_and_stops_after_thirty(self):
         transcript = self.transcript("working.jsonl")
-        self.assertEqual(transcript.state(BASE_TIME + 121)[0], WAITING)
+        state, activity = transcript.state(BASE_TIME + 121)
+        self.assertEqual(state, WAITING)
+        self.assertTrue(activity.startswith("Waiting for your approval? · "))
         self.assertEqual(transcript.state(BASE_TIME + 1800)[0], WAITING)
         state, activity = transcript.state(BASE_TIME + 1801)
         self.assertEqual(state, IDLE)
@@ -62,10 +64,20 @@ class TranscriptStateTest(unittest.TestCase):
         state, activity = transcript.state(BASE_TIME)
         self.assertEqual(state, WAITING)
         self.assertIn("Which option should I use?", activity)
+        self.assertEqual(transcript.state(BASE_TIME + 1801)[0], WAITING)
 
-    def test_subagent_with_delivered_report_is_done(self):
+    def test_subagent_handback_delivers_report(self):
         transcript = self.transcript("subagent-report.jsonl", kind="sub")
         self.assertEqual(transcript.state(BASE_TIME + 60), (DONE, "Report delivered"))
+
+    def test_subagent_final_text_delivers_report(self):
+        transcript = self.transcript("subagent-say.jsonl", kind="sub")
+        self.assertEqual(transcript.state(BASE_TIME + 60), (DONE, "Report delivered"))
+
+    def test_subagent_report_is_not_done_after_later_tool_activity(self):
+        transcript = self.transcript("subagent-report-then-tool.jsonl", kind="sub")
+        self.assertEqual(transcript.report, "Completed the assigned review.")
+        self.assertEqual(transcript.state(BASE_TIME + 60)[0], WORKING)
 
     def test_silent_subagent_stops_only_after_three_minutes(self):
         transcript = self.transcript("subagent-silent.jsonl", kind="sub")
