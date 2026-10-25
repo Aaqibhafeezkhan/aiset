@@ -17,6 +17,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- The Brain reads code graphs and indexes for a single-repository unit named ".".
 - `teammap` expands `api_route` decorators into their declared HTTP methods (GET when omitted), deduplicates method names, records unreadable methods as unknown, and refreshes older cached indexes. Failure reports keep indexed project `internal/` frames while excluding older Node runtime frames. Unknown `--repo` names and invalid or missing numeric option values now produce a usage error (exit 2) before indexing.
 - `aiset-init` supports single-package repositories whose manifest is at the root, with one root engineer and root-relative checks when no service subfolders are found. Member ids are allocated uniquely (`root`, then `root-2`, ...; a service folder named like `pm` or `tester` no longer overwrites that agent), and the root engineer is scoped once service folders appear.
 - Malformed input and invalid request shapes no longer crash the office server handler: non-object bodies and malformed roster/member edits on `/api/settings` return a clean 400 response, non-float `since` query parameters on `/api/brain/live` fall back to 1800, and `Content-Length` is clamped to prevent negative-length blocking reads. Invalid roster shapes without members or valid agent records are rejected in `reload_roster` while preserving the last good roster.
