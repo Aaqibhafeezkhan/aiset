@@ -473,7 +473,17 @@ async function loadLive() {
     else if (c.to !== last) cursors.set(a.key, { from: cursorPos(c) || { ...pos.get(last) }, to: last, t0: performance.now() });
   }
   if ([...liveSet].join() !== before) { recompute(); alpha = Math.max(alpha, .15); }
-  if (!follow) { const m = location.hash.match(/live=([^&]+)/); if (m) { const a = LIVE.agents.find(x => x.agent === decodeURIComponent(m[1])); if (a) { follow = a.key; snap = true; openAgent = a.key; autoFit = false; if (view.k < 1.1) view.k = 1.1; } } }
+  if (!follow) {
+    const hash = new URLSearchParams(location.hash.slice(1));
+    const agentId = hash.get("live");
+    const a = agentId && LIVE.agents.find(x => x.agent === agentId);
+    if (a) {
+      hash.delete("live");
+      const remainingHash = hash.toString();
+      history.replaceState(history.state, "", `${location.pathname}${location.search}${remainingHash ? `#${remainingHash}` : ""}`);
+      follow = a.key; snap = true; openAgent = a.key; autoFit = false; if (view.k < 1.1) view.k = 1.1;
+    }
+  }
   renderLive();
 }
 function renderLive() {
