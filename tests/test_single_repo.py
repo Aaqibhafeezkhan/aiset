@@ -112,7 +112,7 @@ class UniqueMemberIdTest(unittest.TestCase):
             self.assertIn("pytest", root_md)  # the root engineer keeps its own checks
             self.assertIn("You own:\n\n- `.` at ", root_md)  # its own unit, not the new service's
             self.assertNotIn("- `svc` (", root_md)
-            self.assertTrue(any("still owns the repository root" in str(c.args[0]) for c in out.call_args_list if c.args))
+            self.assertTrue(any("owns the repository root; the service folders belong to their own engineers" in str(c.args[0]) for c in out.call_args_list if c.args))
             third, _ = _init(root, tmp)  # idempotent: the note is not appended twice
             self.assertEqual(next(m for m in third["members"] if m["id"] == "root")["duty"].count("service folders"), 1)
 
@@ -211,12 +211,46 @@ class RootPackageOwnershipTest(unittest.TestCase):
             (root / "api").mkdir()
             (root / "api/pyproject.toml").write_text('[project]\nname="api"\n')
             self.assertEqual([r["name"] for r in init_team.scan(str(root))], ["api", "."])
-            roster, _ = _init(root, tmp)
+            roster, out = _init(root, tmp)
             by_repo = {r: m for m in roster["members"] for r in m.get("repos") or []}
             self.assertEqual(by_repo["api"]["id"], "api")
             self.assertEqual(by_repo["."]["id"], "root")
             self.assertIsNot(by_repo["api"], by_repo["."])
             self.assertIn("service folders", by_repo["."]["duty"])
+            out.assert_any_call(f"root:    {by_repo['.']['name']} owns the repository root; "
+                                "the service folders belong to their own engineers")
+
+    def test_default_group_and_header_count_services_without_root(self):
+        for services in (0, 12):
+            with self.subTest(services=services), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp) / "mono"
+                (root / ".git").mkdir(parents=True)
+                (root / "pyproject.toml").write_text('[project]\nname="demo"\n')
+                for i in range(services):
+                    service = root / f"service{i}"
+                    service.mkdir()
+                    (service / "requirements.txt").write_text("somepkg\n")
+                roster, out = _init(root, tmp)
+                with self.subTest("one engineer per repo through twelve services"):
+                    self.assertNotEqual(roster.get("group"), "stack")
+                with self.subTest("header counts services and keeps root-only singular"):
+                    count = services or 1
+                    self.assertIn(f"(monorepo, {count} service{'' if count == 1 else 's'},",
+                                  out.call_args_list[0].args[0])
+
+    def test_group_stack_scopes_root_owner_when_another_engineer_owns_a_service(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "mono"
+            (root / ".git").mkdir(parents=True)
+            (root / "package.json").write_text('{}')
+            (root / "web").mkdir()
+            (root / "web/package.json").write_text('{}')
+            (root / "api").mkdir()
+            (root / "api/requirements.txt").write_text("somepkg\n")
+            roster, _ = _init(root, tmp, "--group", "stack")
+            owner = next(m for m in roster["members"] if "." in (m.get("repos") or []))
+            self.assertEqual(set(owner["repos"]), {"web", "."})
+            self.assertIn("service folders", owner["duty"])
 
     def test_group_stack_one_engineer_owns_root_and_service(self):
         with tempfile.TemporaryDirectory() as tmp:

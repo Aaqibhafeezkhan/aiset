@@ -314,7 +314,7 @@ def scope_root_owner(roster, repos):
     """scan() returns the root unit whenever the repository root has a manifest, so a roster member
     owns it from the first init. When the scan found service folders besides it, the root engineer's
     duty notes they belong to their own engineers. ``repos`` is the scan() result. The note is left
-    out when the same member also owns those folders (--group stack), because nothing is handed to
+    out when the same member also owns all those folders (--group stack), because nothing is handed to
     anyone else then."""
     if not any(r["name"] == "." for r in repos):
         return []
@@ -324,7 +324,7 @@ def scope_root_owner(roster, repos):
     scoped = []
     for m in roster["members"]:
         owned = m.get("repos") or []
-        if "." not in owned or any(r in owned for r in others):
+        if "." not in owned or all(r in owned for r in others):
             continue
         if ROOT_SCOPE not in m.get("duty", ""):
             m["duty"] = m.get("duty", "") + ROOT_SCOPE
@@ -439,7 +439,7 @@ def main():
     ap.add_argument("folder")
     ap.add_argument("--team", help="team name shown in the office (default: folder name)")
     ap.add_argument("--force", action="store_true", help="overwrite agent files even if you edited them")
-    ap.add_argument("--group", choices=("repo", "stack"), help="one engineer per repo, or per stack (default: stack above 12 units)")
+    ap.add_argument("--group", choices=("repo", "stack"), help="one engineer per repo, or per stack (default: stack above 12 services)")
     ap.add_argument("--share", action="store_true", help="don't hide .claude/ from git in a monorepo")
     ap.add_argument("--no-launcher", action="store_true", help="don't write the <team>-pm command")
     ap.add_argument("--no-nudge", action="store_true",
@@ -459,7 +459,7 @@ def main():
             old = json.load(f)
     if is_monorepo(ws):
         repos = carry_root_unit(ws, scanned, old)
-    group = args.group or (old or {}).get("group") or ("stack" if len(repos) > 12 else "repo")
+    group = args.group or (old or {}).get("group") or ("stack" if sum(r["name"] != "." for r in repos) > 12 else "repo")
     old_team = (old or {}).get("team")  # build_roster renames the old roster in place
     roster, added = build_roster(ws, args.team, repos, old, group)
     rescoped = scope_root_owner(roster, scanned) if is_monorepo(ws) else []
@@ -484,13 +484,14 @@ def main():
         bin_dir, on_path = registry.scripts_dir()
         launcher = registry.write_launcher(roster["team"], ws, bin_dir)
 
-    print(f"Team '{roster['team']}' in {ws}" + (f"  (monorepo, {len(scanned)} service{'' if len(scanned) == 1 else 's'}, one engineer per {group})" if is_monorepo(ws) else ""))
+    services = sum(r["name"] != "." for r in scanned) or len(scanned)
+    print(f"Team '{roster['team']}' in {ws}" + (f"  (monorepo, {services} service{'' if services == 1 else 's'}, one engineer per {group})" if is_monorepo(ws) else ""))
     for r in repos:
         owner = next((m["name"] for m in roster["members"] if r["name"] in (m.get("repos") or [])), "-")
         print(f"  {r['name']:30} {r['stack']:32} → {owner}")
     print(f"roster:  {roster_path}" + (f"  (added: {', '.join(added)})" if added and old else ""))
     if rescoped:
-        print(f"root:    {', '.join(rescoped)} still owns the repository root; the service folders now belong to their own engineers")
+        print(f"root:    {', '.join(rescoped)} owns the repository root; the service folders belong to their own engineers")
     print(f"agents:  {', '.join(written) or 'up to date'}" + (f"  (kept your edits: {', '.join(kept)})" if kept else ""))
     if briefs:
         print(f"briefs:  {', '.join(briefs)} (stubs)")
