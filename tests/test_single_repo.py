@@ -1,15 +1,18 @@
 """Initialize single-package repositories without moving the checkout."""
 
+import fnmatch
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
+from collections import Counter
 from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from aiset import init_team  # noqa: E402
+from aiset import init_team, research, teammap  # noqa: E402
 
 
 class SingleRepoTest(unittest.TestCase):
@@ -123,6 +126,59 @@ class RootPackageOwnershipTest(unittest.TestCase):
                         "package.json": '{"scripts": {"test": "node --test"}}',
                         "Dockerfile": "FROM python:3.12\n"}
     SUPPORT_CHECKS = {"requirements.txt": "pytest", "Dockerfile": "docker compose -f <file> config -q"}
+
+    def _indexed_monorepo(self, tmp):
+        root = Path(tmp) / "mono"
+        root.mkdir()
+        files = {
+            "package.json": '{"workspaces": ["api", "web", "worker"]}',
+            "root.py": "def root_task():\n    pass\n",
+            "api/requirements.txt": "fastapi\n",
+            "api/main.py": '@app.get("/api/items")\ndef items():\n    return []\n',
+            "api/tests/test_main.py": "def test_items():\n    pass\n",
+            "web/package.json": '{"scripts": {"test": "node --test"}}',
+            "web/app.test.js": "test('app', () => {});\n",
+            "worker/requirements.txt": "somepkg\n",
+            "worker/jobs.py": "def run_job():\n    pass\n",
+        }
+        for rel, content in files.items():
+            path = root / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+        subprocess.run(["git", "init", "-q", str(root)], check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(root), "add", *files], check=True, capture_output=True)
+        roster, _ = _init(root, tmp)
+        names = list(dict.fromkeys(r for m in roster["members"] for r in m.get("repos") or []))
+        self.assertEqual(set(names), {"api", "web", "worker", "."})
+        return root, names
+
+    def test_root_index_lists_service_endpoint_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, names = self._indexed_monorepo(tmp)
+            with patch.object(teammap, "REPOS", names), patch.object(teammap, "CODE_ROOT", str(root)), \
+                 patch.object(teammap, "INDEX", str(Path(tmp) / "index")):
+                linked = teammap.link([teammap.load_repo(n, True) for n in names])
+            self.assertEqual([(e["repo"], e["file"]) for e in linked["endpoints"] if e["path"] == "/api/items"],
+                             [("api", "main.py")])
+
+    def test_root_index_partitions_tracked_files_across_units(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, names = self._indexed_monorepo(tmp)
+            tracked = subprocess.run(["git", "-C", str(root), "ls-files", "-z"], check=True,
+                                     capture_output=True, text=True, encoding="utf-8").stdout.split("\0")
+            expected = sorted(os.path.normpath(str(root / rel)) for rel in tracked if rel
+                              and any(fnmatch.fnmatch(rel, glob) for glob in ("*.py", "*.js")))
+            self.assertEqual(len(expected), 5)
+            listed = []
+            with patch.object(teammap, "REPOS", names), patch.object(teammap, "CODE_ROOT", str(root)), \
+                 patch.object(teammap, "INDEX", str(Path(tmp) / "index")):
+                for name in names:
+                    listed.extend(os.path.normpath(str(root / name / rel))
+                                  for rel in teammap.git_files(str(root / name), research.TEST_GLOBS))
+            with self.subTest("each file has one unit"):
+                self.assertEqual(sorted(path for path, count in Counter(listed).items() if count > 1), [])
+            with self.subTest("all tracked sources are kept"):
+                self.assertEqual(sorted(set(listed)), expected)
 
     def test_root_unit_scanned_alongside_support_folder_units(self):
         for folder, manifest in self.SUPPORT_SHAPES:
