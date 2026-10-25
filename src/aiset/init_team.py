@@ -313,7 +313,7 @@ def carry_root_unit(ws, repos, old):
 def scope_root_owner(roster, repos):
     """scan() returns the root unit whenever the repository root has a manifest, so a roster member
     owns it from the first init. When the scan found service folders besides it, the root engineer's
-    duty notes they belong to their own engineers. ``repos`` is the scan() result. The note is left
+    duty notes they belong to their own engineers. ``repos`` is the effective unit list. The note is left
     out when the same member also owns all those folders (--group stack), because nothing is handed to
     anyone else then."""
     if not any(r["name"] == "." for r in repos):
@@ -462,7 +462,7 @@ def main():
     group = args.group or (old or {}).get("group") or ("stack" if sum(r["name"] != "." for r in repos) > 12 else "repo")
     old_team = (old or {}).get("team")  # build_roster renames the old roster in place
     roster, added = build_roster(ws, args.team, repos, old, group)
-    rescoped = scope_root_owner(roster, scanned) if is_monorepo(ws) else []
+    rescoped = scope_root_owner(roster, repos) if is_monorepo(ws) else []
     if args.no_nudge:
         roster["nudge"] = False
     hidden = False

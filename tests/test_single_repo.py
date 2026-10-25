@@ -282,7 +282,7 @@ class RootPackageOwnershipTest(unittest.TestCase):
             (root / "pyproject.toml").unlink()
             (root / "api").mkdir()
             (root / "api/pyproject.toml").write_text('[project]\nname="api"\n')
-            roster, _ = _init(root, tmp)
+            roster, out = _init(root, tmp)
             owner = next(m for m in roster["members"] if m.get("repos") == ["."])
             self.assertEqual(owner["id"], "root")
             self.assertEqual(owner["checks"], ["pytest"])  # kept from the first init's roster
@@ -290,6 +290,11 @@ class RootPackageOwnershipTest(unittest.TestCase):
             root_md = (root / ".claude/agents/root.md").read_text(encoding="utf-8")
             self.assertIn("You own:\n\n- `.` at ", root_md)  # carry_root_unit kept the root unit in repos
             self.assertNotIn("- `api`", root_md)
+            with self.subTest("carried root duty is scoped"):
+                self.assertIn("service folders", owner["duty"])
+            with self.subTest("carried root scope is announced"):
+                out.assert_any_call(f"root:    {owner['name']} owns the repository root; "
+                                    "the service folders belong to their own engineers")
 
     def test_group_stack_keeps_the_root_units_commands_unmasked(self):
         with tempfile.TemporaryDirectory() as tmp:
