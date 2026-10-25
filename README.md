@@ -48,7 +48,7 @@ Give the PM its first task:
 > [!TIP]
 > Agents working in parallel spend tokens in parallel. The office shows the cost per agent and task as it happens, and **Settings** lets you put routine roles on Sonnet or Haiku.
 
-<sub>Needs Python 3.9+, Git and [Claude Code](https://claude.com/claude-code); TypeScript indexing also uses Node.js. Works with a folder of repositories or a monorepo; a single repository with its project at the root isn't supported yet ([#36](https://github.com/JamshidS/aiset/issues/36)).</sub><br>
+<sub>Needs Python 3.9+, Git and [Claude Code](https://claude.com/claude-code); TypeScript indexing also uses Node.js. Works with a folder of repositories or a monorepo; a single repository with its project at the root is one unit, and a root package that later gains service folders keeps its root engineer ([#36](https://github.com/JamshidS/aiset/issues/36)).</sub><br>
 <sub>The PyPI package is `aiset-cli`; `aiset` on PyPI is an unrelated project.</sub>
 
 <br>
@@ -152,6 +152,8 @@ Services, databases and the calls between them, each backed by a file and line. 
 | `teammap failures <log>` | Failed tests, messages and in-repo frames from a saved test run, grouped. |
 | `teammap endpoint` · `model` · `arch` · `symbol` | Direct lookups. `teammap --help` lists them all. |
 | `aiset --version` · `aiset-init --version` · `teammap --version` | Print the installed version. Doesn't start the office or touch a workspace. |
+
+`teammap --repo NAME` uses repository names from the active roster. Unknown names and missing or non-integer numeric option values produce a usage error (exit 2); see the [user guide](docs/USER-GUIDE.md#research-tools-teammap-impact-failures-relevant) for options.
 
 <details>
 <summary><b>Example: what does changing an endpoint break?</b></summary>
