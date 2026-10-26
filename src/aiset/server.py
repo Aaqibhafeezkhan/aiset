@@ -28,6 +28,7 @@ if __name__ == "__main__" and not __package__:  # run as a file: python src/aise
     __package__ = "aiset"
 HERE = os.path.dirname(os.path.realpath(__file__))
 from . import registry  # noqa: E402
+from .atomic import write_text_atomic  # noqa: E402
 
 # every module reads its paths from workspace.py on import, so settle the workspace first:
 # --workspace (a folder or a team name aiset-init registered), the workspace you're in,
@@ -258,9 +259,7 @@ class Handler(BaseHTTPRequestHandler):
                     if not isinstance(body["roster"], dict):
                         raise ValueError("roster must be an object")
                     roster = settings.apply_roster(self.office.roster, body["roster"])
-                    with open(ROSTER, "w", encoding="utf-8", newline="\n") as f:
-                        json.dump(roster, f, indent=2, ensure_ascii=False)
-                        f.write("\n")
+                    write_text_atomic(ROSTER, json.dumps(roster, indent=2, ensure_ascii=False) + "\n", newline="\n")
                     reload_roster(self.office, force=True)
                 if "settings" in body:
                     if not isinstance(body["settings"], dict):
