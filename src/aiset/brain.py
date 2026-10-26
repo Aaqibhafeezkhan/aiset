@@ -20,6 +20,19 @@ from .workspace import CODE_ROOT, EPISODES, GRAPHS, KNOWLEDGE, norm, relative, r
 EPISODE_FIELDS = ("TASK", "DATE", "AGENTS", "OUTCOME", "TOUCHED", "CONTRACT", "DECISIONS", "GOTCHAS", "COST")
 
 
+def _json_files(directory):
+    """Sorted JSON files, including hidden names produced by the root unit."""
+    try:
+        with os.scandir(directory) as entries:
+            return sorted(
+                entry.path
+                for entry in entries
+                if entry.name.endswith(".json") and entry.is_file()
+            )
+    except OSError:
+        return []
+
+
 def brief_sections(filename):
     """[(level, title, first line, text)] for the ## and ### headings of a brief."""
     try:
@@ -181,7 +194,7 @@ def build(office, roster):
 
     # -- external code graphs ---------------------------------------------------------
     tree_code = []
-    for path in sorted(glob(os.path.join(GRAPHS, "*.json"))):
+    for path in _json_files(GRAPHS):
         try:
             with open(path, encoding="utf-8") as f:
                 g = json.load(f)
@@ -279,7 +292,7 @@ def _cached(key, stamp, make):
 
 def _graph_nodes():
     """Endpoint/model/file nodes from the code graphs, for resolving teammap queries."""
-    files = sorted(glob(os.path.join(GRAPHS, "*.json")))
+    files = _json_files(GRAPHS)
     stamp = tuple(os.path.getmtime(f) for f in files)
 
     def make():
@@ -298,7 +311,7 @@ def _graph_nodes():
 
 def _symbol_files():
     """symbol name -> [(repo, rel)] from teammap's index, refreshed when the index changes."""
-    files = sorted(glob(os.path.join(GRAPHS, "index", "*.json")))
+    files = _json_files(os.path.join(GRAPHS, "index"))
     stamp = tuple(os.path.getmtime(f) for f in files)
 
     def make():
