@@ -575,7 +575,7 @@ def cmd_endpoint(repos, L, args, limit):
 
 def cmd_symbol(repos, L, args, limit, path_filter=None):
     q = args[0]
-    hits, match_kind = _matching_hits(repos, q, path_filter)
+    hits, match_kind = _matching_hits(repos, q, path_filter, prefer_qualified=True)
     if not hits:
         if path_filter:
             print(f"no symbol matches {q!r} under path {path_filter!r}")
@@ -613,19 +613,31 @@ def cmd_symbol(repos, L, args, limit, path_filter=None):
     return 0
 
 
-def _matching_hits(repos, q, path_filter=None):
-    hits = _best_hits(repos, q, path_filter)
-    qualified = [hit for hit in hits if hit[3]["qual"] == q]
-    if qualified:
-        return _sort_hits(qualified), "qualified"
-    if any(hit[3]["name"] == q for hit in hits):
-        return hits, "exact"
-    return hits, "substring"
+def _best_hits(repos, q, path_filter=None):
+    return _matching_hits(repos, q, path_filter)[0]
+
+
+def _matching_hits(repos, q, path_filter=None, prefer_qualified=False):
+    symbols = [hit for hit in all_symbols(repos) if _path_matches(hit[1], path_filter)]
+    exact = [hit for hit in symbols if hit[3]["name"] == q or hit[3]["qual"] == q]
+    if exact:
+        qualified = [hit for hit in exact if hit[3]["qual"] == q]
+        if prefer_qualified and qualified:
+            return _sort_hits(qualified), "qualified"
+        return _sort_hits(exact), "exact"
+    substring = [hit for hit in symbols if q.lower() in hit[3]["qual"].lower()]
+    return _sort_hits(substring), "substring"
 
 
 def _sort_hits(hits):
     # the real definition first: not a test, not a nested helper, the biggest body
-    hits.sort(key=lambda h: (is_test(h[1]), h[3]["qual"].count(".") - (1 if h[3]["kind"] == "method" else 0), -(h[3]["end"] - h[3]["line"])))
+    hits.sort(
+        key=lambda h: (
+            is_test(h[1]),
+            h[3]["qual"].count(".") - (1 if h[3]["kind"] == "method" else 0),
+            -(h[3]["end"] - h[3]["line"]),
+        )
+    )
     return hits
 
 
@@ -636,17 +648,6 @@ def _path_matches(path, path_filter):
     while normalized.startswith("./"):
         normalized = normalized[2:]
     return path == normalized or path.endswith("/" + normalized)
-
-
-def _best_hits(repos, q, path_filter=None):
-    symbols = [hit for hit in all_symbols(repos) if _path_matches(hit[1], path_filter)]
-    exact = [
-        (r, f, lang, s) for r, f, lang, s in symbols if s["name"] == q or s["qual"] == q
-    ]
-    hits = exact or [
-        (r, f, lang, s) for r, f, lang, s in symbols if q.lower() in s["qual"].lower()
-    ]
-    return _sort_hits(hits)
 
 
 def _matches_multiple_files(hits):
@@ -681,7 +682,7 @@ def _other_name_hits(repos, q, hits, path_filter):
 def cmd_code(repos, L, args, limit=None, max_lines=150, path_filter=None):
     """Print a definition's source so an agent reads exactly that function, in one call."""
     q = args[0]
-    hits, match_kind = _matching_hits(repos, q, path_filter)
+    hits, match_kind = _matching_hits(repos, q, path_filter, prefer_qualified=True)
     if not hits:
         if path_filter:
             print(f"no symbol matches {q!r} under path {path_filter!r}")
