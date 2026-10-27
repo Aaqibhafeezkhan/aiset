@@ -1035,7 +1035,7 @@ function renderIso() {
     setState(p, v.st); p.classList.toggle("sel", selected?.id === id);
     $(".r1 b", p).textContent = m.name;
     $(".pill", p).textContent = STATE_LABEL[v.st];
-    $(".r2", p).innerHTML = [m.role, top?.tokens?.total ? `${mdl(top.tokens.model)} 🪙 ${fmtTok(top.tokens.total)}` : "", m.active > 1 ? `×${m.active}` : ""].filter(Boolean).map(x => `<span>${x.startsWith("<") ? x : esc(x)}</span>`).join("");
+    $(".r2", p).innerHTML = [esc(m.role), top?.tokens?.total ? `${mdl(top.tokens.model)} 🪙 ${fmtTok(top.tokens.total)}` : "", m.active > 1 ? `×${m.active}` : ""].filter(Boolean).map(x => `<span>${x}</span>`).join("");
   }
   for (const s of [...S.sessions.slice(0, 5), ...S.contractors.slice(0, 10)]) {
     const g = svg.querySelector(`.iso-desk[data-key="${CSS.escape(s.key)}"]`), p = ov.querySelector(`.iso-plate[data-key="${CSS.escape(s.key)}"]`);

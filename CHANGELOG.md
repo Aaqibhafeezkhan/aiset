@@ -16,11 +16,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Security
 
+- Hand-edited `roster.json` values can no longer inject markup into the office. A role starting with `<` was inserted into the isometric nameplate as raw HTML, and member and helper colours went into `style` attributes unchecked. Roles are now always escaped, and colours that aren't `#hex` fall back to grey when the roster is loaded.
 - The office now refuses read requests whose `Host` isn't its own address. Before, only writes were checked, so a web page using DNS rebinding could read the dashboard's data, including transcript excerpts.
 - Task ids in `/api/board` and `/api/task` must be plain task names. `..` previously resolved to the team folder.
 
 ### Fixed
 
+- Team files, workspace registries, launchers and briefs use atomic replacement, so failed writes no longer leave them truncated.
+- Brain now consumes a `#live=` link after it follows the agent, so toggling follow off or panning the graph is not undone by the next live refresh.
+- The Brain reads code graphs and indexes for a single-repository unit named `.`.
 - `teammap` expands `api_route` decorators into their declared HTTP methods (GET when omitted), deduplicates method names, records unreadable methods as unknown, and refreshes older cached indexes. Failure reports keep indexed project `internal/` frames while excluding older Node runtime frames. Unknown `--repo` names and invalid or missing numeric option values now produce a usage error (exit 2) before indexing.
 - `aiset-init` supports single-package repositories whose manifest is at the root, with one root engineer and root-relative checks when no service subfolders are found. Member ids are allocated uniquely (`root`, then `root-2`, ...; a service folder named like `pm` or `tester` no longer overwrites that agent), and the root engineer is scoped once service folders appear.
 - Malformed input and invalid request shapes no longer crash the office server handler: non-object bodies and malformed roster/member edits on `/api/settings` return a clean 400 response, non-float `since` query parameters on `/api/brain/live` fall back to 1800, and `Content-Length` is clamped to prevent negative-length blocking reads. Invalid roster shapes without members or valid agent records are rejected in `reload_roster` while preserving the last good roster.
@@ -29,6 +33,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Sessions are matched to their workspace the way Claude Code names project folders. `slug()` lowercased before replacing, and `"İ".lower()` is two characters, so a workspace under a non-ASCII path (or one with an emoji in it) never matched and the office showed no sessions at all. Sibling folders no longer leak in either: with workspace `C:\work\app`, sessions from `C:\work\apples` and `C:\work\app2` used to appear on the floor and in the token and cost totals.
 - The office footer now suggests the `<team>-pm` launcher when `aiset-init` writes it and the command is on `PATH`; `--no-launcher` and unavailable launchers keep the roster's existing PM command, and so does a `pmCommand` you edited in Settings.
 - Code-scanning findings: explicit returns, documented intentional `except` blocks, unused variables in the dashboard, and a `Map` for the route cache. The `<team>-pm` launcher is now made executable for its owner only.
+- In a monorepo, a root package with a manifest keeps an owner when subfolders have manifests too: the root unit (`.`) is scanned alongside the service folders instead of only when no service folder was found, and the root engineer's duty notes the service folders belong to their own engineers (omitted when the same engineer owns the root and all service folders, `--group stack`), and the root unit's code index leaves the service folders out, so `teammap` and research list each file under exactly one unit. The init header and automatic stack grouping count service folders separately from the root unit (a root-only repository still shows one service).
 
 ## [0.1.0] - 2026-10-18
 

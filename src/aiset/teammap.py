@@ -198,6 +198,8 @@ def py_extract(text):
 # -- index with an mtime cache ---------------------------------------------------------------
 
 def git_files(repo, patterns):
+    if os.path.normpath(repo) == os.path.normpath(CODE_ROOT):
+        patterns = list(patterns) + [":(exclude,literal)" + name for name in REPOS if name != "."]
     try:
         out = subprocess.run(["git", "-C", repo, "-c", "core.quotepath=off", "ls-files", "-z", *patterns],
                              capture_output=True, text=True, encoding="utf-8", timeout=30).stdout
