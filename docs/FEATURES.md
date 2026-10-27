@@ -28,6 +28,7 @@ Legend: ✅ works · 🟡 partial / limited · ❌ missing
 |---|---|---|
 | Isometric and classic view | ✅ | Rooms, desks, animated bots; switch to the classic card layout from the top right. The choice is remembered in the browser. |
 | Agent states | ✅ | Working, thinking, waiting for you, done, idle; shown by animation and colour. |
+| Alternate transcript root | ✅ | `AISET_CLAUDE_HOME` moves the transcript data root and, without a workspace, the fallback team and agents folders. |
 | Speech bubbles | ✅ | What the agent is doing right now. |
 | Assignment lines | ✅ | Lines flowing from the PM to the working agents. |
 | "Needs you" alert | 🟡 | A red banner when the PM asks a question. Permission prompts aren't written to the transcript, so "waiting for approval?" is only guessed from 2 minutes of silence. |
