@@ -235,6 +235,26 @@ class ReloadRosterTest(unittest.TestCase):
                 self.assertIsNone(result)
                 self.assertEqual(self.office.roster, self.good_roster)
 
+    def test_reload_roster_replaces_colours_that_are_not_hex(self):
+        roster = {"team": "T", "members": [
+            {"id": "a", "name": "A", "color": "#22c55e"},
+            {"id": "b", "name": "B", "color": "#abc"},
+            {"id": "c", "name": "C", "color": "red;background:url(https://example.com/x)"},
+            {"id": "d", "name": "D", "color": '#fff" onmouseover="alert(1)'},
+            {"id": "e", "name": "E", "color": 5},
+            {"id": "f", "name": "F"},
+        ], "helpers": {"agents": {"Explore": ["Scout", "Explore agent", "#94a3b8"],
+                                  "Plan": ["Archie", "Planning agent", "</style><script>alert(1)</script>"]}}}
+        with open(self.roster_path, "w", encoding="utf-8") as f:
+            json.dump(roster, f)
+        loaded = server.reload_roster(self.office, force=True)
+        colors = {m["id"]: m.get("color") for m in loaded["members"]}
+        self.assertEqual(colors, {"a": "#22c55e", "b": "#abc", "c": server.FALLBACK_COLOR,
+                                  "d": server.FALLBACK_COLOR, "e": server.FALLBACK_COLOR, "f": None})
+        self.assertEqual(loaded["helpers"]["agents"]["Explore"][2], "#94a3b8")
+        self.assertEqual(loaded["helpers"]["agents"]["Plan"][2], server.FALLBACK_COLOR)
+        self.assertIs(self.office.roster, loaded)
+
 
 if __name__ == "__main__":
     unittest.main()
