@@ -17,6 +17,7 @@ import argparse
 import json
 import math
 import os
+import re
 import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -50,6 +51,23 @@ from .core import Office, board_detail, task_detail, task_routes  # noqa: E402
 
 ROSTER = workspace.ROSTER
 _roster_mtime = None
+COLOR = re.compile(r"#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})")
+FALLBACK_COLOR = "#94a3b8"
+
+
+def safe_colors(roster):
+    """Colours go into style attributes on the office and Brain pages, and roster.json is edited by hand:
+    anything that isn't a #hex colour falls back to grey."""
+    def ok(c):
+        return isinstance(c, str) and COLOR.fullmatch(c)
+    for m in roster["members"]:
+        if "color" in m and not ok(m["color"]):
+            m["color"] = FALLBACK_COLOR
+    helpers = roster.get("helpers")
+    if isinstance(helpers, dict) and isinstance(helpers.get("agents"), dict):
+        for a in helpers["agents"].values():
+            if isinstance(a, list) and len(a) > 2 and not ok(a[2]):
+                a[2] = FALLBACK_COLOR
 
 
 def reload_roster(office, force=False):
@@ -71,6 +89,7 @@ def reload_roster(office, force=False):
                 or not m["name"]
             ):
                 raise ValueError("each member must be an object with non-empty string 'id' and 'name'")
+        safe_colors(roster)
     except (OSError, ValueError) as e:  # mid-edit, invalid JSON or bad shape: keep the last good roster
         print(f"roster.json not loaded: {e}")
         return None

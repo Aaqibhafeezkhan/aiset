@@ -12,6 +12,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Security
 
+- Hand-edited `roster.json` values can no longer inject markup into the office. A role starting with `<` was inserted into the isometric nameplate as raw HTML, and member and helper colours went into `style` attributes unchecked. Roles are now always escaped, and colours that aren't `#hex` fall back to grey when the roster is loaded.
 - The office now refuses read requests whose `Host` isn't its own address. Before, only writes were checked, so a web page using DNS rebinding could read the dashboard's data, including transcript excerpts.
 - Task ids in `/api/board` and `/api/task` must be plain task names. `..` previously resolved to the team folder.
 
