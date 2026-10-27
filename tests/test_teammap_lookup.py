@@ -64,6 +64,10 @@ class TeammapLookupTest(unittest.TestCase):
                     "class Service:\n    def get(self):\n        return 'other method'\n"
                 ),
             },
+            "preferred": {
+                "app/api.py": "def save(item):\n    return 'application'\n",
+                "tests/test_api.py": "def save(item):\n    return 'test'\n",
+            },
             "substring": {
                 "src/models.py": "class BeanUpdate:\n    pass\n",
             },
@@ -113,8 +117,8 @@ class TeammapLookupTest(unittest.TestCase):
         self.assertIn("ambiguous matches for 'get'", result.stdout)
         self.assertIn("function get  alpha/src/api.py:1", result.stdout)
         self.assertIn("function get  beta/src/api.py:1", result.stdout)
-        self.assertIn("teammap code <qual>", result.stdout)
-        self.assertIn("add --repo <name> and/or --path <file>", result.stdout)
+        self.assertNotIn("teammap code <qual>", result.stdout)
+        self.assertIn("Try add --repo <name> or --path <file> to narrow.", result.stdout)
         self.assertNotIn("return 'alpha'", result.stdout)
 
     def test_repo_filter_keeps_full_output_and_exits_zero(self):
@@ -138,6 +142,12 @@ class TeammapLookupTest(unittest.TestCase):
         self.assertIn("method Service.get  back/app/api.py:2", ambiguous.stdout)
         self.assertIn("method Service.get  back/app/other.py:2", ambiguous.stdout)
         self.assertIn("--path <file>", ambiguous.stdout)
+        self.assertNotIn("teammap code <qual>", ambiguous.stdout)
+
+        symbol_ambiguous = self.run_teammap("symbol", "Service.get", "--repo", "back")
+        self.assertEqual(symbol_ambiguous.returncode, 3, symbol_ambiguous.stdout + symbol_ambiguous.stderr)
+        self.assertIn("add --path <file>", symbol_ambiguous.stdout)
+        self.assertNotIn("teammap symbol <qual>", symbol_ambiguous.stdout)
 
         selected = self.run_teammap(
             "code", "Service.get", "--repo", "back", "--path", "app/api.py"
@@ -162,6 +172,30 @@ class TeammapLookupTest(unittest.TestCase):
         self.assertIn("return 'top-level'", result.stdout)
         self.assertIn("other matches: Service.get (related/app/api.py:5)", result.stdout)
         self.assertIn("Service.get (related/app/other.py:2)", result.stdout)
+
+    def test_only_non_test_candidate_is_selected_and_tests_are_listed(self):
+        for command in ("code", "symbol"):
+            with self.subTest(command=command):
+                result = self.run_teammap(command, "save", "--repo", "preferred")
+
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn("preferred/app/api.py", result.stdout)
+                if command == "code":
+                    self.assertIn("return 'application'", result.stdout)
+                else:
+                    self.assertIn("function save(item)", result.stdout)
+                self.assertIn("other matches: save (preferred/tests/test_api.py:1)", result.stdout)
+                self.assertNotIn("return 'test'", result.stdout)
+
+    def test_path_misuse_exits_two_on_stderr(self):
+        cases = (("search", "save", "--path", "src/api.py"), ("code", "save", "--path", ""))
+        for args in cases:
+            with self.subTest(args=args):
+                result = self.run_teammap(*args)
+
+                self.assertEqual(result.returncode, 2)
+                self.assertEqual(result.stdout, "")
+                self.assertIn("--path requires a file path", result.stderr)
 
     def test_same_file_overloads_keep_full_output(self):
         result = self.run_teammap("code", "get", "--repo", "same")

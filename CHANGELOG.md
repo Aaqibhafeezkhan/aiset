@@ -12,7 +12,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
-- teammap code and symbol now list cross-file candidates (exit 3), accept --path to select a file, show same-name alternatives for qualified matches, and return exit 4 when no symbol matches.
+- `teammap code` and `teammap symbol` now list cross-file candidates (exit 3), accept `--path` to select a file, show same-name alternatives for qualified matches, and return exit 4 when no symbol matches.
 
 ### Security
 

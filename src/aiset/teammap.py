@@ -612,6 +612,8 @@ def cmd_symbol(repos, L, args, limit, path_filter=None):
             print(f"            {c}")
     if len(hits) > limit:
         print(f"… {len(hits) - limit} more: " + ", ".join(sorted({s['qual'] for _, _, _, s in hits[limit:limit + 12]})))
+    if match_kind == "preferred_non_test":
+        _print_other_matches(repos, q, hits, limit, path_filter)
     return 0
 
 
@@ -623,6 +625,10 @@ def _matching_hits(repos, q, path_filter=None, prefer_qualified=False):
     symbols = [hit for hit in all_symbols(repos) if _path_matches(hit[1], path_filter)]
     exact = [hit for hit in symbols if hit[3]["name"] == q or hit[3]["qual"] == q]
     if exact:
+        if _matches_multiple_files(exact):
+            non_test = [hit for hit in exact if not is_test(hit[1])]
+            if len(non_test) == 1:
+                return _sort_hits(non_test), "preferred_non_test"
         qualified = [hit for hit in exact if hit[3]["qual"] == q]
         if prefer_qualified and qualified:
             return _sort_hits(qualified), "qualified"
@@ -633,13 +639,7 @@ def _matching_hits(repos, q, path_filter=None, prefer_qualified=False):
 
 def _sort_hits(hits):
     # the real definition first: not a test, not a nested helper, the biggest body
-    hits.sort(
-        key=lambda h: (
-            is_test(h[1]),
-            h[3]["qual"].count(".") - (1 if h[3]["kind"] == "method" else 0),
-            -(h[3]["end"] - h[3]["line"]),
-        )
-    )
+    hits.sort(key=lambda h: (is_test(h[1]), h[3]["qual"].count(".") - (1 if h[3]["kind"] == "method" else 0), -(h[3]["end"] - h[3]["line"])))
     return hits
 
 
@@ -662,12 +662,12 @@ def _print_candidates(q, hits, limit, command, match_kind):
     for repo, path, _lang, symbol in hits[:limit]:
         print(f"  {symbol['kind']} {symbol['qual']}  {repo}/{path}:{symbol['line']}")
     if len(hits) > limit:
-        print(
-            f"… {len(hits) - limit} more; add --limit {len(hits)} to see all candidates"
-        )
-    print(
-        f"Try teammap {command} <qual> for an exact match, or add --repo <name> and/or --path <file> to narrow."
-    )
+        print(f"… {len(hits) - limit} more; add --limit {len(hits)} to see all candidates")
+    if len({symbol[3]["qual"] for symbol in hits}) == 1:
+        hint = "add --path <file>" if len({repo for repo, *_ in hits}) == 1 else "add --repo <name> or --path <file>"
+        print(f"Try {hint} to narrow.")
+    else:
+        print(f"Try teammap {command} <qual> for an exact match, or add --repo <name> and/or --path <file> to narrow.")
 
 
 def _other_name_hits(repos, q, hits, path_filter):
@@ -679,6 +679,19 @@ def _other_name_hits(repos, q, hits, path_filter):
         if symbol["name"] == name and _path_matches(path, path_filter) and key not in selected:
             matches.append((repo, path, lang, symbol))
     return _sort_hits(matches)
+
+
+def _print_other_matches(repos, q, hits, limit, path_filter):
+    other_hits = hits[limit:] + _other_name_hits(repos, q, hits, path_filter)
+    seen = set()
+    other_matches = []
+    for hit in other_hits:
+        key = (hit[0], hit[1], hit[3]["qual"], hit[3]["line"])
+        if key not in seen:
+            seen.add(key)
+            other_matches.append(hit)
+    if other_matches:
+        print("other matches: " + ", ".join(f"{hit[3]['qual']} ({hit[0]}/{hit[1]}:{hit[3]['line']})" for hit in other_matches[:6]))
 
 
 def cmd_code(repos, L, args, limit=None, max_lines=150, path_filter=None):
@@ -729,19 +742,7 @@ def cmd_code(repos, L, args, limit=None, max_lines=150, path_filter=None):
             if stop < end:
                 print(f"  … {end - stop} more lines: Read {path} offset={stop + 1} limit={end - stop}  (or --max {end - start + 1})")
         print()
-    other_hits = hits[max_results:] + _other_name_hits(repos, q, hits, path_filter)
-    seen = set()
-    other_matches = []
-    for hit in other_hits:
-        key = (hit[0], hit[1], hit[3]["qual"], hit[3]["line"])
-        if key not in seen:
-            seen.add(key)
-            other_matches.append(hit)
-    if other_matches:
-        print("other matches: " + ", ".join(
-            f"{hit[3]['qual']} ({hit[0]}/{hit[1]}:{hit[3]['line']})"
-            for hit in other_matches[:6]
-        ))
+    _print_other_matches(repos, q, hits, max_results, path_filter)
     return 0
 
 
@@ -956,7 +957,7 @@ def main(argv):
         print(__doc__.strip())
         return 0
     if path_filter is not None and (not path_filter or args[0] not in ("code", "symbol")):
-        print("--path requires a file path and is only available for code and symbol")
+        print("--path requires a file path and is only available for code and symbol", file=sys.stderr)
         return 2
     if args[0] == "arch":  # static scan of the whole workspace, no index needed
         from . import archmap
