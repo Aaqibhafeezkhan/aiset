@@ -22,6 +22,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- The office no longer prints a traceback when the browser closes a request before the reply is written (a reload, leaving the page or closing the tab while `/api/brain` is still building). Windows reported it as `ConnectionAbortedError` (WinError 10053), Linux and macOS as `BrokenPipeError`.
 - Team files, workspace registries, launchers and briefs use atomic replacement, so failed writes no longer leave them truncated.
 - Brain now consumes a `#live=` link after it follows the agent, so toggling follow off or panning the graph is not undone by the next live refresh.
 - The Brain reads code graphs and indexes for a single-repository unit named `.`.
