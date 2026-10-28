@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-28
+
 ### Added
 
 - `aiset --version`, `aiset-init --version` and `teammap --version` print the package version without initializing a workspace.
@@ -22,6 +24,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- Cost uses each older model's own price (Opus 4.6–4.8, Sonnet 4.6, Haiku 4.5) instead of falling back to the current generation's, which put Haiku 4.5 about ten times too low. Haiku 5.5 prompts over 100K tokens use the long-prompt rate.
 - The office no longer prints a traceback when the browser closes a request before the reply is written (a reload, leaving the page or closing the tab while `/api/brain` is still building). Windows reported it as `ConnectionAbortedError` (WinError 10053), Linux and macOS as `BrokenPipeError`.
 - Team files, workspace registries, launchers and briefs use atomic replacement, so failed writes no longer leave them truncated.
 - Brain now consumes a `#live=` link after it follows the agent, so toggling follow off or panning the graph is not undone by the next live refresh.
@@ -53,5 +56,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Research evaluation scripts in `eval/`.
 - CI on Linux, Windows and macOS for Python 3.9 to 3.13, lint, package build checks and CodeQL.
 
-[Unreleased]: https://github.com/JamshidS/aiset/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/JamshidS/aiset/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/JamshidS/aiset/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/JamshidS/aiset/releases/tag/v0.1.0
