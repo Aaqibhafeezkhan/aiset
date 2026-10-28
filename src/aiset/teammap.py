@@ -23,7 +23,13 @@ Research (one call instead of a string of greps and reads; exact vs inferred fin
   teammap relevant "<task text>"         files, symbols, endpoints, brief sections and episodes to read first
   teammap research show <id>             a stored result in full     (teammap impact --help for all options)
 
-Options: --repo <name> limits a query to one repository; --limit N (default 5) caps the matches shown.
+Options: --repo <name> limits a query to one repository; --path <file> filters code/symbol results by repository-relative path or suffix; --limit N (default 5) caps the matches shown.
+
+Exit status for `teammap code` and `teammap symbol`:
+  0  one match, or multiple matches in the same file, were shown
+  2  the command or its arguments are invalid
+  3  the query matches definitions in different files; qualify the name or use --repo and/or --path
+  4  no symbol matches; try `teammap search <text>`
 
 The index lives in <team>/graph/index/ (see workspace.py) and refreshes itself on every query: only files whose
 mtime changed are parsed again (Python with ast, TypeScript with the repo's own typescript package).
@@ -569,12 +575,20 @@ def cmd_endpoint(repos, L, args, limit):
         print(f"… {len(hits) - limit} more; narrow the path or add a method")
 
 
-def cmd_symbol(repos, L, args, limit):
+def cmd_symbol(repos, L, args, limit, path_filter=None):
     q = args[0]
-    hits = _best_hits(repos, q)
+    hits, match_kind = _matching_hits(repos, q, path_filter, prefer_qualified=True)
     if not hits:
-        print(f"no symbol matches {q!r}")
-        return
+        if path_filter:
+            print(f"no symbol matches {q!r} under path {path_filter!r}")
+        else:
+            print(f"no symbol matches {q!r}  (try: teammap search {q})")
+        return 4
+    if _matches_multiple_files(hits):
+        _print_candidates(q, hits, limit, "symbol", match_kind)
+        return 3
+    if match_kind == "substring":
+        print(f"substring match for {q!r} (not an exact name):")
     shown_callers = set()
     for r, f, lang, s in hits[:limit]:
         sig = ", ".join(f"{p['name']}: {p['type']}" if p["type"] else p["name"] for p in s.get("params", [])) if lang == "py" else s.get("params", "")
@@ -598,24 +612,105 @@ def cmd_symbol(repos, L, args, limit):
             print(f"            {c}")
     if len(hits) > limit:
         print(f"… {len(hits) - limit} more: " + ", ".join(sorted({s['qual'] for _, _, _, s in hits[limit:limit + 12]})))
+    if match_kind == "preferred_non_test":
+        _print_other_matches(repos, q, hits, limit, path_filter)
+    return 0
 
 
-def _best_hits(repos, q):
-    exact = [(r, f, lang, s) for r, f, lang, s in all_symbols(repos) if s["name"] == q or s["qual"] == q]
-    hits = exact or [(r, f, lang, s) for r, f, lang, s in all_symbols(repos) if q.lower() in s["qual"].lower()]
+def _best_hits(repos, q, path_filter=None):
+    return _matching_hits(repos, q, path_filter)[0]
+
+
+def _matching_hits(repos, q, path_filter=None, prefer_qualified=False):
+    symbols = [hit for hit in all_symbols(repos) if _path_matches(hit[1], path_filter)]
+    exact = [hit for hit in symbols if hit[3]["name"] == q or hit[3]["qual"] == q]
+    if exact:
+        if _matches_multiple_files(exact):
+            non_test = [hit for hit in exact if not is_test(hit[1])]
+            if len(non_test) == 1:
+                return _sort_hits(non_test), "preferred_non_test"
+        qualified = [hit for hit in exact if hit[3]["qual"] == q]
+        if prefer_qualified and qualified:
+            return _sort_hits(qualified), "qualified"
+        return _sort_hits(exact), "exact"
+    substring = [hit for hit in symbols if q.lower() in hit[3]["qual"].lower()]
+    return _sort_hits(substring), "substring"
+
+
+def _sort_hits(hits):
     # the real definition first: not a test, not a nested helper, the biggest body
     hits.sort(key=lambda h: (is_test(h[1]), h[3]["qual"].count(".") - (1 if h[3]["kind"] == "method" else 0), -(h[3]["end"] - h[3]["line"])))
     return hits
 
 
-def cmd_code(repos, L, args, limit, max_lines=150):
+def _path_matches(path, path_filter):
+    if not path_filter:
+        return True
+    normalized = os.path.normpath(path_filter).replace(os.sep, "/")
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    return path == normalized or path.endswith("/" + normalized)
+
+
+def _matches_multiple_files(hits):
+    return len({(repo, path) for repo, path, _lang, _symbol in hits}) > 1
+
+
+def _print_candidates(q, hits, limit, command, match_kind):
+    label = "substring matches" if match_kind == "substring" else "ambiguous matches"
+    print(f"{label} for {q!r}:")
+    for repo, path, _lang, symbol in hits[:limit]:
+        print(f"  {symbol['kind']} {symbol['qual']}  {repo}/{path}:{symbol['line']}")
+    if len(hits) > limit:
+        print(f"… {len(hits) - limit} more; add --limit {len(hits)} to see all candidates")
+    if len({symbol[3]["qual"] for symbol in hits}) == 1:
+        hint = "add --path <file>" if len({repo for repo, *_ in hits}) == 1 else "add --repo <name> or --path <file>"
+        print(f"Try {hint} to narrow.")
+    else:
+        print(f"Try teammap {command} <qual> for an exact match, or add --repo <name> and/or --path <file> to narrow.")
+
+
+def _other_name_hits(repos, q, hits, path_filter):
+    name = q.rsplit(".", 1)[-1]
+    selected = {(repo, path, symbol["qual"], symbol["line"]) for repo, path, _lang, symbol in hits}
+    matches = []
+    for repo, path, lang, symbol in all_symbols(repos):
+        key = (repo, path, symbol["qual"], symbol["line"])
+        if symbol["name"] == name and _path_matches(path, path_filter) and key not in selected:
+            matches.append((repo, path, lang, symbol))
+    return _sort_hits(matches)
+
+
+def _print_other_matches(repos, q, hits, limit, path_filter):
+    other_hits = hits[limit:] + _other_name_hits(repos, q, hits, path_filter)
+    seen = set()
+    other_matches = []
+    for hit in other_hits:
+        key = (hit[0], hit[1], hit[3]["qual"], hit[3]["line"])
+        if key not in seen:
+            seen.add(key)
+            other_matches.append(hit)
+    if other_matches:
+        print("other matches: " + ", ".join(f"{hit[3]['qual']} ({hit[0]}/{hit[1]}:{hit[3]['line']})" for hit in other_matches[:6]))
+
+
+def cmd_code(repos, L, args, limit=None, max_lines=150, path_filter=None):
     """Print a definition's source so an agent reads exactly that function, in one call."""
     q = args[0]
-    hits = _best_hits(repos, q)
+    hits, match_kind = _matching_hits(repos, q, path_filter, prefer_qualified=True)
     if not hits:
-        print(f"no symbol matches {q!r}  (try: teammap search {q})")
-        return
-    for r, f, lang, s in hits[:limit]:
+        if path_filter:
+            print(f"no symbol matches {q!r} under path {path_filter!r}")
+        else:
+            print(f"no symbol matches {q!r}  (try: teammap search {q})")
+        return 4
+    if _matches_multiple_files(hits):
+        _print_candidates(q, hits, limit or 5, "code", match_kind)
+        return 3
+    if match_kind == "substring":
+        print(f"substring match for {q!r} (not an exact name):")
+    max_results = limit or 1
+    for r, f, lang, s in hits[:max_results]:
         path = os.path.join(CODE_ROOT, r, f)
         try:
             with open(path, encoding="utf-8", errors="replace") as fh:
@@ -647,8 +742,8 @@ def cmd_code(repos, L, args, limit, max_lines=150):
             if stop < end:
                 print(f"  … {end - stop} more lines: Read {path} offset={stop + 1} limit={end - stop}  (or --max {end - start + 1})")
         print()
-    if len(hits) > limit:
-        print("other matches: " + ", ".join(f"{h[3]['qual']} ({h[0]}/{h[1]}:{h[3]['line']})" for h in hits[limit:limit + 6]))
+    _print_other_matches(repos, q, hits, max_results, path_filter)
+    return 0
 
 
 def camel(s):
@@ -854,12 +949,16 @@ def main(argv):
     parser.add_argument("--limit", type=int)
     parser.add_argument("--max", type=int, default=150)
     parser.add_argument("--repo", choices=REPOS)
+    parser.add_argument("--path")
     parser.add_argument("--force", action="store_true")
     opts, args = parser.parse_known_args(argv)
-    limit, only, force, max_lines = opts.limit, opts.repo, opts.force, opts.max
+    limit, only, path_filter, force, max_lines = opts.limit, opts.repo, opts.path, opts.force, opts.max
     if not args or args[0] in ("-h", "--help", "help"):
         print(__doc__.strip())
         return 0
+    if path_filter is not None and (not path_filter or args[0] not in ("code", "symbol")):
+        print("--path requires a file path and is only available for code and symbol", file=sys.stderr)
+        return 2
     if args[0] == "arch":  # static scan of the whole workspace, no index needed
         from . import archmap
         return archmap.main(argv[argv.index("arch") + 1:])
@@ -892,8 +991,9 @@ def main(argv):
         L = link(all_repos)
         L["endpoints"] = [e for e in L["endpoints"] if e["repo"] == only] or L["endpoints"]
     if cmd == "code":
-        cmd_code(repos, L, rest, limit or 1, max_lines)
-        return 0
+        return cmd_code(repos, L, rest, limit, max_lines, path_filter)
+    if cmd == "symbol":
+        return cmd_symbol(repos, L, rest, limit or 5, path_filter)
     cmds[cmd](all_repos if cmd in ("endpoint", "who-uses", "model") else repos, L, rest, limit or 5)
     return 0
 
