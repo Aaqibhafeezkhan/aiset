@@ -57,14 +57,17 @@ MAX_EVIDENCE = 6
 DETECTORS = [
     dict(id="postgres", label="PostgreSQL", kind="database",
          py=["psycopg2", "psycopg2-binary", "psycopg", "asyncpg", "pg8000"], npm=["pg", "postgres", "pg-promise"], jvm=["postgresql", "r2dbc-postgresql"],
+         go=["github.com/jackc/pgx/v5", "github.com/jackc/pgx/v4", "github.com/jackc/pgx", "gorm.io/driver/postgres"],
          code=[r"postgres(?:ql)?(?:\+\w+)?://", r"\basyncpg\.(?:connect|create_pool)", r"\bpsycopg2?\.connect", r"jdbc:postgresql:"],
          prop=[r"jdbc:postgresql:", r"database\s*=\s*postgres", r"PostgreSQL\w*Dialect"], env=[r"^(POSTGRES|PG)_?[A-Z_]*$", r"DATABASE_URL$"], image=[r"postgres|postgis|timescale"]),
     dict(id="mysql", label="MySQL", kind="database", py=["pymysql", "mysqlclient", "aiomysql"], npm=["mysql", "mysql2"],
          jvm=["mysql-connector-java", "mysql-connector-j", "mariadb-java-client"],
+         go=["github.com/go-sql-driver/mysql"],
          code=[r"mysql(?:\+\w+)?://", r"jdbc:mysql:"], prop=[r"jdbc:mysql:", r"database\s*=\s*mysql", r"MySQL\w*Dialect", r"com\.mysql\."],
          env=[r"^MYSQL_"], image=[r"mysql|mariadb"]),
     dict(id="mongodb", label="MongoDB", kind="database", py=["pymongo", "motor", "mongoengine", "flask-pymongo", "mongoalchemy", "flask-mongoalchemy"],
          npm=["mongodb", "mongoose", "@nestjs/mongoose", "winston-mongodb"], jvm=["spring-boot-starter-data-mongodb", "mongodb-driver", "mongodb-driver-sync", "mongo-java-driver"],
+         go=["go.mongodb.org/mongo-driver"],
          code=[r"mongodb(?:\+srv)?://", r"\bMongo(?:Template|Repository|Client)\b", r"\bmongoose\.(?:connect|model|Schema)\b"],
          prop=[r"^spring\.data\.mongodb\.", r"mongodb://"], env=[r"^MONGO"], image=[r"mongo"]),
     dict(id="cassandra", label="Cassandra", kind="database", py=["cassandra-driver"], npm=["cassandra-driver"],
@@ -75,6 +78,7 @@ DETECTORS = [
          code=[r"sqlite(?:\+\w+)?:///", r"\bsqlite3\.connect"], prop=[r"jdbc:sqlite:"], env=[], image=[]),
     dict(id="redis", label="Redis", kind="cache", py=["redis", "aioredis", "redis-py-cluster", "flask-redis"], npm=["redis", "ioredis"],
          jvm=["spring-boot-starter-data-redis", "spring-data-redis", "jedis", "lettuce-core", "redisson"],
+         go=["github.com/redis/go-redis/v9", "github.com/go-redis/redis/v8", "github.com/go-redis/redis"],
          code=[r"redis(?:s)?://", r"^\s*(?:import|from)\s+(?:redis|aioredis)\b", r"\bRedis\(", r"\b(?:RedisTemplate|StringRedisTemplate|Jedis(?:Pool)?)\b"],
          prop=[r"^spring\.(?:data\.)?redis\."], env=[r"^REDIS"], image=[r"redis|valkey"]),
     dict(id="celery", label="Celery", kind="worker", py=["celery"], npm=[], jvm=[], only=(".py",),
@@ -140,6 +144,15 @@ FRAMEWORKS_JVM = [("spring-cloud-starter-zuul", "Zuul gateway", "gateway"), ("sp
                   ("spring-boot-starter-web", "Spring Boot", "api"), ("spring-boot-starter-webflux", "Spring Boot (WebFlux)", "api"),
                   ("ktor-server-core", "Ktor", "api"), ("quarkus-core", "Quarkus", "api"), ("micronaut-http-server", "Micronaut", "api"),
                   ("spring-boot-starter", "Spring Boot", "service")]
+FRAMEWORKS_GO = [("github.com/gin-gonic/gin", "Gin", "api"),
+                 ("github.com/labstack/echo/v4", "Echo", "api"),
+                 ("github.com/labstack/echo", "Echo", "api"),
+                 ("github.com/go-chi/chi/v5", "Chi", "api"),
+                 ("github.com/go-chi/chi", "Chi", "api"),
+                 ("github.com/gofiber/fiber/v2", "Fiber", "api"),
+                 ("github.com/gofiber/fiber", "Fiber", "api"),
+                 ("github.com/gorilla/mux", "Gorilla Mux", "api"),
+                 ("github.com/kataras/iris/v12", "Iris", "api")]
 CODE_ROLE = [(r"@EnableZuulProxy", "Zuul gateway", "gateway"), (r"@EnableEurekaServer", "Eureka server", "registry"),
              (r"@EnableConfigServer", "Config server", "registry")]
 # libraries worth naming on a repo card
@@ -232,8 +245,8 @@ def _walk(repo_path):
 
 
 def _deps(repo_path, files):
-    """Python, npm and JVM dependency names, each with where it was declared."""
-    py, npm, jvm = {}, {}, {}
+    """Python, npm, JVM and Go dependency names, each with where it was declared."""
+    py, npm, jvm, go = {}, {}, {}, {}
     for path, f in files:
         rel = os.path.relpath(path, repo_path).replace(os.sep, "/")
         if re.match(r"requirements.*\.txt$", f):
@@ -268,7 +281,32 @@ def _deps(repo_path, files):
             for i, line in enumerate(_read(path).splitlines(), 1):
                 for m in re.finditer(r"['\"]([\w.\-]+):([\w.\-]+)(?::[^'\"]*)?['\"]", line):
                     jvm.setdefault(m.group(2), (rel, i, line.strip()))
-    return py, npm, jvm
+        elif f == "go.mod":
+            text = _read(path)
+            in_require = False
+            paren_block = False
+            for i, line in enumerate(text.splitlines(), 1):
+                stripped = line.strip()
+                if not stripped or stripped.startswith("//"):
+                    continue
+                if re.match(r"^require\s*\(", stripped):
+                    paren_block = True
+                    continue
+                if paren_block:
+                    if stripped == ")":
+                        paren_block = False
+                        continue
+                    # skip indirect comments/markers if present
+                    m = re.match(r"([^\s]+)\s+v[^\s]+", stripped)
+                    if m and not stripped.startswith("//"):
+                        go.setdefault(m.group(1), (rel, i, line.strip()))
+                    continue
+                m = re.match(r"^require\s+([^\s]+)\s+v", stripped)
+                if m:
+                    go.setdefault(m.group(1), (rel, i, line.strip()))
+                    continue
+                # also catch single line requires outside block
+    return py, npm, jvm, go
 
 
 def _spring_props(text, yml):
@@ -315,7 +353,7 @@ SPRING_CONF = re.compile(r"^(?:application|bootstrap)(?:-[\w.-]+)?\.(ya?ml|prope
 def scan_repo(name):
     path = os.path.join(CODE_ROOT, name)
     files = list(_walk(path))
-    py, npm, jvm = _deps(path, files)
+    py, npm, jvm, go = _deps(path, files)
     langs, envs, code_hits, entry, deploy, images, clients, props = {}, {}, {}, [], [], {}, {}, []
     links, aliases, role = [], {name}, None  # links: (kind, target name, rel, line, text)
     detectors = [(d, [re.compile(p, re.M) for p in d["code"]]) for d in DETECTORS]
@@ -453,7 +491,8 @@ def scan_repo(name):
     # ---- profile ----
     fw = next(((label, kind) for key, label, kind in FRAMEWORKS_NPM if key in npm), None) or \
          next(((label, kind) for key, label, kind in FRAMEWORKS_JVM if key in jvm), None) or \
-         next(((label, kind) for key, label, kind in FRAMEWORKS_PY if key in py), None)
+         next(((label, kind) for key, label, kind in FRAMEWORKS_PY if key in py), None) or \
+         next(((label, kind) for key, label, kind in FRAMEWORKS_GO if key in go), None)
     if role:  # @EnableZuulProxy / @EnableEurekaServer say more than the starters
         fw = role
     total = sum(l["bytes"] for l in langs.values()) or 1
@@ -465,7 +504,7 @@ def scan_repo(name):
     for d in DETECTORS:
         ev = []
         dep = next(((n, py[n]) for n in d["py"] if n in py), None) or next(((n, npm[n]) for n in d["npm"] if n in npm), None) \
-            or next(((n, jvm[n]) for n in d.get("jvm", []) if n in jvm), None)
+            or next(((n, jvm[n]) for n in d.get("jvm", []) if n in jvm), None) or next(((n, go[n]) for n in d.get("go", []) if n in go), None)
         if dep:
             ev.append({"type": "dependency", "file": dep[1][0], "line": dep[1][1], "text": mask(dep[1][2])})
         for rel, i, line in code_hits.get(d["id"], [])[:MAX_EVIDENCE]:
