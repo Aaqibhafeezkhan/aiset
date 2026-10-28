@@ -181,6 +181,26 @@ class ServerMalformedInputTest(unittest.TestCase):
         self.assertEqual(self.sent[0][0], 200)
 
 
+class ClientDisconnectTest(unittest.TestCase):
+    def handler(self, error):
+        h = Handler.__new__(Handler)  # no socket: the write fails the way a closed connection does
+        h.request_version, h.requestline = "HTTP/1.1", "GET /api/brain HTTP/1.1"
+        h.wfile = unittest.mock.MagicMock()
+        h.wfile.write.side_effect = error
+        return h
+
+    def test_a_closed_connection_is_not_an_error(self):
+        for error in (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
+            with self.subTest(error=error.__name__):
+                h = self.handler(error())
+                h._send(200, b"{}", "application/json")  # must not raise
+                h.wfile.write.assert_called()
+
+    def test_other_write_errors_still_surface(self):
+        with self.assertRaises(OSError):
+            self.handler(OSError("disk full"))._send(200, b"{}", "application/json")
+
+
 class ReloadRosterTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
