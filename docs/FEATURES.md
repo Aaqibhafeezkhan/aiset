@@ -28,7 +28,6 @@ Legend: ✅ works · 🟡 partial / limited · ❌ missing
 |---|---|---|
 | Isometric and classic view | ✅ | Rooms, desks, animated bots; switch to the classic card layout from the top right. The choice is remembered in the browser. |
 | Agent states | ✅ | Working, thinking, waiting for you, done, idle; shown by animation and colour. |
-| Alternate transcript root | ✅ | `AISET_CLAUDE_HOME` moves the transcript data root and, without a workspace, the fallback team and agents folders. |
 | Speech bubbles | ✅ | What the agent is doing right now. |
 | Assignment lines | ✅ | Lines flowing from the PM to the working agents. |
 | "Needs you" alert | 🟡 | A red banner when the PM asks a question. Permission prompts aren't written to the transcript, so "waiting for approval?" is only guessed from 2 minutes of silence. |
@@ -94,6 +93,7 @@ Legend: ✅ works · 🟡 partial / limited · ❌ missing
 
 | Feature | Status | Summary |
 |---|---|---|
+| Alternate transcript root | ✅ | `AISET_CLAUDE_HOME` moves the transcript data root and, without a workspace, the fallback team and agents folders. |
 | No dependencies | ✅ | Only the Python 3 standard library; the repo's own `typescript` package for parsing TypeScript. |
 | Read-only | ✅ | Reads the transcripts Claude Code already writes; writes to nothing (except brief indexes and the name sync). |
 | Windows support | ✅ | Path normalisation, `\` and `/` separators. Architecture evidence uses `/`, with workflow/DAG detection and test-file exclusion. Non-ASCII Git filenames are preserved. |

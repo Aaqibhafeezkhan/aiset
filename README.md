@@ -41,10 +41,6 @@ shop-pm                                            # talk to your PM, from any f
 
 Then open the office in a second terminal with `aiset` and visit **http://127.0.0.1:8765**.
 
-For demos or isolated session data, set `AISET_CLAUDE_HOME` before starting the
-office to read an alternate Claude Code data root; see the
-[user guide](docs/USER-GUIDE.md#use-it-on-any-project).
-
 Give the PM its first task:
 
 > *"Build the knowledge briefs. Document the architecture, conventions, test commands and known pitfalls for each repository."*

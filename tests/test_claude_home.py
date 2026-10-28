@@ -9,6 +9,8 @@ from pathlib import Path
 
 
 SRC = str(Path(__file__).resolve().parents[1] / "src")
+
+
 def normalized(path):
     value = path.as_posix()
     return value[0].lower() + value[1:] if len(value) > 1 and value[1] == ":" else value
@@ -39,7 +41,9 @@ class ClaudeHomeTest(unittest.TestCase):
             env["AISET_WORKSPACE"] = str(workspace)
         result = subprocess.run([sys.executable, "-c", PROBE], cwd=root, env=env,
                                 capture_output=True, text=True, check=True)
-        return json.loads(result.stdout)
+        data = json.loads(result.stdout)
+        data["sessions"] = [path.replace("\\", "/") for path in data["sessions"]]
+        return data
 
     def session(self, home, slug="synthetic-project"):
         path = home / "projects" / slug / "session.jsonl"
