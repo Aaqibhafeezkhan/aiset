@@ -150,6 +150,7 @@ Services, databases and the calls between them, each backed by a file and line. 
 | `teammap relevant "<task>"` | Files, symbols, endpoints, brief sections and past episodes to read first. |
 | `teammap impact <path\|symbol\|Model> [METHOD]` | What a change can reach: consumers, models, importers, tests. Exact vs inferred. |
 | `teammap failures <log>` | Failed tests, messages and in-repo frames from a saved test run, grouped. |
+| `teammap outline <file>` | Imports, symbol signatures, line ranges, sizes and routes for one indexed file. |
 | `teammap endpoint` · `model` · `arch` · `symbol` | Direct lookups. `teammap --help` lists them all. |
 | `aiset --version` · `aiset-init --version` · `teammap --version` | Print the installed version. Doesn't start the office or touch a workspace. |
 

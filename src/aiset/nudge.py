@@ -140,8 +140,8 @@ def suggest(ws, tool, inp, cwd, teammap="teammap"):
         if n <= LONG_FILE:
             return None
         rel = "/".join(p for p in hit if p)
-        return f"read:{rel}", (f"aiset: {rel} has {n} lines. `{teammap} file {os.path.basename(path)}` lists its "
-                               "symbols and routes, `code <name>` prints one of them; "
+        return f"read:{rel}", (f"aiset: {rel} has {n} lines. `{teammap} outline {os.path.basename(path)}` shows its "
+                               "parts and their sizes; `code <name>` prints one definition. "
                                "Read with offset/limit for the part you'll edit.")
 
     if tool == "Grep":
