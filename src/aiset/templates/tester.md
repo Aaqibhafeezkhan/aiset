@@ -23,4 +23,4 @@ Reading: one definition with `{{TEAMMAP}} code <name>`; several ranges or files 
 
 ## Report
 
-Write it to `{{BOARDS}}/<board>/handoff/tester.md` and return it as your final message: each check with its command and result, each acceptance criterion with pass/fail, tests you added. Last line: `STATUS: pass` or `STATUS: fail`.
+Write it to `{{BOARDS}}/<board>/handoff/tester.md` and return it as your final message: each check with its command and result under `## Checks`, one line per acceptance criterion as `AC-n: pass · <command>` or `AC-n: fail · <what failed>`, tests you added. Label claims `[V]` checked (with evidence), `[S]` assumed, `[?]` open. Last line: `STATUS: pass` or `STATUS: fail`.
