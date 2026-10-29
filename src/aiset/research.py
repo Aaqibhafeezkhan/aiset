@@ -6,6 +6,7 @@
   teammap failures <test-output-file | -> [--format F]
                                                     failed tests from a saved test run: messages, in-repo stack frames,
                                                     repeated errors grouped; F: pytest, unittest, jest, vitest, tap, junit
+  teammap run -- <command…>                       run a test command, save its full output, print a short summary
   teammap relevant "<task text or symbol>"          files, symbols, endpoints, models, brief sections and episodes
                                                     worth reading first, each with why it was picked
   teammap research show <id> [--section S]          a stored result in full (ids are printed with every result)
@@ -20,13 +21,14 @@ and which are inferred (matched by name, by URL suffix or by text), what the cod
 of the inputs it was computed from. A stored result is reused only while that fingerprint still matches the code:
 index file mtimes (committed or not) plus the tool version and parameters; otherwise it is recomputed.
 Results are stored in <team>/graph/research/ (see workspace.py); nothing is written into the repositories, and
-test output is only read, never executed.
+saved test output is read, never executed; `run` executes only the command the caller explicitly supplies.
 """
 import argparse
 import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -1206,8 +1208,110 @@ def _parse(argv):
     return args, vars(opts)
 
 
+def _run_cmd(command):
+    if not command:
+        print("usage: teammap run -- <command...>")
+        return 2
+    shown = " ".join(command)
+    stamp = time.strftime("%Y%m%d-%H%M%S") + f"-{time.time_ns() % 1_000_000_000:09d}"
+    slug = re.sub(r"[^A-Za-z0-9._-]+", "-", shown).strip("-._")[:60] or "command"
+    log_path = norm(os.path.join(STORE, "runs", f"{stamp}-{slug}.log"))
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    code = 0
+    try:
+        executable = shutil.which(command[0]) or command[0]
+        with open(log_path, "wb") as log:
+            try:
+                proc = subprocess.run([executable, *command[1:]], stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, check=False)
+                code = 128 + abs(proc.returncode) if proc.returncode < 0 else proc.returncode
+            except KeyboardInterrupt:
+                code = 130
+            except OSError as e:
+                log.write((str(e) + "\n").encode("utf-8", errors="replace"))
+                code = 127
+    except OSError as e:
+        print(f"could not save log: {e}")
+        return 1
+    try:
+        logs = sorted(glob(os.path.join(STORE, "runs", "*.log")))
+        for old in logs[:-50]:
+            try:
+                os.remove(old)
+            except OSError:
+                pass
+    except OSError:
+        pass
+    max_bytes = 2_000_000
+    offset_lines = 0
+    try:
+        with open(log_path, "rb") as log:
+            log.seek(0, os.SEEK_END)
+            size = log.tell()
+            if size > max_bytes:
+                start = size - max_bytes
+                log.seek(0)
+                remaining = start
+                while remaining:
+                    chunk = log.read(min(65536, remaining))
+                    if not chunk:
+                        break
+                    offset_lines += chunk.count(b"\n")
+                    remaining -= len(chunk)
+                log.seek(start)
+                data = log.read(max_bytes)
+                if b"\n" in data:
+                    data = data.split(b"\n", 1)[1]
+                    offset_lines += 1
+                else:
+                    offset_lines = 0
+            else:
+                log.seek(0)
+                data = log.read(max_bytes)
+    except OSError as e:
+        print(f"command: {shown}\nexit code: {code}\nfull log: {log_path}\nCould not read log: {e}")
+        return code
+    output = data.decode("utf-8", errors="replace")
+    output = re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", output)
+    print(f"command: {shown}\nexit code: {code}")
+    if offset_lines:
+        print("log excerpt: last 2 MB; line numbers below are absolute in the full log")
+    repos = []
+    if detect_format(output) not in (None, "passed-only"):
+        repos, _, _ = load_index()
+    result, _ = failures(output, repos=repos)
+    groups = result.get("sections", {}).get("groups", [])
+    if code != 0 and not groups:
+        print("output tail (last 30 lines):")
+        print("\n".join(output.splitlines()[-30:]) if output.splitlines() else "(no output)")
+    elif result["status"] != "unrecognized":
+        for line in result["summary"][:2]:
+            print(f"tests: {line}")
+        for group in groups[:10]:
+            location = "/".join(x for x in (group.get("repo"), group.get("file")) if x)
+            if location and group.get("line"):
+                location += f":{group['line']}"
+            tests = ", ".join(group.get("tests", [])[:5])
+            if len(group.get("tests", [])) > 5:
+                tests += ", …"
+            print(f"  {group.get('count', 1)}× {location + ': ' if location else ''}{group.get('text', '(failure)')}")
+            if tests:
+                print(f"    tests: {tests}")
+            lines = group.get("log_lines")
+            if lines:
+                print(f"    log lines: {lines[0] + offset_lines}-{lines[1] + offset_lines}")
+    else:
+        print("output tail (last 30 lines):")
+        print("\n".join(output.splitlines()[-30:]) if output.splitlines() else "(no output)")
+    print(f"full log: {log_path}")
+    return code
+
 def main(argv):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if argv and argv[0] == "run":
+        if len(argv) < 2 or argv[1] != "--":
+            print("usage: teammap run -- <command...>")
+            return 2
+        return _run_cmd(argv[2:])
     if not argv or argv[0] in ("-h", "--help", "help"):
         print(__doc__.strip())
         return 0

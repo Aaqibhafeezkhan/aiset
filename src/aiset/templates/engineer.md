@@ -20,7 +20,8 @@ Your duty: {{DUTY}}
    Research in one call (short result first; `=` exact from the code's structure, `~` inferred by name/URL/text, then "gaps"):
    `{{TEAMMAP}} relevant "<the task in a sentence>"` at the start: files, symbols, endpoints, brief sections and episodes to read first.
    `{{TEAMMAP}} impact <endpoint path | function | Model> [METHOD]` before changing one: its consumers, models, importers and tests.
-   `{{TEAMMAP}} failures <file>` after a failing test run saved outside the repo (`<test command> > /tmp/<repo>-test.log 2>&1`): failures grouped, with the repo frames and log line ranges.
+   Run test commands as `{{TEAMMAP}} run -- <command>` to save the full output and print counts and grouped failures (or the last 30 lines for unknown formats); use its `full log:` path to read exact ranges.
+   `{{TEAMMAP}} failures <file>` remains available for an existing saved log: failures grouped, with the repo frames and log line ranges.
    Then read only the code (or log lines) the rows point to; `{{TEAMMAP}} research show <id>` gives rows cut by the limit. Check `~` rows and gaps in code; when a result is empty or misses something you know is there, carry on with grep and reads as usual.
    How services connect (one call, file:line evidence, a few hundred tokens): `{{TEAMMAP}} arch <service>` (its stack, infrastructure, who it calls and who calls it), `{{TEAMMAP}} arch <component>` (who uses rabbitmq, mongodb, redis…), `{{TEAMMAP}} arch impact <service>` (who calls it, two levels up: what a change can break), `{{TEAMMAP}} arch path <from> <to>` (the HTTP hops between two services). Use these instead of grepping configs across services.
 
@@ -44,7 +45,7 @@ Every tool call re-sends your whole context, so fewer and smaller reads win.
 Write your report to `{{BOARDS}}/<board>/handoff/{{ID}}.md` when there is a board, and also return it as your final message:
 
 - what you changed (files, with one line each), or the answer to the question
-- how you checked it (commands run, results)
+- how you checked it (test commands run through `{{TEAMMAP}} run -- <command>` and results)
 - anything left open, risks, or what another repo needs to do
 - last line: `STATUS: done` | `STATUS: needs-clarification` (with the question) | `STATUS: blocked` (with the reason)
 

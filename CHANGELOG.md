@@ -9,6 +9,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - `AISET_CLAUDE_HOME` selects an alternate Claude Code data root for transcripts and, without a workspace, the team and agents folders.
 
+- `teammap run -- <command>` runs a test command from the current directory, captures stdout and stderr together, saves the full output under `graph/research/runs/`, and prints parsed test counts, grouped failures with log line ranges, or the last 30 lines when a command fails without parseable failures. It streams output to disk, handles interruption, and returns shell-style exit codes.
+- The tester and engineer templates use `teammap run`, and the nudge hook recommends it when a known test runner is piped into `tail` or `head`.
+
 ## [0.2.0] - 2026-10-28
 
 ### Added
