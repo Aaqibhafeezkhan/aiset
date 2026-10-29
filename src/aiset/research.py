@@ -1238,8 +1238,10 @@ def _run_cmd(command):
             try:
                 os.remove(old)
             except OSError:
+                # Log retention is best-effort; keep the command result even if an old log cannot be removed.
                 pass
     except OSError:
+        # A failed retention scan must not hide the command result or its log.
         pass
     max_bytes = 2_000_000
     offset_lines = 0
