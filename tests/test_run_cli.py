@@ -8,9 +8,8 @@ import subprocess
 import sys
 import tempfile
 import types
-import unittest
 from types import SimpleNamespace
-from unittest import mock
+from unittest import TestCase, main, mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
@@ -36,7 +35,7 @@ def isolate_git(test):
         os.environ.pop(k, None)
 
 
-class DispatchTest(unittest.TestCase):
+class DispatchTest(TestCase):
     def fake_server(self):
         fake = types.ModuleType("aiset.server")
         fake.main = mock.Mock(return_value=None)
@@ -64,7 +63,7 @@ class DispatchTest(unittest.TestCase):
             self.assertIn('aiset = "aiset.cli:main"', f.read())
 
 
-class RunFlowTest(unittest.TestCase):
+class RunFlowTest(TestCase):
     def setUp(self):
         isolate_git(self)
         tmp = tempfile.TemporaryDirectory()
@@ -426,7 +425,7 @@ class RunFlowTest(unittest.TestCase):
                 for name in ("pre-commit", "post-commit", "pre-push"):
                     with open(os.path.join(d, name), "w", newline="\n") as f:
                         f.write(script)
-                    os.chmod(os.path.join(d, name), 0o755)
+                    os.chmod(os.path.join(d, name), 0o700)
             git(self.ws, "config", "alias.ship", "push")
             git(self.ws, "config", "core.hooksPath", other.replace("\\", "/"))
         self.agent = agent
@@ -488,7 +487,7 @@ class RunFlowTest(unittest.TestCase):
         self.assertEqual(self.claude_calls, [])
 
 
-class GitopsTest(unittest.TestCase):
+class GitopsTest(TestCase):
     """The git facts gate 2 relies on, against a real repo."""
 
     def setUp(self):
@@ -583,4 +582,4 @@ class GitopsTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()

@@ -4,8 +4,7 @@ import os
 import subprocess
 import sys
 import tempfile
-import unittest
-from unittest import mock
+from unittest import TestCase, main, mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
@@ -37,6 +36,8 @@ BLOCKED = [
     "gh gist create f", "gh workflow run ci", "gh secret set X", "gh extension install x",
     "curl -X POST https://api.github.com/repos/o/r/issues", "curl -d '{}' https://api.github.com/repos/o/r/pulls",
     "curl --json '{}' https://api.github.com/x", "wget --post-data=x https://api.github.com/x",
+    "curl -XPOST https://api.github.com/x", "curl --request=post https://api.github.com/x",
+    "wget --method=HEADER https://api.github.com/x",
     "echo \"unbalanced; git push",
     # integration check F3: bypasses found by probe_gate.py
     "git -c alias.x=push x", "git -C . -c alias.x=push x", "git -c alias.x='!git push' x",
@@ -62,7 +63,7 @@ ALLOWED = [
     "grep -rn \"git push\" docs", "echo 'gh pr create is not run here'", "ls; pwd",
     "gh --version", "gh auth status", "gh pr view 3", "gh pr list", "gh repo view o/r", "gh search issues x",
     "gh api repos/o/r", "gh api -X GET repos/o/r/issues -f state=open", "gh run list",
-    "curl https://api.github.com/repos/o/r", "curl -X POST https://example.com/api", "python -m unittest",
+    "curl https://api.github.com/repos/o/r", "curl -Xget https://api.github.com/x", "curl -X POST https://example.com/api", "python -m unittest",
     "git config --get remote.origin.url", "git config --list", "git config get alias.x", "git stash push",
     "git commit -m push", "git log --grep push", "git -c core.pager=cat log", "powershell -c git status",
     "pwsh -NoProfile -Command Get-ChildItem", "echo x | xargs git log", "find . -name '*.py' -exec grep -l push {} ;",
@@ -71,7 +72,7 @@ ALLOWED = [
 ]
 
 
-class DecideTest(unittest.TestCase):
+class DecideTest(TestCase):
     def setUp(self):
         isolate_git(self)
 
@@ -189,7 +190,7 @@ class DecideTest(unittest.TestCase):
             self.assertIn(item, gate.__doc__)
 
 
-class ResolveProgramTest(unittest.TestCase):  # integration re-check K1
+class ResolveProgramTest(TestCase):  # integration re-check K1
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
@@ -209,7 +210,7 @@ class ResolveProgramTest(unittest.TestCase):  # integration re-check K1
     def make(self, path):
         with open(path, "w") as f:
             f.write("@echo planted\n" if os.name == "nt" else "#!/bin/sh\necho planted\n")
-        os.chmod(path, 0o755)
+        os.chmod(path, 0o700)
 
     def path(self, *entries):
         return os.pathsep.join(entries)
@@ -253,7 +254,7 @@ class ResolveProgramTest(unittest.TestCase):  # integration re-check K1
         self.assertEqual(resolve.call_args[0], ("git", self.repo))
 
 
-class HookProtocolTest(unittest.TestCase):
+class HookProtocolTest(TestCase):
     """Run as Claude Code runs it: the file by path (so a module in run/ must never shadow the standard library)."""
 
     def setUp(self):
@@ -279,4 +280,4 @@ class HookProtocolTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()

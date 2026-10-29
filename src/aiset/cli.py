@@ -16,7 +16,7 @@ def main():
         from .run.cli import main as run_main
         return run_main(sys.argv[2:])
     from .server import main as serve
-    return serve()
+    serve()
 
 
 if __name__ == "__main__":

@@ -3,8 +3,7 @@ import json
 import os
 import sys
 import tempfile
-import unittest
-from unittest import mock
+from unittest import TestCase, main, mock
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
 
@@ -13,7 +12,7 @@ from aiset.run import gate, launch  # noqa: E402
 BOARD = "C:/ws/.claude/team/tasks/2026-10-29-issue-123-crash"
 
 
-class ArgvTest(unittest.TestCase):
+class ArgvTest(TestCase):
     def test_new_session(self):
         argv = launch.claude_argv(BOARD, "sid-1", model="sonnet", name="aiset run #123")
         self.assertEqual(argv[1:5], ["--agent", "pm", "--session-id", "sid-1"])
@@ -66,7 +65,7 @@ class ArgvTest(unittest.TestCase):
         call.assert_not_called()
 
 
-class CheckPathTest(unittest.TestCase):  # integration check F9
+class CheckPathTest(TestCase):  # integration check F9
     def test_cmd_unsafe_board_paths_refused_on_windows(self):
         for path in ("C:/a&b/tasks/x", "C:/%USERPROFILE%/x", "C:/hi!/x", "C:/a,b/x", 'C:/a"b'):
             with self.assertRaises(launch.RunError, msg=path):
@@ -75,7 +74,7 @@ class CheckPathTest(unittest.TestCase):  # integration check F9
         launch.check_path("C:/Users/me/My Projects (old)/ws/.claude/team/tasks/2026-10-29-issue-1-x", windows=True)
 
 
-class PermissionWarningsTest(unittest.TestCase):
+class PermissionWarningsTest(TestCase):
     def test_bypass_and_auto_warn(self):
         with tempfile.TemporaryDirectory() as home, tempfile.TemporaryDirectory() as ws:
             os.makedirs(os.path.join(ws, ".claude"))
@@ -92,4 +91,4 @@ class PermissionWarningsTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()

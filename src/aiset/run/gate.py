@@ -345,12 +345,17 @@ def _http(verb, args):
         if verb == "curl":
             if a in ("-X", "--request") and i + 1 < len(args) and args[i + 1].upper() not in ("GET", "HEAD"):
                 return f"curl -X {args[i + 1].upper()} to GitHub"
-            if re.match(r"^-X(?!GET$|HEAD$)\w+$", a, re.I) or re.match(r"^--request=(?!GET$|HEAD$)", a, re.I):
+            m = re.match(r"^-X(\w+)$", a) or re.match(r"^--request=(.+)$", a, re.I)
+            if m and m.group(1).upper() not in ("GET", "HEAD"):
                 return "curl write request to GitHub"
             if re.match(r"^(-d|--data\S*|-F|--form\S*|--json|-T|--upload-file)(=|$)", a) or re.match(r"^-[dFT]\S", a):
                 return "curl upload to GitHub"
-        elif re.match(r"^--(method=(?!GET|HEAD)|post-data|post-file|body-data|body-file)", a, re.I):
-            return "wget write request to GitHub"
+        else:
+            m = re.match(r"^--method=(.*)$", a, re.I)
+            if m and m.group(1).upper() not in ("GET", "HEAD"):
+                return "wget write request to GitHub"
+            if re.match(r"^--(post-data|post-file|body-data|body-file)", a, re.I):
+                return "wget write request to GitHub"
     return None
 
 
