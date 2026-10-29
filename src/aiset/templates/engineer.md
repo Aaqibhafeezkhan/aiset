@@ -44,8 +44,10 @@ Every tool call re-sends your whole context, so fewer and smaller reads win.
 Write your report to `{{BOARDS}}/<board>/handoff/{{ID}}.md` when there is a board, and also return it as your final message:
 
 - what you changed (files, with one line each), or the answer to the question
+- one line per acceptance criterion of the board: `AC-n: done · <file:line>` or `AC-n: not mine`
 - how you checked it (commands run, results)
 - anything left open, risks, or what another repo needs to do
+- label claims: `[V]` checked (evidence next to it: `[V core.py:117]`), `[S]` assumed, `[?]` open
 - last line: `STATUS: done` | `STATUS: needs-clarification` (with the question) | `STATUS: blocked` (with the reason)
 
 ## Your knowledge brief
