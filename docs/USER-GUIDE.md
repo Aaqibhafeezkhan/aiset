@@ -45,6 +45,8 @@ Edit names, roles and duties in `<folder>/.claude/team/roster.json` and run `ini
 
 Without a workspace (no `--workspace`, not inside one, and for the office: no team set up with `aiset-init`), everything below works as before: `~/.claude/agents`, `~/.claude/team`, the checkout root as the code root (the package directory in a non-editable installation) and the package's `src/aiset/roster.json`.
 
+`AISET_WORKSPACE` (or the older `AGENT_OFFICE_WORKSPACE`) selects a workspace by folder path. `AISET_CLAUDE_HOME` moves the Claude Code data root from `~/.claude`: the office reads transcripts from `<AISET_CLAUDE_HOME>/projects`, and without a workspace its team and agents come from that root's `team` and `agents` folders. A selected workspace keeps its own `.claude/team` and `.claude/agents` paths. Set the variable before starting aiset, for example `AISET_CLAUDE_HOME=~/demo-claude aiset` in a POSIX shell or `$env:AISET_CLAUDE_HOME = "$HOME/demo-claude"; aiset` in PowerShell. An unset or empty value retains the default paths; `~` is expanded and relative paths are resolved from the launch directory. This is useful for demos or tests that should read synthetic transcripts instead of your real sessions.
+
 ## Use the example team
 
 The bundled roster is a sample team with no repositories assigned. Set each engineer's `repos` list to your repository folder names, or run `init_team.py` for your workspace to generate a team from its repositories. The roster defines the office display; use `init_team.py` to create agent files.

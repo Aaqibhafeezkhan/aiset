@@ -24,6 +24,7 @@ HERE = os.path.dirname(os.path.realpath(__file__))
 # the checkout (src/aiset -> repo root) for a source tree; the package folder when installed
 APP_DIR = os.path.dirname(os.path.dirname(HERE)) if os.path.basename(os.path.dirname(HERE)) == "src" else HERE
 HOME = os.path.expanduser("~")
+CLAUDE_HOME = os.path.abspath(os.path.expanduser(os.environ.get("AISET_CLAUDE_HOME") or os.path.join(HOME, ".claude")))
 
 
 def norm(path):
@@ -98,14 +99,14 @@ if WORKSPACE:
     ROSTER = TEAM + "/roster.json"
 else:
     CODE_ROOT = norm(APP_DIR)
-    TEAM = norm(os.path.join(HOME, ".claude", "team"))
-    AGENTS = norm(os.path.join(HOME, ".claude", "agents"))
+    TEAM = norm(os.path.join(CLAUDE_HOME, "team"))
+    AGENTS = norm(os.path.join(CLAUDE_HOME, "agents"))
     ROSTER = norm(os.path.join(HERE, "roster.json"))
 KNOWLEDGE = TEAM + "/knowledge"
 BOARDS = TEAM + "/tasks"
 EPISODES = TEAM + "/episodes"
 GRAPHS = TEAM + "/graph"
-PROJECTS = norm(os.path.join(HOME, ".claude", "projects"))
+PROJECTS = norm(os.path.join(CLAUDE_HOME, "projects"))
 
 
 def script_command(name):
