@@ -14,7 +14,7 @@ pipx install aiset-cli    # adds the commands aiset, aiset-init and teammap (fro
 
 Check which version is installed with `aiset --version` (also `aiset-init --version`, `teammap --version`); it doesn't start the office or touch a workspace.
 
-Without installing, run the files directly: `python src/aiset/server.py`, `python src/aiset/teammap.py`, `python src/aiset/init_team.py`. Tests: `python -m unittest discover -s tests`.
+Without installing, run the files directly: `python src/aiset/server.py`, `python src/aiset/cli.py run <issue>`, `python src/aiset/teammap.py`, `python src/aiset/init_team.py`. Tests: `python -m unittest discover -s tests`.
 
 The `Makefile` wraps the usual commands (`make` lists them): `make test`, `make check`, `make install`, `make office WS=~/work/shop`, `make init WS=… TEAM=…`, `make index WS=…`, `make impact WS=… Q='/items/{item_id} GET'`, `make relevant WS=… Q="…"`, `make failures WS=… Q=<log>`, `make eval WS=…`, `make eval-agent WS=… RUNS=3` (spends tokens), `make clean`.
 
@@ -73,6 +73,30 @@ Tell the PM what you need. The PM clarifies the request with you, writes accepta
 - Agent definitions live in `~/.claude/agents/*.md`. Edit them there or with `/agents`.
 - Knowledge briefs live in `~/.claude/team/knowledge/`. Agents add to their own brief under `## Field notes`. To regenerate a brief, ask your PM, for example "refresh Emre's knowledge".
 - You can also use any agent from a normal Claude session, for example "ask Emre why …".
+
+## Work a GitHub issue (`aiset run`, preview)
+
+`aiset run` takes a GitHub issue through the team and opens a **draft** pull request, but only after you approve it. Run it inside a workspace set up with `aiset-init`, with the [GitHub CLI](https://cli.github.com) installed and logged in (`gh auth login`):
+
+```sh
+aiset run 123 --dry-run      # show the issue, the acceptance criteria, the branch and the claude command; change nothing
+aiset run 123                # or the issue URL; --repo OWNER/NAME when the workspace has several repos
+aiset run 123 --resume       # continue the last session on the issue's board
+aiset run 123 --publish      # go straight to the approval step for an existing board
+```
+
+The gate's fail-closed timeout (`onFailure: "block"`) needs a recent Claude Code (2.1.312 tested); older versions ignore it.
+
+If `aiset run` opens the office instead (an older `aiset` earlier on `PATH`), `python -m aiset.run 123` runs the same command.
+
+1. It reads the issue with `gh` and shows its acceptance criteria. **Gate 1:** you confirm them (`y`), edit them (`e`) or stop (`N`). Nothing is written before that.
+2. It opens a board `.claude/team/tasks/<date>-issue-123-<slug>/` (`issue.md`, `brief.md` with `AC-1..n`, `run.json`), creates the branch `aiset/issue-123-<slug>` in your checkout (the working tree must be clean), and starts the PM in this terminal. You answer permission prompts and questions as usual, and the office shows the run.
+3. When the work is verified, the PM writes `summary.md` and asks you to type `/exit`.
+4. **Gate 2:** you see every URL `origin` really pushes to (each must be the issue's repo on github.com), the base branch, the commits the session made since gate 1, the files and diffstat since gate 1, any earlier commits the push would also send (marked, with a separate question, when they touch `.claude/` or carry an AI trailer), a loud flag on new or changed files under `.github/`, and `pr.md`, the PR description with the criteria, the tester's checks, the open assumptions and the cost. Commits from the session that touch `.claude/` or carry an AI trailer (`Co-Authored-By` ...) are refused; other session commits need their own `y`. If git config that can redirect a push or run code (remotes, `url.*.insteadOf`, aliases, `core.hooksPath`, filters ...) or a hook changed since gate 1, you get a loud warning and a separate question. `d` shows the diff, new files included. Only on `y` does `aiset run` commit (no AI trailer), push the branch and run `gh pr create --draft`, with git hooks turned off for its own commit and push. On `N` nothing is committed or pushed; publish later with `--publish`.
+
+The issue is text written by outsiders. Agents get it only as `issue.md`, marked as data, never in their prompt. The session can't push or write to GitHub: deny rules and a hook (`src/aiset/run/gate.py`, passed with `--settings` for this session only, subagents included) block `git push` (and its aliases and wrappers), `gh issue`, `gh pr` writes, `gh api` writes, and edits inside `.git/` (hooks, config). It is a tripwire, not a sandbox: what it can't catch is listed in `gate.py`, and gate 2 checks the result anyway. Text from the issue and the agents is defused in the PR description, so `@mentions` don't ping and `fixes #9` closes nothing.
+
+This is a first version. Several parts are deliberately simple stubs that contributors are replacing: today the criteria are read only from `- [ ]` task lists, hidden characters in the issue (zero-width, HTML comments) are not yet flagged at gate 1, the snapshot has no size limits, the PR's cost line shows only dollars, and `#123`/`owner/name#123` forms aren't accepted yet (use the number or the URL). Not in this version: headless or CI runs, a budget limit, changes across several repos, worktrees, GitHub Enterprise hosts.
 
 ## The office
 
