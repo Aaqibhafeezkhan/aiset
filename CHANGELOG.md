@@ -8,8 +8,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 
 - `AISET_CLAUDE_HOME` selects an alternate Claude Code data root for transcripts and, without a workspace, the team and agents folders.
-
+- `aiset run <issue>` (preview) works a GitHub issue with the team and opens a draft pull request after you approve it. It fetches the issue with `gh`, writes a board with an untrusted `issue.md` snapshot and numbered acceptance criteria, asks you to confirm them (gate 1), creates a branch and starts the PM in your terminal. When the PM is done, it shows where `origin` really pushes, the session's own commits, the files and diffstat since gate 1, any git config or hook changes since then, and the PR description, and only on your `y` commits, pushes (git hooks off) and runs `gh pr create --draft` (gate 2). Session commits that touch `.claude/` or carry an AI trailer are refused. `--dry-run`, `--resume`, `--fresh` and `--publish` cover previewing, interrupted sessions and publishing later. Agents in the session can't push or write to GitHub: deny rules and a session-only PreToolUse hook block it, subagents included. Several parts are simple stubs for now (acceptance criteria from task lists only, no hidden-character warnings, no snapshot size limits, a dollars-only cost line); see the user guide.
 - `teammap run -- <command>` runs a test command from the current directory, captures stdout and stderr together, saves the full output under `graph/research/runs/`, and prints parsed test counts, grouped failures with log line ranges, or the last 30 lines when a command fails without parseable failures. It streams output to disk, handles interruption, and returns shell-style exit codes.
+
+### Changed
+
+- The `aiset` command is now `aiset.cli:main`: `aiset run …` goes to the new command and everything else starts the office as before. Reinstall (`pip install -e .` or `pipx reinstall aiset-cli`) to pick up the new entry point.
+- Agent templates: the PM writes acceptance criteria as `AC-1`, `AC-2`, … (#58); engineers and QA report one `AC-n:` line per criterion and label claims `[V]` verified, `[S]` assumed, `[?]` open (#61). The PM has a short section on working an issue for `aiset run`.
 - The tester and engineer templates use `teammap run`, and the nudge hook recommends it when a known test runner is piped into `tail` or `head`.
 
 ## [0.2.0] - 2026-10-28

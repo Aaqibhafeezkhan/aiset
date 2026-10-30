@@ -1,6 +1,7 @@
 """teammap impact / failures / relevant: parsers on real test output, and the commands end to end on a small workspace."""
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -319,7 +320,7 @@ class WorkspaceTest(unittest.TestCase):
         self.assertIn("tests: 5 failed test(s)", out)
         self.assertIn("×", out)
         self.assertIn("log lines:", out)
-        match = __import__("re").search(r"full log: (.+)", out)
+        match = re.search(r"full log: (.+)", out)
         self.assertIsNotNone(match, out)
         log = match.group(1)
         self.assertTrue(log.endswith(".log"), log)
