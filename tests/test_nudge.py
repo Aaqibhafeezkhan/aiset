@@ -85,7 +85,7 @@ class NudgeTest(unittest.TestCase):
     def test_whole_reads_of_long_source_files(self):
         msg = self.suggest("Read", {"file_path": self.big})
         self.assertIn("api/app/big.py has 450 lines", msg)
-        self.assertIn("`teammap file big.py`", msg)
+        self.assertIn("`teammap outline big.py` shows its parts and their sizes", msg)
         self.assertIsNone(self.suggest("Read", {"file_path": self.big, "offset": 10, "limit": 40}))
         self.assertIsNone(self.suggest("Read", {"file_path": os.path.join(self.api, "pyproject.toml")}))
         small = os.path.join(self.api, "app", "small.py")

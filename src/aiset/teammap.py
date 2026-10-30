@@ -57,7 +57,7 @@ INDEX = os.path.join(GRAPHS, "index")
 # Index only the repositories configured in the active roster.
 REPOS = roster_repos()
 HTTP = {"get", "post", "put", "patch", "delete", "head", "options"}
-VERSION = 8
+VERSION = 9
 
 
 # -- Python extraction ---------------------------------------------------------------------
@@ -132,7 +132,7 @@ def py_extract(text):
                         if nm and nm not in calls:
                             calls.append(nm)
                 f["symbols"].append({"name": child.name, "qual": qual, "kind": "method" if cls else "function",
-                                     "line": child.lineno, "end": child.end_lineno, "params": params, "calls": calls[:80]})
+                                     "line": child.lineno, "end": child.end_lineno, "params": params, "returns": _src(child.returns) if child.returns else "", "calls": calls[:80]})
                 for d in child.decorator_list:
                     if isinstance(d, ast.Call) and isinstance(d.func, ast.Attribute) and d.func.attr in HTTP | {"api_route"}:
                         r = route_from(d, cls, qual, child.lineno)
@@ -808,6 +808,91 @@ def cmd_model(repos, L, args, limit):
                 print("  frontend  (no matching type found)")
 
 
+def _outline_imports(data, lang):
+    """Readable import names from the index's existing Python or TypeScript records."""
+    out = []
+    for imp in data.get("imports", []):
+        if lang == "py":
+            module, name, level = imp.get("module") or "", imp.get("name"), imp.get("level", 0)
+            prefix = "." * level + module
+            value = f"{prefix}.{name}" if name and prefix else (prefix or name or "")
+        else:
+            value = imp.get("from", "")
+            names = imp.get("names") or []
+            if value and names:
+                value = ", ".join(f"{value}.{name}" for name in names if name)
+        if value and value not in out:
+            out.append(value)
+    return out
+
+
+def cmd_outline(repos, L, args):
+    """Print one indexed file's structure without reading its source again."""
+    q = args[0].replace("\\", "/")
+    normalized = posixpath.normpath(q).removeprefix("./")
+    hits = [(r, f, e) for r in repos for f, e in r["files"].items() if q in f]
+    hits.sort(key=lambda x: (len(x[1]), x[0]["name"], x[1]))
+    exact = [(r, f, e) for r, f, e in hits if f == normalized or f.endswith("/" + normalized)]
+    if exact:
+        hits = exact
+    if not hits:
+        print(f"no file matches {q!r}")
+        return 4
+    if len(hits) > 1:
+        print(f"multiple files match {q!r}; use a more specific path:")
+        for r, f, _ in hits[:20]:
+            print(f"  {r['name']}/{f}")
+        if len(hits) > 20:
+            print(f"… {len(hits) - 20} more")
+        return 3
+    r, f, entry = hits[0]
+    data = entry.get("data", {})
+    if "error" in data:
+        print(f"cannot outline {r['name']}/{f}: the index could not parse this file")
+        return 1
+    try:
+        with open(os.path.join(r["root"], f), "rb") as source:
+            line_count = sum(1 for _ in source)
+    except OSError:
+        line_count = max((s.get("end", s.get("line", 1)) for s in data.get("symbols", [])), default=1)
+    print(f"{r['name']}/{f}  ({line_count} lines)")
+    lang = entry.get("lang", "py")
+    imports = _outline_imports(data, lang)
+    if imports:
+        print("  imports  " + ", ".join(imports[:20]) + (" …" if len(imports) > 20 else ""))
+    symbols = sorted(data.get("symbols", []), key=lambda s: (s.get("line", 0), s.get("qual", "").count(".")))
+    for symbol in symbols:
+        start, end = symbol.get("line", 1), symbol.get("end", symbol.get("line", 1))
+        size = max(1, end - start + 1)
+        qual = symbol.get("qual", symbol.get("name", ""))
+        name = symbol.get("name", qual)
+        kind = symbol.get("kind", "symbol")
+        if kind == "class":
+            label = f"class {qual}"
+        elif kind == "method":
+            label = f"{'method' if lang == 'ts' else 'def'} {name}"
+        else:
+            label = f"{'fn' if lang == 'ts' else 'def'} {qual}" if kind == "function" else f"{kind} {qual}"
+        params = symbol.get("params", [])
+        if kind != "class" and params:
+            if isinstance(params, list):
+                signature = ", ".join(f"{p.get('name', '')}: {p.get('type', '')}".rstrip(": ") for p in params)
+            else:
+                signature = str(params)
+            label += f"({signature})"
+        if symbol.get("returns"):
+            label += f" -> {symbol['returns']}"
+        indent = "  " + "  " * qual.count(".")
+        print(f"{indent}{label:<48} {start}-{end} ({size})")
+    for typ in data.get("types", []):
+        start, end = typ.get("line", 1), typ.get("end", typ.get("line", 1))
+        size = max(1, end - start + 1)
+        print(f"  {typ.get('kind', 'type')} {typ['name']:<44} {start}-{end} ({size})")
+    for ep in [x for x in L["endpoints"] if x["repo"] == r["name"] and x["file"] == f]:
+        print(f"  route {ep['method']} {ep['path']} → {ep['handler']}()")
+    return 0
+
+
 def cmd_file(repos, L, args, limit):
     q = args[0]
     hits = [(r, f, e) for r in repos for f, e in r["files"].items() if q in f]
@@ -977,6 +1062,11 @@ def main(argv):
     L = link(all_repos)
     if any(r["changed"] for r in all_repos) or cmd == "index":
         export(all_repos, L)
+    if cmd == "outline":
+        if len(rest) != 1:
+            print("usage: teammap outline <path-part>")
+            return 2
+        return cmd_outline(repos, L, rest)
     cmds = {"endpoint": cmd_endpoint, "who-uses": cmd_endpoint, "symbol": cmd_symbol, "model": cmd_model,
             "file": cmd_file, "search": cmd_search, "code": cmd_code}
     if cmd == "index":
