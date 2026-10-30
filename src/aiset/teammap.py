@@ -828,7 +828,7 @@ def _outline_imports(data, lang):
 def cmd_outline(repos, L, args):
     """Print one indexed file's structure without reading its source again."""
     q = args[0].replace("\\", "/")
-    normalized = posixpath.normpath(q).lstrip("./")
+    normalized = posixpath.normpath(q).removeprefix("./")
     hits = [(r, f, e) for r in repos for f, e in r["files"].items() if q in f]
     hits.sort(key=lambda x: (len(x[1]), x[0]["name"], x[1]))
     exact = [(r, f, e) for r, f, e in hits if f == normalized or f.endswith("/" + normalized)]
