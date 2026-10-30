@@ -37,7 +37,7 @@ Issues = "https://github.com/JamshidS/aiset/issues"
 Changelog = "https://github.com/JamshidS/aiset/blob/master/CHANGELOG.md"
 
 [project.scripts]
-aiset = "aiset.server:main"
+aiset = "aiset.cli:main"
 teammap = "aiset.teammap:cli"
 aiset-init = "aiset.init_team:main"
 
