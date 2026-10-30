@@ -20,6 +20,7 @@ Answers "where is X and who uses it" in one call, instead of a string of greps a
 Research (one call instead of a string of greps and reads; exact vs inferred findings, gaps, a stored result id):
   teammap impact <path-part|symbol|Model> [METHOD]  what a change can reach: consumers, models, importers, tests
   teammap failures <test-output-file>    failed tests, messages, in-repo frames, repeated errors grouped
+  teammap run -- <command…>              run a test command, save its full log and summarize failures
   teammap relevant "<task text>"         files, symbols, endpoints, brief sections and episodes to read first
   teammap research show <id>             a stored result in full     (teammap impact --help for all options)
 
@@ -1030,6 +1031,9 @@ def main(argv):
         print("teammap " + __version__)
         return 0
     argv = [msys_unmangle(a) for a in argv]
+    if argv and argv[0] == "run":
+        from . import research
+        return research.main(argv)
     parser = argparse.ArgumentParser(prog="teammap", add_help=False, allow_abbrev=False)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--max", type=int, default=150)
