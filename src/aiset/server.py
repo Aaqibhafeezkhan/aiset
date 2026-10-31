@@ -296,7 +296,8 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # Windows consoles default to cp1252
-    ap = argparse.ArgumentParser(description="Live office view of your Claude Code agents.")
+    ap = argparse.ArgumentParser(description="Live office view of your Claude Code agents.",
+                                 epilog="Also: aiset run <issue> works a GitHub issue with the team and opens a draft PR after your approval (aiset run --help).")
     from . import __version__
     ap.add_argument("--version", action="version", version="aiset " + __version__)
     ap.add_argument("--port", type=int, default=8765)

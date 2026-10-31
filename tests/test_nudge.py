@@ -47,6 +47,25 @@ class NudgeTest(unittest.TestCase):
                       self.suggest("Grep", {"pattern": "update_bean|UpdateBean", "path": self.api}))
         self.assertIsNone(self.suggest("Grep", {"pattern": "update_bean|timeout.*", "path": self.api}))
 
+    def test_piped_test_runner_suggests_teammap_run(self):
+        for runner in ("pytest -q", "npm test", "jest --runInBand", "vitest run", "go test ./...", "make test"):
+            for truncator in ("tail -20", "head -20"):
+                hit = self.suggest("Bash", {"command": f"{runner} | {truncator}"})
+                self.assertIsNotNone(hit, (runner, truncator))
+                self.assertIn(f"teammap run -- {runner}", hit)
+                self.assertIn("full log", hit)
+        self.assertIsNone(self.suggest("Bash", {"command": "pytest -q"}))
+        self.assertIsNone(self.suggest("Bash", {"command": "echo pytest -q | tail -20"}))
+        for command, expected in (
+            ("pytest -q 2>&1 | tail -20", "pytest -q"),
+            ("python -m pytest -q | tail -20", "python -m pytest -q"),
+            ("uv run pytest -q | head -20", "uv run pytest -q"),
+            ("npx jest --runInBand | tail -20", "npx jest --runInBand"),
+            ("npx vitest run | head -20", "npx vitest run"),
+        ):
+            hit = self.suggest("Bash", {"command": command})
+            self.assertIn(f"teammap run -- {expected}", hit, command)
+
     def test_grep_it_leaves_alone(self):
         for inp in ({"pattern": "todo", "path": self.api},  # a plain word: as likely text as a name
                     {"pattern": "timeout.*retry", "path": self.api},  # a regex
@@ -66,7 +85,7 @@ class NudgeTest(unittest.TestCase):
     def test_whole_reads_of_long_source_files(self):
         msg = self.suggest("Read", {"file_path": self.big})
         self.assertIn("api/app/big.py has 450 lines", msg)
-        self.assertIn("`teammap file big.py`", msg)
+        self.assertIn("`teammap outline big.py` shows its parts and their sizes", msg)
         self.assertIsNone(self.suggest("Read", {"file_path": self.big, "offset": 10, "limit": 40}))
         self.assertIsNone(self.suggest("Read", {"file_path": os.path.join(self.api, "pyproject.toml")}))
         small = os.path.join(self.api, "app", "small.py")

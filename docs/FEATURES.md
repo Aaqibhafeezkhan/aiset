@@ -93,6 +93,7 @@ Legend: ✅ works · 🟡 partial / limited · ❌ missing
 
 | Feature | Status | Summary |
 |---|---|---|
+| Alternate transcript root | ✅ | `AISET_CLAUDE_HOME` moves the transcript data root and, without a workspace, the fallback team and agents folders. |
 | No dependencies | ✅ | Only the Python 3 standard library; the repo's own `typescript` package for parsing TypeScript. |
 | Read-only | ✅ | Reads the transcripts Claude Code already writes; writes to nothing (except brief indexes and the name sync). |
 | Windows support | ✅ | Path normalisation, `\` and `/` separators. Architecture evidence uses `/`, with workflow/DAG detection and test-file exclusion. Non-ASCII Git filenames are preserved. |

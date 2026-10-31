@@ -1,11 +1,13 @@
 """teammap impact / failures / relevant: parsers on real test output, and the commands end to end on a small workspace."""
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, "..", "src")
@@ -308,6 +310,65 @@ class WorkspaceTest(unittest.TestCase):
         self.assertGreater(full.count("\n  ~ "), shown)
         rc, listing = self.run_tm("research", "list")
         self.assertIn(res["id"], listing)
+
+    def test_run_saves_full_pytest_log_and_groups_failures(self):
+        source = os.path.join(FIX, "pytest.log")
+        code = "import pathlib,sys; sys.stdout.buffer.write(pathlib.Path(" + repr(source) + ").read_bytes()); sys.exit(1)"
+        rc, out = self.run_tm("run", "--", sys.executable, "-c", code)
+        self.assertEqual(rc, 1, out)
+        self.assertIn("exit code: 1", out)
+        self.assertIn("tests: 5 failed test(s)", out)
+        self.assertIn("×", out)
+        self.assertIn("log lines:", out)
+        match = re.search(r"full log: (.+)", out)
+        self.assertIsNotNone(match, out)
+        log = match.group(1)
+        self.assertTrue(log.endswith(".log"), log)
+        with open(log, "rb") as f:
+            with open(source, "rb") as original:
+                self.assertEqual(f.read(), original.read())
+
+    def test_run_pass_log_and_unknown_output(self):
+        source = os.path.join(FIX, "pass.log")
+        code = "import pathlib,sys; sys.stdout.write(pathlib.Path(" + repr(source) + ").read_text())"
+        rc, out = self.run_tm("run", "--", sys.executable, "-c", code)
+        self.assertEqual(rc, 0, out)
+        self.assertIn("1 passed", out)
+        self.assertIn("full log:", out)
+
+        code = "for i in range(35): print('line', i)"
+        rc, out = self.run_tm("run", "--", sys.executable, "-c", code)
+        self.assertEqual(rc, 0, out)
+        self.assertIn("output tail (last 30 lines):", out)
+        self.assertNotIn("line 4\n", out)
+        self.assertIn("line 5\n", out)
+        self.assertIn("line 34\n", out)
+        self.assertIn("full log:", out)
+
+    def test_run_nonzero_unparsed_output_shows_tail(self):
+        code = "print('coverage threshold not met'); raise SystemExit(2)"
+        rc, out = self.run_tm("run", "--", sys.executable, "-c", code)
+        self.assertEqual(rc, 2, out)
+        self.assertIn("output tail (last 30 lines):", out)
+        self.assertIn("coverage threshold not met", out)
+        self.assertIn("full log:", out)
+
+    def test_run_interrupt_keeps_log_and_returns_130(self):
+        with tempfile.TemporaryDirectory() as store:
+            old_store = research.STORE
+            research.STORE = store
+            try:
+                with patch("aiset.research.subprocess.run", side_effect=KeyboardInterrupt):
+                    from contextlib import redirect_stdout
+                    from io import StringIO
+                    output = StringIO()
+                    with redirect_stdout(output):
+                        rc = research._run_cmd([sys.executable, "-c", "pass"])
+                self.assertEqual(rc, 130)
+                self.assertIn("full log:", output.getvalue())
+                self.assertEqual(len([name for name in os.listdir(os.path.join(store, "runs")) if name.endswith(".log")]), 1)
+            finally:
+                research.STORE = old_store
 
     def test_no_index(self):
         with tempfile.TemporaryDirectory() as empty:
