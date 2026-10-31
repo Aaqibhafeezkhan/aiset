@@ -5,6 +5,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+
+- Starting the office on a busy or unavailable port now prints a concise message with a `--port 0` hint instead of a traceback (#125).
+
 ### Added
 
 - Architecture view: Go services. Web frameworks (Gin, Echo, Chi, Fiber, Gorilla Mux, Iris) and databases, Redis, RabbitMQ and Kafka clients are read from the direct requirements in `go.mod`, for any major version (#17).
