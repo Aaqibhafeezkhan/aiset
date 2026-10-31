@@ -57,12 +57,12 @@ MAX_EVIDENCE = 6
 DETECTORS = [
     dict(id="postgres", label="PostgreSQL", kind="database",
          py=["psycopg2", "psycopg2-binary", "psycopg", "asyncpg", "pg8000"], npm=["pg", "postgres", "pg-promise"], jvm=["postgresql", "r2dbc-postgresql"],
-         go=["github.com/jackc/pgx/v5", "github.com/jackc/pgx/v4", "github.com/jackc/pgx", "gorm.io/driver/postgres"],
+         go=["github.com/jackc/pgx", "github.com/lib/pq", "gorm.io/driver/postgres"],
          code=[r"postgres(?:ql)?(?:\+\w+)?://", r"\basyncpg\.(?:connect|create_pool)", r"\bpsycopg2?\.connect", r"jdbc:postgresql:"],
          prop=[r"jdbc:postgresql:", r"database\s*=\s*postgres", r"PostgreSQL\w*Dialect"], env=[r"^(POSTGRES|PG)_?[A-Z_]*$", r"DATABASE_URL$"], image=[r"postgres|postgis|timescale"]),
     dict(id="mysql", label="MySQL", kind="database", py=["pymysql", "mysqlclient", "aiomysql"], npm=["mysql", "mysql2"],
          jvm=["mysql-connector-java", "mysql-connector-j", "mariadb-java-client"],
-         go=["github.com/go-sql-driver/mysql"],
+         go=["github.com/go-sql-driver/mysql", "gorm.io/driver/mysql"],
          code=[r"mysql(?:\+\w+)?://", r"jdbc:mysql:"], prop=[r"jdbc:mysql:", r"database\s*=\s*mysql", r"MySQL\w*Dialect", r"com\.mysql\."],
          env=[r"^MYSQL_"], image=[r"mysql|mariadb"]),
     dict(id="mongodb", label="MongoDB", kind="database", py=["pymongo", "motor", "mongoengine", "flask-pymongo", "mongoalchemy", "flask-mongoalchemy"],
@@ -78,18 +78,20 @@ DETECTORS = [
          code=[r"sqlite(?:\+\w+)?:///", r"\bsqlite3\.connect"], prop=[r"jdbc:sqlite:"], env=[], image=[]),
     dict(id="redis", label="Redis", kind="cache", py=["redis", "aioredis", "redis-py-cluster", "flask-redis"], npm=["redis", "ioredis"],
          jvm=["spring-boot-starter-data-redis", "spring-data-redis", "jedis", "lettuce-core", "redisson"],
-         go=["github.com/redis/go-redis/v9", "github.com/go-redis/redis/v8", "github.com/go-redis/redis"],
+         go=["github.com/redis/go-redis", "github.com/go-redis/redis"],
          code=[r"redis(?:s)?://", r"^\s*(?:import|from)\s+(?:redis|aioredis)\b", r"\bRedis\(", r"\b(?:RedisTemplate|StringRedisTemplate|Jedis(?:Pool)?)\b"],
          prop=[r"^spring\.(?:data\.)?redis\."], env=[r"^REDIS"], image=[r"redis|valkey"]),
     dict(id="celery", label="Celery", kind="worker", py=["celery"], npm=[], jvm=[], only=(".py",),
          code=[r"\bCelery\(", r"@(?:shared_task|\w+\.task)\b", r"\.delay\(|\.apply_async\("], prop=[], env=[r"^CELERY"], image=[]),
     dict(id="rabbitmq", label="RabbitMQ", kind="broker", py=["pika", "aio-pika", "kombu", "amqp", "aiormq"],
          npm=["amqplib", "amqp-connection-manager", "amqplib-as-promised", "@golevelup/nestjs-rabbitmq"], jvm=["spring-rabbit", "spring-boot-starter-amqp", "amqp-client"],
+         go=["github.com/rabbitmq/amqp091-go", "github.com/streadway/amqp"],
          code=[r"amqps?://", r"^\s*(?:import|from)\s+(?:pika|aio_pika|kombu)\b", r"\bbasic_(?:publish|consume)\b", r"\b(?:RabbitTemplate|AmqpTemplate)\b|@RabbitListener",
                r"\bamqp\.connect\(|require\(['\"]amqplib"],
          prop=[r"^spring\.rabbitmq\."], env=[r"^RABBIT", r"^AMQP"], image=[r"rabbitmq"]),
     dict(id="kafka", label="Kafka", kind="broker", py=["kafka-python", "aiokafka", "confluent-kafka"], npm=["kafkajs", "node-rdkafka"],
          jvm=["spring-kafka", "kafka-clients", "kafka-streams"],
+         go=["github.com/segmentio/kafka-go", "github.com/IBM/sarama", "github.com/Shopify/sarama", "github.com/confluentinc/confluent-kafka-go"],
          code=[r"^\s*(?:import|from)\s+(?:kafka|aiokafka|confluent_kafka)\b", r"\bKafka(?:Producer|Consumer|Template)\b|@KafkaListener", r"new Kafka\("],
          prop=[r"^spring\.kafka\.", r"bootstrap[.-]servers"], env=[r"^KAFKA"], image=[r"kafka|redpanda"]),
     dict(id="mqtt", label="MQTT", kind="broker", py=["paho-mqtt", "asyncio-mqtt", "gmqtt"], npm=["mqtt", "async-mqtt"],
@@ -144,15 +146,10 @@ FRAMEWORKS_JVM = [("spring-cloud-starter-zuul", "Zuul gateway", "gateway"), ("sp
                   ("spring-boot-starter-web", "Spring Boot", "api"), ("spring-boot-starter-webflux", "Spring Boot (WebFlux)", "api"),
                   ("ktor-server-core", "Ktor", "api"), ("quarkus-core", "Quarkus", "api"), ("micronaut-http-server", "Micronaut", "api"),
                   ("spring-boot-starter", "Spring Boot", "service")]
-FRAMEWORKS_GO = [("github.com/gin-gonic/gin", "Gin", "api"),
-                 ("github.com/labstack/echo/v4", "Echo", "api"),
-                 ("github.com/labstack/echo", "Echo", "api"),
-                 ("github.com/go-chi/chi/v5", "Chi", "api"),
-                 ("github.com/go-chi/chi", "Chi", "api"),
-                 ("github.com/gofiber/fiber/v2", "Fiber", "api"),
-                 ("github.com/gofiber/fiber", "Fiber", "api"),
-                 ("github.com/gorilla/mux", "Gorilla Mux", "api"),
-                 ("github.com/kataras/iris/v12", "Iris", "api")]
+# Go module paths without a /vN major suffix (_deps strips it), so echo/v5 or fiber/v3 match too
+FRAMEWORKS_GO = [("github.com/gin-gonic/gin", "Gin", "api"), ("github.com/labstack/echo", "Echo", "api"),
+                 ("github.com/go-chi/chi", "Chi", "api"), ("github.com/gofiber/fiber", "Fiber", "api"),
+                 ("github.com/gorilla/mux", "Gorilla Mux", "api"), ("github.com/kataras/iris", "Iris", "api")]
 CODE_ROLE = [(r"@EnableZuulProxy", "Zuul gateway", "gateway"), (r"@EnableEurekaServer", "Eureka server", "registry"),
              (r"@EnableConfigServer", "Config server", "registry")]
 # libraries worth naming on a repo card
@@ -282,30 +279,23 @@ def _deps(repo_path, files):
                 for m in re.finditer(r"['\"]([\w.\-]+):([\w.\-]+)(?::[^'\"]*)?['\"]", line):
                     jvm.setdefault(m.group(2), (rel, i, line.strip()))
         elif f == "go.mod":
-            text = _read(path)
-            in_require = False
-            paren_block = False
-            for i, line in enumerate(text.splitlines(), 1):
-                stripped = line.strip()
-                if not stripped or stripped.startswith("//"):
+            # direct requirements only: `// indirect` ones are transitive, replace/exclude blocks are skipped
+            block = None
+            for i, line in enumerate(_read(path).splitlines(), 1):
+                code, _, comment = line.partition("//")
+                words = code.split()
+                if not words:
                     continue
-                if re.match(r"^require\s*\(", stripped):
-                    paren_block = True
-                    continue
-                if paren_block:
-                    if stripped == ")":
-                        paren_block = False
+                if block:
+                    if words == [")"]:
+                        block = None
                         continue
-                    # skip indirect comments/markers if present
-                    m = re.match(r"([^\s]+)\s+v[^\s]+", stripped)
-                    if m and not stripped.startswith("//"):
-                        go.setdefault(m.group(1), (rel, i, line.strip()))
+                    words = [block, *words]
+                elif words[-1].endswith("("):
+                    block = words[0].rstrip("(")
                     continue
-                m = re.match(r"^require\s+([^\s]+)\s+v", stripped)
-                if m:
-                    go.setdefault(m.group(1), (rel, i, line.strip()))
-                    continue
-                # also catch single line requires outside block
+                if words[0] == "require" and len(words) >= 3 and comment.strip() != "indirect":
+                    go.setdefault(re.sub(r"/v\d+$", "", words[1]), (rel, i, line.strip()))
     return py, npm, jvm, go
 
 
